@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "exterior-acceptance-20260817:chrome-cleanup",
+  "task": "T006",
+  "artifact": "chrome-cleanup",
+  "userDataDir": "/tmp/t005-serving-chrome",
+  "rule": "T008 discipline: a scratch user-data-dir per capture session, killed after, with the surviving-process count READ rather than assumed and recorded as a number.",
+  "statement": "One row per capture session, appended by the instrument at the moment it killed its own scratch Chrome. pgrep is run AFTER the kill and its line count is the number recorded; zero is the only clean value and a non-zero value is recorded rather than retried away.",
+  "sessions": [
+    {
+      "session": "campaign-frames",
+      "at": "2026-08-22T11:39:47.833Z",
+      "vsyncMode": "vsync-on",
+      "survivingChromeProcessCount": 0
+    }
+  ]
+}

@@ -37,6 +37,21 @@ export const SERVING_RELEASE_IDS = [
   "manhattan-northern-manhattan-cells-20260812-s2",
 ];
 
+/**
+ * Releases the COMMITTED harnesses pin, which are NOT the six the campaign is
+ * about. Added after the frames harness aborted six minutes into a run: its G1
+ * known-count scene opts into manhattan-exterior-cells-20260811-v3-s1, the
+ * single-LOD era release, and the journeys CLI names the midtown -s1. Neither
+ * was staged, so the SPA fallback answered and exterior never activated. The
+ * campaign's own subject is the -s2 set; these are vehicle dependencies, and
+ * checking them here turns a six-minute timeout into a one-second refusal.
+ */
+export const HARNESS_REQUIRED_RELEASE_IDS = [
+  "manhattan-exterior-cells-20260811-v3-s1",
+  "manhattan-midtown-core-cells-20260811-v3-s1",
+  "manhattan-citywide-20260804",
+];
+
 /** Digests the pre-registration pinned. Restated here so drift is loud. */
 export const PINNED = {
   farTierPayloadInventory: "cf8e26480eecc91f2e7b473d217a0d3551d0be59b4d8da39ee1217a6e0538f0a",
@@ -114,6 +129,21 @@ async function run() {
     }
   }
   checks.push(check("staged-serving-bytes", badFiles.length === 0, badFiles.length === 0 ? `${filesChecked} files re-verified` : badFiles.slice(0, 10).join("; ")));
+
+  // ---- 3b. RELEASES THE COMMITTED HARNESSES REQUIRE.
+  const harnessMissing = [];
+  for (const releaseId of HARNESS_REQUIRED_RELEASE_IDS) {
+    const dir = join(repositoryRoot, "public", "data", releaseId);
+    if (!existsSync(dir)) { harnessMissing.push(`${releaseId}: not staged`); continue; }
+    // Different package families name their manifest differently: the serving
+    // releases carry index.json, the citywide base carries manifest.json. The
+    // check is "this package has a manifest", not "it has the one filename I
+    // happened to think of first".
+    const manifests = ["index.json", "manifest.json", "release.json"];
+    if (!manifests.some((name) => existsSync(join(dir, name)))) harnessMissing.push(`${releaseId}: no manifest on disk`);
+  }
+  checks.push(check("harness-required-releases-staged", harnessMissing.length === 0,
+    harnessMissing.length === 0 ? `${HARNESS_REQUIRED_RELEASE_IDS.length} vehicle dependencies present` : harnessMissing.join("; ")));
 
   // ---- 4. FAR-TIER PAYLOAD AND RECORDS.
   const farInventory = join(repositoryRoot, "public", "far-tier", "payload-inventory.json");

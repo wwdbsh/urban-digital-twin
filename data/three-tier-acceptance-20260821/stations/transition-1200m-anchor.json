@@ -1,0 +1,105 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "three-tier-acceptance-20260821:station:transition-1200m-anchor",
+  "task": "T007",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION.",
+  "station": "transition-1200m-anchor",
+  "tierComposition": {
+    "farTierAttributesPresent": true,
+    "farTierArmed": true,
+    "farTierDrawnCells": 838,
+    "farTierDeclaredCells": 840,
+    "farTierNearCells": 1,
+    "farTierPresent": true,
+    "exteriorResidentCells": 8,
+    "exteriorPresent": true,
+    "massingActive": 0,
+    "massingSuppressible": 0,
+    "massingCovered": 0,
+    "massingUncovered": 0,
+    "publishSeq": 5,
+    "tiersObserved": [
+      "exterior-wave",
+      "far-tier"
+    ],
+    "unreadable": []
+  },
+  "frames": {
+    "done": true,
+    "count": 11,
+    "p50": 1001.5999999999985,
+    "p95": 1008.2999999999956,
+    "p99": 1008.2999999999956,
+    "min": 1000,
+    "max": 1008.2999999999956
+  },
+  "f1": {
+    "verdict": "NOT-CAPTURED",
+    "reason": "11 deltas, below the registered minimum of 600"
+  },
+  "raw": {
+    "frames": {
+      "done": true,
+      "count": 11,
+      "p50": 1001.5999999999985,
+      "p95": 1008.2999999999956,
+      "p99": 1008.2999999999956,
+      "min": 1000,
+      "max": 1008.2999999999956
+    },
+    "state": {
+      "farTierViewport": {
+        "farTierMassingActive": "0",
+        "farTierMassingSuppressible": "0",
+        "farTierMassingCovered": "0",
+        "farTierMassingUncovered": "0",
+        "farTierMassingUncoveredHidden": "0",
+        "farTierMassingUncoveredDesired": "0",
+        "farTierMassingUncoveredNotDesired": "0",
+        "farTierPublishSeq": "5",
+        "farTierPassUncovered": "0",
+        "farTierPassDrawn": "838",
+        "farTierPublishDrawn": "838",
+        "farTierDesiredCovered": "11705",
+        "farTierAppliedCovered": "0"
+      },
+      "farTierStatus": {
+        "farTierDeclared": "840",
+        "farTierDrawn": "838",
+        "farTierNear": "1",
+        "farTierNotDeclared": "1",
+        "farTierAbsent": "0",
+        "farTierChecksumMismatch": "0",
+        "farTierBuildFailure": "0",
+        "farTierOverBudget": "0"
+      },
+      "schedulerDecision": {
+        "residentCount": 8,
+        "visibleCount": 587,
+        "deferredCount": 579,
+        "retainedCount": 0,
+        "heightBucket": 1200
+      },
+      "exteriorStreamingActive": true,
+      "canvas": {
+        "cssX": 92,
+        "cssY": 60,
+        "cssWidth": 1005,
+        "cssHeight": 790
+      },
+      "devicePixelRatio": 2,
+      "windowInner": {
+        "width": 1097,
+        "height": 894
+      },
+      "resourceCount": 2598,
+      "resourceBufferAtCap": true,
+      "glbCount": 1561,
+      "farTierGlbCount": 838,
+      "lod0Count": 3,
+      "lod1Count": 720
+    }
+  },
+  "stillSha256": null
+}
