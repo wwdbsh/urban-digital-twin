@@ -1,0 +1,135 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "three-tier-acceptance-20260821:journeys-analysis",
+  "task": "T007",
+  "phase": "3",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION.",
+  "boundTo": {
+    "harnessRecord": "journeys.json",
+    "harnessRecordSha256": "052c878896962b381c29b206dd7d9ad362b18595a01e679a7b1e426f1681a5fa",
+    "comparedAgainst": "data/exterior-acceptance-20260817/journeys.json (FROZEN T006 baseline, read only, never written)",
+    "attemptCount": 2
+  },
+  "outRedirection": "Every run passed --out=three-tier-acceptance-20260821. The CLI's --out DEFAULTS to the frozen T006 root, so omitting it would have overwritten the baseline this analysis compares against. The frozen record's checksum is re-verified by the pre-flight at both ends of the campaign.",
+  "armsCross": {
+    "registered": "farTier on/off x exteriorScheduler on/off for J1-J7.",
+    "whatTheCommittedCliCanExpress": "exteriorStreaming=off and exteriorScheduler=off only. It has NO far-tier flag, which is the same far-tier blindness the pre-registration named when it required a new harness. The far-tier half of the cross is therefore answered by DOM reading, exactly as pre-registered, rather than by pretending the CLI covered it.",
+    "doesSchedulerOffDisarmTheFarTier": "ANSWERED BY READING, not assumed: no. At the J2 pose with farTier=off the far-tier status element is absent entirely (farTierDrawn null), while the exterior scheduler continues to resolve cells. The two are independent switches.",
+    "offArmIsTheUnmeasuredThirdConfiguration": "Restated from T005: FAR_TIER_DEFAULT_ON=false restores the pre-HLOD composition but NOT the raised ceilings or the swapped pin, so any far-tier-off reading is a reading of a third configuration nobody has characterised."
+  },
+  "journeys": [
+    {
+      "journeyId": "cold-default-six-wave",
+      "verdict": "FAIL-INSTRUMENT-SCOPE",
+      "harnessPass": false,
+      "measured": {
+        "activeWaveCount": 6,
+        "activeWaveIds": [
+          "manhattan-central-upper-manhattan-cells-20260812-s2",
+          "manhattan-exterior-cells-20260811-v3-s2",
+          "manhattan-lower-manhattan-cells-20260812-s2",
+          "manhattan-midtown-core-cells-20260811-v3-s2",
+          "manhattan-northern-manhattan-cells-20260812-s2",
+          "manhattan-southern-remainder-cells-20260812-s2"
+        ],
+        "bootDocumentTotal": 0
+      },
+      "frozenBaseline": {
+        "activeWaveIds": [
+          "manhattan-central-upper-manhattan-cells-20260812-s1",
+          "manhattan-exterior-cells-20260811-v3-s1",
+          "manhattan-lower-manhattan-cells-20260812-s1",
+          "manhattan-midtown-core-cells-20260811-v3-s1",
+          "manhattan-northern-manhattan-cells-20260812-s1",
+          "manhattan-southern-remainder-cells-20260812-s1"
+        ],
+        "bootDocumentTotal": 18,
+        "pass": true
+      },
+      "attribution": "INSTRUMENT SCOPE, PROVED FROM THE HARNESS'S OWN DATA. Line 346 filters boot documents to releases whose id ends in -s1. The frozen baseline's six active waves ARE -s1 and it counted 18 boot documents (6 x 3). The shipped default now activates the six -s2 waves -- the harness's own activeWaveIds says so -- so the filter matches nothing and the total is 0. The substantive half of the claim HOLDS: six promoted waves active, 883 cells declared, no exterior parameter in the URL. The boot-document half is asking about a release generation the default no longer serves.",
+      "falsifiedHypothesis": "I first suspected a warm Chrome profile: the CLI uses a machine-global scratch path, /tmp/t006-journeys-chrome, created 17 August by the T006 campaign. I cleared it and re-ran. The result was identical, so that hypothesis is FALSIFIED and is recorded rather than quietly dropped.",
+      "disposition": "Not a product failure. Named for T008: J1's boot-document filter is pinned to the -s1 era."
+    },
+    {
+      "journeyId": "search-select-details",
+      "verdict": "FAIL",
+      "harnessPass": false,
+      "measured": {
+        "query": "doitt:100022",
+        "searchResultCount": 1,
+        "presentRows": [
+          "Uncertainty"
+        ],
+        "missingRows": [
+          "Cell / release",
+          "Active asset",
+          "Truth tiers"
+        ],
+        "panelStatement": "A verified exterior asset ships for this building, but its cell is not streamed at this camera yet. Move closer to load it."
+      },
+      "frozenBaseline": {
+        "query": "doitt:100022",
+        "presentRows": [
+          "Cell / release",
+          "Active asset",
+          "Truth tiers",
+          "Uncertainty"
+        ],
+        "missingRows": [],
+        "pass": true
+      },
+      "attribution": "A REAL BEHAVIOURAL DIFFERENCE, NOT AN INSTRUMENT ARTIFACT. Same query (doitt:100022), same pose, same single search result. The frozen baseline carried all four rows -- Cell / release, Active asset, Truth tiers, Uncertainty. The shipped default carries one. The panel is HONEST about why: 'A verified exterior asset ships for this building, but its cell is not streamed at this camera yet. Move closer to load it.' It states what is unavailable rather than silently drawing less, which is the property J5 independently passes on.",
+      "isolation": "NOT THE FAR TIER. Re-run at the same pose with farTier=off -- far-tier status element absent, farTierDrawn null -- the panel still shows 1 of 4 rows and the same not-streamed notice. The cause is the -s1 to -s2 two-LOD serving promotion changing which cells are resident at that camera, NOT the far tier this campaign was convened to accept.",
+      "disposition": "RECORDED FAIL with a named T008 disposition. Fixes are out of scope here. The user-visible consequence: a searched building at that camera no longer shows its cell/release, active asset or truth-tier rows."
+    },
+    {
+      "journeyId": "block835-opt-in",
+      "verdict": "PASS",
+      "detail": [
+        "manhattan-exterior-cells-20260811-v3"
+      ]
+    },
+    {
+      "journeyId": "deep-link-identity",
+      "verdict": "PASS",
+      "detail": "round trip true, panel digests match"
+    },
+    {
+      "journeyId": "streaming-off-honesty",
+      "verdict": "PASS",
+      "j5RuleForThreeTiers": "As pre-registered, J5's differ-by-checksum rule was restated for a three-tier scene: the composition present in each arm is stated before checksums are compared. With streaming off the app STATES what is unavailable in words and the still differs by checksum from the default arm. It passes on the shipped three-tier default.",
+      "detail": {
+        "statements": null,
+        "differs": true
+      }
+    },
+    {
+      "journeyId": "eviction-identity-cross-reference",
+      "verdict": "NOT-CAPTURED",
+      "reason": "J6 takes no measurement of its own: it reads eviction-loop.json, which is produced by the serving CLI's campaign-eviction subcommand. That subcommand was not run in this campaign, so J6 has nothing to cross-reference. Recorded as NOT-CAPTURED rather than as a pass or a failure."
+    },
+    {
+      "journeyId": "refused-parent-honesty-j7",
+      "verdict": "NOT-CAPTURED",
+      "reason": "J7 runs as a separate --journey=j7 invocation and was not reached before the heap phase claimed the vehicle. Disclosed rather than omitted."
+    }
+  ],
+  "summary": {
+    "pass": 3,
+    "failProduct": 1,
+    "failInstrumentScope": 1,
+    "notCaptured": 2,
+    "of": 7
+  },
+  "attemptDisclosure": {
+    "attemptCount": 2,
+    "attempt1": "Completed. Same verdicts.",
+    "attempt2": "Re-run with the machine-global Chrome profile cleared, to test the warm-cache hypothesis for J1. Identical results; hypothesis falsified. Both runs are disclosed; neither changed a bar."
+  },
+  "nonClaims": [
+    "Three journeys passing is not visual acceptance.",
+    "The J2 FAIL is one building at one pose; it is not a measurement of how many buildings are affected.",
+    "The frozen T006 baseline was read only and never written; its checksum is verified at both ends of this campaign."
+  ]
+}
