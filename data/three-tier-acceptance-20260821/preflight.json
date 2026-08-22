@@ -8,7 +8,7 @@
   "verdict": "PASS",
   "rule": "FAIL CLOSED. Any unmet condition aborts the campaign rather than degrading it. There is no partial pass.",
   "whyThisExists": "T005 shipped two promotion sweeps whose vehicle was missing the entire exterior wave tier, because the server answered every absent package with index.html and nothing checked. A campaign that quietly measures two tiers and reports three is worse than one that refuses to start.",
-  "worktreeHead": "731dc3868d7c71e3b253e8a91b0b3aa38abad46d",
+  "worktreeHead": "6281cdcedb35af66ea76cb2f642f7f62be730507",
   "base": "http://127.0.0.1:4173",
   "hardwareAtCapture": {
     "note": "The committed pre-registration recorded this machine on BATTERY and made AC power a pre-flight condition. That record is NOT edited -- a pre-registration that changes after the fact is not one. The capture-time state is recorded HERE instead.",
@@ -20,10 +20,10 @@
     "power": {
       "source": "AC Power",
       "onAcPower": true,
-      "chargePercent": 95,
+      "chargePercent": 98,
       "adapterWatts": 68,
       "thermalWarningRecorded": "unknown",
-      "raw": "Now drawing from 'AC Power' |  -InternalBattery-0 (id=6946915)\t95%; charging; 0:37 remaining present: true"
+      "raw": "Now drawing from 'AC Power' |  -InternalBattery-0 (id=6946915)\t98%; charging; 0:17 remaining present: true"
     },
     "oneMachineOneSession": "Every timing verdict from this campaign is one machine, one session. Not a distribution, no confidence interval, does not generalise."
   },
@@ -31,7 +31,7 @@
     {
       "id": "worktree-clean",
       "ok": true,
-      "detail": "clean at 731dc3868d7c71e3b253e8a91b0b3aa38abad46d"
+      "detail": "clean at 6281cdcedb35af66ea76cb2f642f7f62be730507"
     },
     {
       "id": "pre-registration-unedited",
@@ -44,9 +44,9 @@
       "detail": "93564 files re-verified"
     },
     {
-      "id": "harness-required-releases-staged",
+      "id": "harness-required-releases-served",
       "ok": true,
-      "detail": "3 vehicle dependencies present"
+      "detail": "7 vehicle dependencies answered real manifests"
     },
     {
       "id": "far-tier-payload-inventory",
@@ -91,7 +91,7 @@
     {
       "id": "ac-power",
       "ok": true,
-      "detail": "AC Power 68W 95%"
+      "detail": "AC Power 68W 98%"
     }
   ],
   "manifests": [

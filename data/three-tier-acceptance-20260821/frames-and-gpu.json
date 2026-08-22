@@ -1,0 +1,2384 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "exterior-acceptance-20260817:frames-and-gpu",
+  "task": "T006",
+  "artifact": "frames-and-gpu",
+  "capturedAt": "2026-08-22T12:02:17.671Z",
+  "attemptCount": 3,
+  "attemptPolicy": "SINGLE attempt per capture. attemptCount is recorded on every record. A capture is repeated ONLY for a NAMED instrument failure (a pre-flight abort, an M2 activeRequests violation, a pose-landing failure, a probe that never mounted), never because a reading looked wrong. The name of the failure is recorded with the attempt.",
+  "vsyncMode": "vsync-on",
+  "chromeLaunchCommand": "open -na \"Google Chrome\" --args --remote-debugging-port=9224 --user-data-dir=/tmp/t005-serving-chrome --no-first-run --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding",
+  "chromeDiscipline": "T008 discipline: a scratch user-data-dir per capture session, killed after, with the surviving-process count READ rather than assumed and recorded as a number.",
+  "browser": "Chrome/151.0.7922.172",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "deviceScaleFactor": 1
+  },
+  "base": "http://127.0.0.1:4173/",
+  "servedBundle": {
+    "previewBase": "http://127.0.0.1:4173/",
+    "indexHtmlChecksumSha256": "a9d167157e5a653f0fa97eba3072b67f214fa06a426a284f6a8fdcf7727647ff",
+    "localDistIndexHtmlChecksumSha256": "a9d167157e5a653f0fa97eba3072b67f214fa06a426a284f6a8fdcf7727647ff",
+    "matchesLocalDist": true,
+    "entryScriptCount": 1,
+    "assets": [
+      {
+        "ref": "/assets/index-CGAuZ-c1.js",
+        "byteSize": 5852913,
+        "sha256": "f0d559e5894faedb3e0c8608ea4be010fe50bd95e0789aa62e8438bad5d0dd13"
+      }
+    ],
+    "probeMarkers": {
+      "scheduler": "data-exterior-scheduler-probe",
+      "citywideOverview": "data-citywide-overview-probe",
+      "texture": "data-exterior-texture-probe"
+    },
+    "probeMarkersPresent": {
+      "scheduler": true,
+      "citywideOverview": true,
+      "texture": true
+    },
+    "probeBuildCommand": "VITE_EXTERIOR_SCHEDULER_PROBE=1 VITE_CITYWIDE_OVERVIEW_PROBE=1 VITE_EXTERIOR_TEXTURE_PROBE=1 pnpm build",
+    "statement": "Checked BEFORE Chrome is launched, and fail-closed on both limbs: the served index.html is byte-identical to this worktree's dist/index.html, and the served entry scripts literally contain all three probe attribute markers. The second limb exists because a probe-less bundle does not fail loudly; it reads null and produces a record full of absences."
+  },
+  "preRegistration": "data/exterior-acceptance-20260817/pre-registration.json",
+  "harnessDisclosure": "The bundle carries VITE_EXTERIOR_SCHEDULER_PROBE=1 VITE_CITYWIDE_OVERVIEW_PROBE=1 VITE_EXTERIOR_TEXTURE_PROBE=1, verified by reading the three attribute markers out of the SERVED bytes before Chrome was launched. The probes read state the app already holds and decide nothing. Chrome runs with --disable-backgrounding-occluded-windows and --disable-renderer-backgrounding because requestAnimationFrame is suspended in an occluded window; they stop the browser deciding not to render at all. Frame durations are requestAnimationFrame deltas and the first delta of each window is dropped because it spans the gap since the previous paint rather than a rendered frame.",
+  "stations": [
+    {
+      "stationId": "overview-52km-island",
+      "role": "nadir island overview; maximum-residency pose in the campaign",
+      "pose": {
+        "lon": -73.9712,
+        "lat": 40.7831,
+        "height": 52000,
+        "heading": 0,
+        "pitch": -90,
+        "roll": 0
+      },
+      "url": "http://127.0.0.1:4173/?data=real-pilot&release=manhattan-citywide-20260804&view=free&lon=-73.971200&lat=40.783100&height=52000.000000&heading=0.000000&pitch=-90.000000&roll=0.000000",
+      "landing": {
+        "dispatchCount": 12,
+        "footprintSignature": null,
+        "landed": false
+      },
+      "settleMs": 45000,
+      "windowMs": 12000,
+      "frame": {
+        "sampleCount": 621,
+        "p50Ms": 16.8,
+        "p95Ms": 25.2,
+        "p99Ms": 26.4,
+        "maxMs": 27
+      },
+      "frameMsHead": [
+        16,
+        25.6,
+        16.7,
+        16.7,
+        17,
+        24.6,
+        16.7,
+        15.6
+      ],
+      "decision": {
+        "hold": "none",
+        "visibleCount": 883,
+        "deferredCount": 875,
+        "retainedCount": 0,
+        "residentCount": 8,
+        "reserved": [
+          "manhattan-exterior-cell-w04-000584-17-38603-35838"
+        ],
+        "decisionIndex": 6,
+        "footprintSignature": "-74.328378:40.623001:-73.614553:40.942802:-73.971466:40.782902",
+        "heightBucket": 52000,
+        "residentUnitIds": [
+          "manhattan-exterior-cell-w04-000465-16-19301-17920",
+          "manhattan-exterior-cell-w04-000466-16-19302-17920",
+          "manhattan-exterior-cell-w04-000580-17-38603-35837",
+          "manhattan-exterior-cell-w04-000583-17-38602-35838",
+          "manhattan-exterior-cell-w04-000584-17-38603-35838",
+          "manhattan-exterior-cell-w04-000587-17-38602-35839",
+          "manhattan-exterior-cell-w04-000588-17-38603-35839",
+          "manhattan-exterior-cell-w04-000589-15-9651-8959"
+        ],
+        "distanceMetersByUnitId": [
+          [
+            "manhattan-exterior-cell-w04-000584-17-38603-35838",
+            0
+          ],
+          [
+            "manhattan-exterior-cell-w04-000588-17-38603-35839",
+            0
+          ],
+          [
+            "manhattan-exterior-cell-w04-000589-15-9651-8959",
+            23.677275415245777
+          ],
+          [
+            "manhattan-exterior-cell-w04-000580-17-38603-35837",
+            112.06506867394722
+          ],
+          [
+            "manhattan-exterior-cell-w04-000465-16-19301-17920",
+            125.48576963903578
+          ],
+          [
+            "manhattan-exterior-cell-w04-000587-17-38602-35839",
+            147.02454009063345
+          ],
+          [
+            "manhattan-exterior-cell-w04-000583-17-38602-35838",
+            167.86533731127946
+          ],
+          [
+            "manhattan-exterior-cell-w04-000466-16-19302-17920",
+            188.55268705336223
+          ]
+        ]
+      },
+      "waves": [
+        {
+          "releaseId": "manhattan-exterior-cells-20260811-v3-s2",
+          "declaredCellCount": 1,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 1,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-midtown-core-cells-20260811-v3-s2",
+          "declaredCellCount": 149,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 149,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-lower-manhattan-cells-20260812-s2",
+          "declaredCellCount": 126,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 126,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-southern-remainder-cells-20260812-s2",
+          "declaredCellCount": 176,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 176,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-central-upper-manhattan-cells-20260812-s2",
+          "declaredCellCount": 249,
+          "scheduledCellCount": 8,
+          "deferredCellCount": 241,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-northern-manhattan-cells-20260812-s2",
+          "declaredCellCount": 182,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 182,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        }
+      ],
+      "residentWaveCount": 1,
+      "sharedCache": {
+        "cacheEntries": 451,
+        "cachedBytes": 25729636,
+        "cacheEvictions": 0,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 0,
+        "loadedArtifactCount": 0,
+        "releasedArtifactCount": 0,
+        "releasedArtifactBytes": 0,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s2",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "sharedCacheBeforeWindow": {
+        "cacheEntries": 451,
+        "cachedBytes": 25729636,
+        "cacheEvictions": 0,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 0,
+        "loadedArtifactCount": 0,
+        "releasedArtifactCount": 0,
+        "releasedArtifactBytes": 0,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s2",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "texture": {
+        "cesiumVersion": "1.143.0",
+        "exteriorReleaseIds": [
+          "manhattan-exterior-cells-20260811-v3-s2",
+          "manhattan-midtown-core-cells-20260811-v3-s2",
+          "manhattan-lower-manhattan-cells-20260812-s2",
+          "manhattan-southern-remainder-cells-20260812-s2",
+          "manhattan-central-upper-manhattan-cells-20260812-s2",
+          "manhattan-northern-manhattan-cells-20260812-s2"
+        ],
+        "exteriorStreamingActive": true,
+        "residentAssetCount": 431,
+        "reading": {
+          "texturesByteLength": 283552146,
+          "geometryByteLength": 108098464,
+          "resourceCacheEntryCount": 14813
+        }
+      },
+      "classTileUrlCount": 4,
+      "denseMetrics": {
+        "featureCount": 54416,
+        "primitiveCount": 30,
+        "instanceCount": 54847,
+        "buildingFeatureCount": 42778,
+        "pointFeatureCount": 11638,
+        "denseSuppressedInstanceCount": 431,
+        "planBuildCount": 2,
+        "planReuseCount": 8,
+        "planCancellationCount": 0,
+        "planSwapCount": 2,
+        "planSuppressionUpdateCount": 1,
+        "planSuppressionFlipCount": 431,
+        "pendingLayerAddedAt": 3627.600000023842,
+        "doubleDrawOpenedAt": 3627.600000023842,
+        "previousLayerRemovedAt": 9792.800000071526,
+        "doubleDrawMs": 6165.200000047684,
+        "planFingerprint": "54416:64dffc90",
+        "selectionMs": 140.20000004768372,
+        "keyMs": 44.10000002384186,
+        "allocationMs": 119.79999995231628,
+        "allocationMaxSliceMs": 8.899999976158142,
+        "allocationChunkCount": 458,
+        "workerReadyMs": 2354.2000000476837,
+        "totalBuildMs": 6165.200000047684,
+        "baseFeatureCount": 54847,
+        "contextFeatureCount": 0,
+        "contextPartCount": 0,
+        "exteriorSuppressedFeatureCount": 431
+      },
+      "denseSampleCount": 3,
+      "denseSamplesWithDoubleDraw": [],
+      "performanceMetricsDelta": {
+        "AdSubframes": 0,
+        "ArrayBufferContents": 0,
+        "AudioHandlers": 0,
+        "AudioWorkletProcessors": 0,
+        "ContextLifecycleStateObservers": 0,
+        "DetachedScriptStates": 0,
+        "DevToolsCommandDuration": 0.000156,
+        "Documents": 0,
+        "DomContentLoaded": 0,
+        "FirstMeaningfulPaint": 0,
+        "Frames": 0,
+        "JSEventListeners": 0,
+        "JSHeapTotalSize": 0,
+        "JSHeapUsedSize": 2898976,
+        "LayoutCount": 0,
+        "LayoutDuration": 0,
+        "LayoutObjects": 0,
+        "MediaKeySessions": 0,
+        "MediaKeys": 0,
+        "NavigationStart": 0,
+        "Nodes": 0,
+        "ProcessTime": 12.509053,
+        "RTCPeerConnections": 0,
+        "RecalcStyleCount": 0,
+        "RecalcStyleDuration": 0,
+        "ResourceFetchers": 0,
+        "Resources": 0,
+        "ScriptDuration": 11.932615,
+        "TaskDuration": 12.024134,
+        "TaskOtherDuration": 0.091363,
+        "ThreadTime": 11.99517,
+        "Timestamp": 12.044796,
+        "UACSSResources": 0,
+        "V8CompileDuration": 0,
+        "V8PerContextDatas": 0,
+        "WorkerGlobalScopes": 0
+      },
+      "notices": {
+        "present": true,
+        "items": [
+          "875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s2: 1 exterior cell is not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-midtown-core-cells-20260811-v3-s2: 149 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s2: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s2: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s2: 241 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s2: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-exterior-cells-20260811-v3-s2: 1 exterior cell is not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-midtown-core-cells-20260811-v3-s2: 149 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-lower-manhattan-cells-20260812-s2: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-southern-remainder-cells-20260812-s2: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-central-upper-manhattan-cells-20260812-s2: 241 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-northern-manhattan-cells-20260812-s2: 182 exterior cells are not loaded for this camera; they load when the camera reaches them."
+        ],
+        "text": "Exterior streaming fallback Dismiss875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s2: 1 exterior cell is not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-midtown-core-cells-20260811-v3-s2: 149 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s2: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s2: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s2: 241 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s2: 182 exterior cells are not loaded for this camera; they load when the camera reaches them."
+      },
+      "still": {
+        "file": "captures/overview-52km-island.png",
+        "byteSize": 310201,
+        "sha256": "8ce67891fa2c78d24fb347d1eb8a9c5ff6bcbddecd85fa3b9871ac2eeab12350"
+      }
+    },
+    {
+      "stationId": "overview-2400m-anchor",
+      "role": "outer scheduler band edge",
+      "pose": {
+        "lon": -73.98636,
+        "lat": 40.748775,
+        "height": 2400,
+        "heading": 45,
+        "pitch": -50,
+        "roll": 0
+      },
+      "url": "http://127.0.0.1:4173/?data=real-pilot&release=manhattan-citywide-20260804&view=free&lon=-73.986360&lat=40.748775&height=2400.000000&heading=45.000000&pitch=-50.000000&roll=0.000000",
+      "landing": {
+        "dispatchCount": 1,
+        "footprintSignature": "-73.990342:40.745759:-73.931918:40.790197:-73.961130:40.767978"
+      },
+      "settleMs": 45000,
+      "windowMs": 12000,
+      "frame": {
+        "sampleCount": 897,
+        "p50Ms": 15.9,
+        "p95Ms": 18.2,
+        "p99Ms": 18.5,
+        "maxMs": 18.7
+      },
+      "frameMsHead": [
+        15.8,
+        9.1,
+        15.7,
+        17.7,
+        15,
+        8.4,
+        18.2,
+        8.3
+      ],
+      "decision": {
+        "hold": "none",
+        "visibleCount": 298,
+        "deferredCount": 290,
+        "retainedCount": 0,
+        "residentCount": 8,
+        "reserved": [
+          "manhattan-exterior-cell-w00-000000-block-00835",
+          "manhattan-exterior-cell-w01-000031-17-38598-35863"
+        ],
+        "decisionIndex": 8,
+        "footprintSignature": "-73.990342:40.745759:-73.931918:40.790197:-73.961130:40.767978",
+        "heightBucket": 2400,
+        "residentUnitIds": [
+          "manhattan-exterior-cell-w00-000000-block-00835",
+          "manhattan-exterior-cell-w01-000031-17-38598-35863",
+          "manhattan-exterior-cell-w01-000097-17-38607-35848",
+          "manhattan-exterior-cell-w01-000100-17-38606-35849",
+          "manhattan-exterior-cell-w01-000101-17-38607-35849",
+          "manhattan-exterior-cell-w01-000105-17-38607-35850",
+          "manhattan-exterior-cell-w01-000135-17-38608-35849",
+          "manhattan-exterior-cell-w01-000139-17-38608-35850"
+        ],
+        "distanceMetersByUnitId": [
+          [
+            "manhattan-exterior-cell-w00-000000-block-00835",
+            2806.590330051707
+          ],
+          [
+            "manhattan-exterior-cell-w01-000031-17-38598-35863",
+            2811.3801293052184
+          ],
+          [
+            "manhattan-exterior-cell-w01-000101-17-38607-35849",
+            0
+          ],
+          [
+            "manhattan-exterior-cell-w01-000105-17-38607-35850",
+            33.308224233975345
+          ],
+          [
+            "manhattan-exterior-cell-w01-000097-17-38607-35848",
+            88.12717862857163
+          ],
+          [
+            "manhattan-exterior-cell-w01-000135-17-38608-35849",
+            92.1869099001616
+          ],
+          [
+            "manhattan-exterior-cell-w01-000100-17-38606-35849",
+            95.12439703253516
+          ],
+          [
+            "manhattan-exterior-cell-w01-000139-17-38608-35850",
+            99.84040861132068
+          ]
+        ]
+      },
+      "waves": [
+        {
+          "releaseId": "manhattan-exterior-cells-20260811-v3-s2",
+          "declaredCellCount": 1,
+          "scheduledCellCount": 1,
+          "deferredCellCount": 0,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-midtown-core-cells-20260811-v3-s2",
+          "declaredCellCount": 149,
+          "scheduledCellCount": 7,
+          "deferredCellCount": 142,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-lower-manhattan-cells-20260812-s2",
+          "declaredCellCount": 126,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 126,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-southern-remainder-cells-20260812-s2",
+          "declaredCellCount": 176,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 176,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-central-upper-manhattan-cells-20260812-s2",
+          "declaredCellCount": 249,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 249,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-northern-manhattan-cells-20260812-s2",
+          "declaredCellCount": 182,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 182,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        }
+      ],
+      "residentWaveCount": 2,
+      "sharedCache": {
+        "cacheEntries": 675,
+        "cachedBytes": 58003202,
+        "cacheEvictions": 61,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 16,
+        "loadedArtifactCount": 16,
+        "releasedArtifactCount": 349,
+        "releasedArtifactBytes": 29902936,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s2",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "sharedCacheBeforeWindow": {
+        "cacheEntries": 675,
+        "cachedBytes": 58003202,
+        "cacheEvictions": 61,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 16,
+        "loadedArtifactCount": 16,
+        "releasedArtifactCount": 349,
+        "releasedArtifactBytes": 29902936,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s2",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "texture": {
+        "cesiumVersion": "1.143.0",
+        "exteriorReleaseIds": [
+          "manhattan-exterior-cells-20260811-v3-s2",
+          "manhattan-midtown-core-cells-20260811-v3-s2",
+          "manhattan-lower-manhattan-cells-20260812-s2",
+          "manhattan-southern-remainder-cells-20260812-s2",
+          "manhattan-central-upper-manhattan-cells-20260812-s2",
+          "manhattan-northern-manhattan-cells-20260812-s2"
+        ],
+        "exteriorStreamingActive": true,
+        "residentAssetCount": 269,
+        "reading": {
+          "texturesByteLength": 283989051,
+          "geometryByteLength": 124147560,
+          "resourceCacheEntryCount": 12146
+        }
+      },
+      "classTileUrlCount": 4,
+      "denseMetrics": {
+        "featureCount": 17210,
+        "primitiveCount": 10,
+        "instanceCount": 17479,
+        "buildingFeatureCount": 13164,
+        "pointFeatureCount": 4046,
+        "denseSuppressedInstanceCount": 269,
+        "planBuildCount": 3,
+        "planReuseCount": 13,
+        "planCancellationCount": 0,
+        "planSwapCount": 3,
+        "planSuppressionUpdateCount": 4,
+        "planSuppressionFlipCount": 1131,
+        "pendingLayerAddedAt": 120930.10000002384,
+        "doubleDrawOpenedAt": 120930.10000002384,
+        "previousLayerRemovedAt": 122730,
+        "doubleDrawMs": 1799.8999999761581,
+        "planFingerprint": "17210:39c23f7",
+        "selectionMs": 48.40000009536743,
+        "keyMs": 18.299999952316284,
+        "allocationMs": 33.80000042915344,
+        "allocationMaxSliceMs": 3,
+        "allocationChunkCount": 146,
+        "workerReadyMs": 432.5,
+        "totalBuildMs": 1799.8999999761581,
+        "baseFeatureCount": 17479,
+        "contextFeatureCount": 0,
+        "contextPartCount": 0,
+        "exteriorSuppressedFeatureCount": 269
+      },
+      "denseSampleCount": 8,
+      "denseSamplesWithDoubleDraw": [
+        {
+          "planFingerprint": "17048:3971771d",
+          "totalBuildMs": 6165.200000047684,
+          "doubleDrawMs": 6165.200000047684,
+          "allocationMs": 119.79999995231628,
+          "planBuildCount": 3,
+          "buildingFeatureCount": 42778
+        },
+        {
+          "planFingerprint": "17479:aee6269e",
+          "totalBuildMs": 6165.200000047684,
+          "doubleDrawMs": 6165.200000047684,
+          "allocationMs": 119.79999995231628,
+          "planBuildCount": 3,
+          "buildingFeatureCount": 42778
+        },
+        {
+          "planFingerprint": "17465:ae8eea1a",
+          "totalBuildMs": 6165.200000047684,
+          "doubleDrawMs": 6165.200000047684,
+          "allocationMs": 33.80000042915344,
+          "planBuildCount": 3,
+          "buildingFeatureCount": 13002
+        },
+        {
+          "planFingerprint": "17451:9aefa8ba",
+          "totalBuildMs": 1799.8999999761581,
+          "doubleDrawMs": 1799.8999999761581,
+          "allocationMs": 33.80000042915344,
+          "planBuildCount": 3,
+          "buildingFeatureCount": 13405
+        },
+        {
+          "planFingerprint": "17210:39c23f7",
+          "totalBuildMs": 1799.8999999761581,
+          "doubleDrawMs": 1799.8999999761581,
+          "allocationMs": 33.80000042915344,
+          "planBuildCount": 3,
+          "buildingFeatureCount": 13164
+        }
+      ],
+      "performanceMetricsDelta": {
+        "AdSubframes": 0,
+        "ArrayBufferContents": 0,
+        "AudioHandlers": 0,
+        "AudioWorkletProcessors": 0,
+        "ContextLifecycleStateObservers": 0,
+        "DetachedScriptStates": 0,
+        "DevToolsCommandDuration": 0.000095,
+        "Documents": 0,
+        "DomContentLoaded": 0,
+        "FirstMeaningfulPaint": 0,
+        "Frames": 0,
+        "JSEventListeners": 0,
+        "JSHeapTotalSize": 2097152,
+        "JSHeapUsedSize": 10442528,
+        "LayoutCount": 0,
+        "LayoutDuration": 0,
+        "LayoutObjects": 0,
+        "MediaKeySessions": 0,
+        "MediaKeys": 0,
+        "NavigationStart": 0,
+        "Nodes": 0,
+        "ProcessTime": 12.529955,
+        "RTCPeerConnections": 0,
+        "RecalcStyleCount": 0,
+        "RecalcStyleDuration": 0,
+        "ResourceFetchers": 0,
+        "Resources": 0,
+        "ScriptDuration": 11.856246,
+        "TaskDuration": 11.993903,
+        "TaskOtherDuration": 0.137562,
+        "ThreadTime": 11.999772,
+        "Timestamp": 12.038083,
+        "UACSSResources": 0,
+        "V8CompileDuration": 0,
+        "V8PerContextDatas": 0,
+        "WorkerGlobalScopes": 0
+      },
+      "notices": {
+        "present": true,
+        "items": [
+          "875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-midtown-core-cells-20260811-v3-s2: 142 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s2: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s2: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s2: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s2: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-midtown-core-cells-20260811-v3-s2: 142 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-lower-manhattan-cells-20260812-s2: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-southern-remainder-cells-20260812-s2: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-central-upper-manhattan-cells-20260812-s2: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-northern-manhattan-cells-20260812-s2: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "349 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s2: 349 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.",
+          "Exterior release manhattan-exterior-cells-20260811-v3-s2: 349 exterior artifacts were released to stay within the session cache budget; they reload on re-entry."
+        ],
+        "text": "Exterior streaming fallback Dismiss875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-midtown-core-cells-20260811-v3-s2: 142 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s2: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s2: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s2: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s2: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.349 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s2: 349 exterior artifacts were released to stay within the session cache budget; they reload on re-entry."
+      },
+      "still": {
+        "file": "captures/overview-2400m-anchor.png",
+        "byteSize": 1089119,
+        "sha256": "2e0ce0b1ffbf3367c39e6db20e1d23874a08a44de669b72d4f5af34a22ef6365"
+      }
+    },
+    {
+      "stationId": "transition-1200m-anchor",
+      "role": "inner scheduler band edge; the overview-to-street transition",
+      "pose": {
+        "lon": -73.98636,
+        "lat": 40.748775,
+        "height": 1200,
+        "heading": 45,
+        "pitch": -45,
+        "roll": 0
+      },
+      "url": "http://127.0.0.1:4173/?data=real-pilot&release=manhattan-citywide-20260804&view=free&lon=-73.986360&lat=40.748775&height=1200.000000&heading=45.000000&pitch=-45.000000&roll=0.000000",
+      "landing": {
+        "dispatchCount": 1,
+        "footprintSignature": "-73.987534:40.747889:-73.953469:40.773801:-73.970501:40.760845"
+      },
+      "settleMs": 45000,
+      "windowMs": 12000,
+      "frame": {
+        "sampleCount": 704,
+        "p50Ms": 16.7,
+        "p95Ms": 24.6,
+        "p99Ms": 25.3,
+        "maxMs": 26.6
+      },
+      "frameMsHead": [
+        16.7,
+        16.7,
+        15,
+        18.3,
+        17,
+        16.3,
+        16.7,
+        16.6
+      ],
+      "decision": {
+        "hold": "none",
+        "visibleCount": 141,
+        "deferredCount": 133,
+        "retainedCount": 0,
+        "residentCount": 8,
+        "reserved": [
+          "manhattan-exterior-cell-w00-000000-block-00835",
+          "manhattan-exterior-cell-w01-000031-17-38598-35863"
+        ],
+        "decisionIndex": 10,
+        "footprintSignature": "-73.987534:40.747889:-73.953469:40.773801:-73.970501:40.760845",
+        "heightBucket": 1200,
+        "residentUnitIds": [
+          "manhattan-exterior-cell-w00-000000-block-00835",
+          "manhattan-exterior-cell-w01-000031-17-38598-35863",
+          "manhattan-exterior-cell-w01-000038-16-19301-17928",
+          "manhattan-exterior-cell-w01-000116-16-19301-17926",
+          "manhattan-exterior-cell-w01-000117-17-38604-35853",
+          "manhattan-exterior-cell-w01-000121-17-38604-35854",
+          "manhattan-exterior-cell-w01-000126-16-19301-17927",
+          "manhattan-exterior-cell-w01-000127-17-38604-35855"
+        ],
+        "distanceMetersByUnitId": [
+          [
+            "manhattan-exterior-cell-w00-000000-block-00835",
+            1687.1726749325087
+          ],
+          [
+            "manhattan-exterior-cell-w01-000031-17-38598-35863",
+            1691.9673901957071
+          ],
+          [
+            "manhattan-exterior-cell-w01-000121-17-38604-35854",
+            0
+          ],
+          [
+            "manhattan-exterior-cell-w01-000127-17-38604-35855",
+            9.125546169523785
+          ],
+          [
+            "manhattan-exterior-cell-w01-000126-16-19301-17927",
+            13.3668131080687
+          ],
+          [
+            "manhattan-exterior-cell-w01-000116-16-19301-17926",
+            109.01930521329805
+          ],
+          [
+            "manhattan-exterior-cell-w01-000117-17-38604-35853",
+            114.105242944921
+          ],
+          [
+            "manhattan-exterior-cell-w01-000038-16-19301-17928",
+            147.608867625546
+          ]
+        ]
+      },
+      "waves": [
+        {
+          "releaseId": "manhattan-exterior-cells-20260811-v3-s2",
+          "declaredCellCount": 1,
+          "scheduledCellCount": 1,
+          "deferredCellCount": 0,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-midtown-core-cells-20260811-v3-s2",
+          "declaredCellCount": 149,
+          "scheduledCellCount": 7,
+          "deferredCellCount": 142,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-lower-manhattan-cells-20260812-s2",
+          "declaredCellCount": 126,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 126,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-southern-remainder-cells-20260812-s2",
+          "declaredCellCount": 176,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 176,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-central-upper-manhattan-cells-20260812-s2",
+          "declaredCellCount": 249,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 249,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-northern-manhattan-cells-20260812-s2",
+          "declaredCellCount": 182,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 182,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        }
+      ],
+      "residentWaveCount": 2,
+      "sharedCache": {
+        "cacheEntries": 766,
+        "cachedBytes": 149062204,
+        "cacheEvictions": 61,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 16,
+        "loadedArtifactCount": 16,
+        "releasedArtifactCount": 590,
+        "releasedArtifactBytes": 57248720,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s2",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "sharedCacheBeforeWindow": {
+        "cacheEntries": 766,
+        "cachedBytes": 149062204,
+        "cacheEvictions": 61,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 16,
+        "loadedArtifactCount": 16,
+        "releasedArtifactCount": 590,
+        "releasedArtifactBytes": 57248720,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s2",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "texture": {
+        "cesiumVersion": "1.143.0",
+        "exteriorReleaseIds": [
+          "manhattan-exterior-cells-20260811-v3-s2",
+          "manhattan-midtown-core-cells-20260811-v3-s2",
+          "manhattan-lower-manhattan-cells-20260812-s2",
+          "manhattan-southern-remainder-cells-20260812-s2",
+          "manhattan-central-upper-manhattan-cells-20260812-s2",
+          "manhattan-northern-manhattan-cells-20260812-s2"
+        ],
+        "exteriorStreamingActive": true,
+        "residentAssetCount": 348,
+        "reading": {
+          "texturesByteLength": 283901670,
+          "geometryByteLength": 98831208,
+          "resourceCacheEntryCount": 6323
+        }
+      },
+      "classTileUrlCount": 4,
+      "denseMetrics": {
+        "featureCount": 8138,
+        "primitiveCount": 5,
+        "instanceCount": 8486,
+        "buildingFeatureCount": 5368,
+        "pointFeatureCount": 2770,
+        "denseSuppressedInstanceCount": 348,
+        "planBuildCount": 4,
+        "planReuseCount": 14,
+        "planCancellationCount": 0,
+        "planSwapCount": 4,
+        "planSuppressionUpdateCount": 5,
+        "planSuppressionFlipCount": 1692,
+        "pendingLayerAddedAt": 178824.60000002384,
+        "doubleDrawOpenedAt": 178824.60000002384,
+        "previousLayerRemovedAt": 179725.70000004768,
+        "doubleDrawMs": 901.1000000238419,
+        "planFingerprint": "8138:2867ae0f",
+        "selectionMs": 47.200000047683716,
+        "keyMs": 8.799999952316284,
+        "allocationMs": 16.600000500679016,
+        "allocationMaxSliceMs": 1.8000000715255737,
+        "allocationChunkCount": 71,
+        "workerReadyMs": 203.10000002384186,
+        "totalBuildMs": 901.1000000238419,
+        "baseFeatureCount": 8486,
+        "contextFeatureCount": 0,
+        "contextPartCount": 0,
+        "exteriorSuppressedFeatureCount": 348
+      },
+      "denseSampleCount": 10,
+      "denseSamplesWithDoubleDraw": [
+        {
+          "planFingerprint": "17048:3971771d",
+          "totalBuildMs": 6165.200000047684,
+          "doubleDrawMs": 6165.200000047684,
+          "allocationMs": 119.79999995231628,
+          "planBuildCount": 3,
+          "buildingFeatureCount": 42778
+        },
+        {
+          "planFingerprint": "17479:aee6269e",
+          "totalBuildMs": 6165.200000047684,
+          "doubleDrawMs": 6165.200000047684,
+          "allocationMs": 119.79999995231628,
+          "planBuildCount": 3,
+          "buildingFeatureCount": 42778
+        },
+        {
+          "planFingerprint": "17465:ae8eea1a",
+          "totalBuildMs": 6165.200000047684,
+          "doubleDrawMs": 6165.200000047684,
+          "allocationMs": 33.80000042915344,
+          "planBuildCount": 3,
+          "buildingFeatureCount": 13002
+        },
+        {
+          "planFingerprint": "17451:9aefa8ba",
+          "totalBuildMs": 1799.8999999761581,
+          "doubleDrawMs": 1799.8999999761581,
+          "allocationMs": 33.80000042915344,
+          "planBuildCount": 3,
+          "buildingFeatureCount": 13405
+        },
+        {
+          "planFingerprint": "17210:39c23f7",
+          "totalBuildMs": 1799.8999999761581,
+          "doubleDrawMs": 1799.8999999761581,
+          "allocationMs": 33.80000042915344,
+          "planBuildCount": 3,
+          "buildingFeatureCount": 13164
+        },
+        {
+          "planFingerprint": "8217:4bc0a271",
+          "totalBuildMs": 1799.8999999761581,
+          "doubleDrawMs": 1799.8999999761581,
+          "allocationMs": 33.80000042915344,
+          "planBuildCount": 4,
+          "buildingFeatureCount": 13164
+        },
+        {
+          "planFingerprint": "8138:2867ae0f",
+          "totalBuildMs": 901.1000000238419,
+          "doubleDrawMs": 901.1000000238419,
+          "allocationMs": 16.600000500679016,
+          "planBuildCount": 4,
+          "buildingFeatureCount": 5368
+        }
+      ],
+      "performanceMetricsDelta": {
+        "AdSubframes": 0,
+        "ArrayBufferContents": 0,
+        "AudioHandlers": 0,
+        "AudioWorkletProcessors": 0,
+        "ContextLifecycleStateObservers": 0,
+        "DetachedScriptStates": 0,
+        "DevToolsCommandDuration": 0.000102,
+        "Documents": 0,
+        "DomContentLoaded": 0,
+        "FirstMeaningfulPaint": 0,
+        "Frames": 0,
+        "JSEventListeners": 0,
+        "JSHeapTotalSize": 0,
+        "JSHeapUsedSize": -26937508,
+        "LayoutCount": 0,
+        "LayoutDuration": 0,
+        "LayoutObjects": 0,
+        "MediaKeySessions": 0,
+        "MediaKeys": 0,
+        "NavigationStart": 0,
+        "Nodes": 0,
+        "ProcessTime": 12.598337,
+        "RTCPeerConnections": 0,
+        "RecalcStyleCount": 0,
+        "RecalcStyleDuration": 0,
+        "ResourceFetchers": 0,
+        "Resources": 0,
+        "ScriptDuration": 11.922401,
+        "TaskDuration": 12.021896,
+        "TaskOtherDuration": 0.099393,
+        "ThreadTime": 12.024222,
+        "Timestamp": 12.052019,
+        "UACSSResources": 0,
+        "V8CompileDuration": 0,
+        "V8PerContextDatas": 0,
+        "WorkerGlobalScopes": 0
+      },
+      "notices": {
+        "present": true,
+        "items": [
+          "875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-midtown-core-cells-20260811-v3-s2: 142 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s2: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s2: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s2: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s2: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-midtown-core-cells-20260811-v3-s2: 142 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-lower-manhattan-cells-20260812-s2: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-southern-remainder-cells-20260812-s2: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-central-upper-manhattan-cells-20260812-s2: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-northern-manhattan-cells-20260812-s2: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "590 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s2: 590 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.",
+          "Exterior release manhattan-exterior-cells-20260811-v3-s2: 590 exterior artifacts were released to stay within the session cache budget; they reload on re-entry."
+        ],
+        "text": "Exterior streaming fallback Dismiss875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-midtown-core-cells-20260811-v3-s2: 142 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s2: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s2: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s2: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s2: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.590 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s2: 590 exterior artifacts were released to stay within the session cache budget; they reload on re-entry."
+      },
+      "still": {
+        "file": "captures/transition-1200m-anchor.png",
+        "byteSize": 818896,
+        "sha256": "6fa088a2883be048ca6378fbf5832e50f62d7b6fb574f5ce242a3c1962c6ed80"
+      }
+    },
+    {
+      "stationId": "street-260m-midtown",
+      "role": "street level over the promoted midtown wave",
+      "pose": {
+        "lon": -73.98636,
+        "lat": 40.748775,
+        "height": 260,
+        "heading": 45,
+        "pitch": -25,
+        "roll": 0
+      },
+      "url": "http://127.0.0.1:4173/?data=real-pilot&release=manhattan-citywide-20260804&view=free&lon=-73.986360&lat=40.748775&height=260.000000&heading=45.000000&pitch=-25.000000&roll=0.000000",
+      "landing": {
+        "dispatchCount": 1,
+        "footprintSignature": "-73.985808:40.749197:-73.980360:40.752675:-73.983084:40.750936"
+      },
+      "settleMs": 45000,
+      "windowMs": 12000,
+      "frame": {
+        "sampleCount": 1028,
+        "p50Ms": 9.4,
+        "p95Ms": 17.8,
+        "p99Ms": 18.4,
+        "maxMs": 18.7
+      },
+      "frameMsHead": [
+        7.9,
+        16.8,
+        8.3,
+        16,
+        7.3,
+        10,
+        16.8,
+        15.6
+      ],
+      "decision": {
+        "hold": "none",
+        "visibleCount": 12,
+        "deferredCount": 10,
+        "retainedCount": 0,
+        "residentCount": 8,
+        "reserved": [
+          "manhattan-exterior-cell-w00-000000-block-00835",
+          "manhattan-exterior-cell-w01-000031-17-38598-35863"
+        ],
+        "decisionIndex": 12,
+        "footprintSignature": "-73.985808:40.749197:-73.980360:40.752675:-73.983084:40.750936",
+        "heightBucket": 300,
+        "residentUnitIds": [
+          "manhattan-exterior-cell-w00-000000-block-00835",
+          "manhattan-exterior-cell-w01-000022-17-38599-35861",
+          "manhattan-exterior-cell-w01-000025-17-38598-35862",
+          "manhattan-exterior-cell-w01-000026-17-38599-35862",
+          "manhattan-exterior-cell-w01-000031-17-38598-35863",
+          "manhattan-exterior-cell-w01-000032-17-38599-35863",
+          "manhattan-exterior-cell-w01-000050-16-19300-17930",
+          "manhattan-exterior-cell-w01-000054-17-38600-35862"
+        ],
+        "distanceMetersByUnitId": [
+          [
+            "manhattan-exterior-cell-w00-000000-block-00835",
+            157.82907410648528
+          ],
+          [
+            "manhattan-exterior-cell-w01-000031-17-38598-35863",
+            162.61142129594907
+          ],
+          [
+            "manhattan-exterior-cell-w01-000022-17-38599-35861",
+            0
+          ],
+          [
+            "manhattan-exterior-cell-w01-000026-17-38599-35862",
+            0
+          ],
+          [
+            "manhattan-exterior-cell-w01-000054-17-38600-35862",
+            81.77608319328644
+          ],
+          [
+            "manhattan-exterior-cell-w01-000050-16-19300-17930",
+            86.50555752138946
+          ],
+          [
+            "manhattan-exterior-cell-w01-000025-17-38598-35862",
+            117.19712367430049
+          ],
+          [
+            "manhattan-exterior-cell-w01-000032-17-38599-35863",
+            122.4452489939521
+          ]
+        ]
+      },
+      "waves": [
+        {
+          "releaseId": "manhattan-exterior-cells-20260811-v3-s2",
+          "declaredCellCount": 1,
+          "scheduledCellCount": 1,
+          "deferredCellCount": 0,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-midtown-core-cells-20260811-v3-s2",
+          "declaredCellCount": 149,
+          "scheduledCellCount": 7,
+          "deferredCellCount": 142,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-lower-manhattan-cells-20260812-s2",
+          "declaredCellCount": 126,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 126,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-southern-remainder-cells-20260812-s2",
+          "declaredCellCount": 176,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 176,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-central-upper-manhattan-cells-20260812-s2",
+          "declaredCellCount": 249,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 249,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-northern-manhattan-cells-20260812-s2",
+          "declaredCellCount": 182,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 182,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        }
+      ],
+      "residentWaveCount": 2,
+      "sharedCache": {
+        "cacheEntries": 704,
+        "cachedBytes": 118202541,
+        "cacheEvictions": 92,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 30,
+        "loadedArtifactCount": 30,
+        "releasedArtifactCount": 910,
+        "releasedArtifactBytes": 168676072,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s2",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "sharedCacheBeforeWindow": {
+        "cacheEntries": 704,
+        "cachedBytes": 118202541,
+        "cacheEvictions": 92,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 30,
+        "loadedArtifactCount": 30,
+        "releasedArtifactCount": 910,
+        "releasedArtifactBytes": 168676072,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s2",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "texture": {
+        "cesiumVersion": "1.143.0",
+        "exteriorReleaseIds": [
+          "manhattan-exterior-cells-20260811-v3-s2",
+          "manhattan-midtown-core-cells-20260811-v3-s2",
+          "manhattan-lower-manhattan-cells-20260812-s2",
+          "manhattan-southern-remainder-cells-20260812-s2",
+          "manhattan-central-upper-manhattan-cells-20260812-s2",
+          "manhattan-northern-manhattan-cells-20260812-s2"
+        ],
+        "exteriorStreamingActive": true,
+        "residentAssetCount": 277,
+        "reading": {
+          "texturesByteLength": 252881327,
+          "geometryByteLength": 161569400,
+          "resourceCacheEntryCount": 11955
+        }
+      },
+      "classTileUrlCount": 4,
+      "denseMetrics": {
+        "featureCount": 216,
+        "primitiveCount": 2,
+        "instanceCount": 395,
+        "buildingFeatureCount": 56,
+        "pointFeatureCount": 160,
+        "denseSuppressedInstanceCount": 179,
+        "planBuildCount": 5,
+        "planReuseCount": 18,
+        "planCancellationCount": 0,
+        "planSwapCount": 5,
+        "planSuppressionUpdateCount": 6,
+        "planSuppressionFlipCount": 1866,
+        "pendingLayerAddedAt": 236864.90000009537,
+        "doubleDrawOpenedAt": 236864.90000009537,
+        "previousLayerRemovedAt": 237053.20000004768,
+        "doubleDrawMs": 188.29999995231628,
+        "planFingerprint": "216:37559edb",
+        "selectionMs": 7.700000047683716,
+        "keyMs": 0.20000004768371582,
+        "allocationMs": 1.0999999046325684,
+        "allocationMaxSliceMs": 0.2999999523162842,
+        "allocationChunkCount": 4,
+        "workerReadyMs": 103.70000004768372,
+        "totalBuildMs": 188.29999995231628,
+        "baseFeatureCount": 395,
+        "contextFeatureCount": 0,
+        "contextPartCount": 0,
+        "exteriorSuppressedFeatureCount": 277
+      },
+      "denseSampleCount": 12,
+      "denseSamplesWithDoubleDraw": [
+        {
+          "planFingerprint": "17048:3971771d",
+          "totalBuildMs": 6165.200000047684,
+          "doubleDrawMs": 6165.200000047684,
+          "allocationMs": 119.79999995231628,
+          "planBuildCount": 3,
+          "buildingFeatureCount": 42778
+        },
+        {
+          "planFingerprint": "17479:aee6269e",
+          "totalBuildMs": 6165.200000047684,
+          "doubleDrawMs": 6165.200000047684,
+          "allocationMs": 119.79999995231628,
+          "planBuildCount": 3,
+          "buildingFeatureCount": 42778
+        },
+        {
+          "planFingerprint": "17465:ae8eea1a",
+          "totalBuildMs": 6165.200000047684,
+          "doubleDrawMs": 6165.200000047684,
+          "allocationMs": 33.80000042915344,
+          "planBuildCount": 3,
+          "buildingFeatureCount": 13002
+        },
+        {
+          "planFingerprint": "17451:9aefa8ba",
+          "totalBuildMs": 1799.8999999761581,
+          "doubleDrawMs": 1799.8999999761581,
+          "allocationMs": 33.80000042915344,
+          "planBuildCount": 3,
+          "buildingFeatureCount": 13405
+        },
+        {
+          "planFingerprint": "17210:39c23f7",
+          "totalBuildMs": 1799.8999999761581,
+          "doubleDrawMs": 1799.8999999761581,
+          "allocationMs": 33.80000042915344,
+          "planBuildCount": 3,
+          "buildingFeatureCount": 13164
+        },
+        {
+          "planFingerprint": "8217:4bc0a271",
+          "totalBuildMs": 1799.8999999761581,
+          "doubleDrawMs": 1799.8999999761581,
+          "allocationMs": 33.80000042915344,
+          "planBuildCount": 4,
+          "buildingFeatureCount": 13164
+        },
+        {
+          "planFingerprint": "8138:2867ae0f",
+          "totalBuildMs": 901.1000000238419,
+          "doubleDrawMs": 901.1000000238419,
+          "allocationMs": 16.600000500679016,
+          "planBuildCount": 4,
+          "buildingFeatureCount": 5368
+        },
+        {
+          "planFingerprint": "390:5cdaf0c8",
+          "totalBuildMs": 901.1000000238419,
+          "doubleDrawMs": 901.1000000238419,
+          "allocationMs": 16.600000500679016,
+          "planBuildCount": 5,
+          "buildingFeatureCount": 5368
+        },
+        {
+          "planFingerprint": "216:37559edb",
+          "totalBuildMs": 188.29999995231628,
+          "doubleDrawMs": 188.29999995231628,
+          "allocationMs": 1.0999999046325684,
+          "planBuildCount": 5,
+          "buildingFeatureCount": 56
+        }
+      ],
+      "performanceMetricsDelta": {
+        "AdSubframes": 0,
+        "ArrayBufferContents": 0,
+        "AudioHandlers": 0,
+        "AudioWorkletProcessors": 0,
+        "ContextLifecycleStateObservers": 0,
+        "DetachedScriptStates": 0,
+        "DevToolsCommandDuration": 0.000081,
+        "Documents": 0,
+        "DomContentLoaded": 0,
+        "FirstMeaningfulPaint": 0,
+        "Frames": 0,
+        "JSEventListeners": 0,
+        "JSHeapTotalSize": 2359296,
+        "JSHeapUsedSize": -10537344,
+        "LayoutCount": 0,
+        "LayoutDuration": 0,
+        "LayoutObjects": 0,
+        "MediaKeySessions": 0,
+        "MediaKeys": 0,
+        "NavigationStart": 0,
+        "Nodes": 0,
+        "ProcessTime": 12.353732,
+        "RTCPeerConnections": 0,
+        "RecalcStyleCount": 0,
+        "RecalcStyleDuration": 0,
+        "ResourceFetchers": 0,
+        "Resources": 0,
+        "ScriptDuration": 11.489165,
+        "TaskDuration": 11.689656,
+        "TaskOtherDuration": 0.20041,
+        "ThreadTime": 11.70177,
+        "Timestamp": 12.026024,
+        "UACSSResources": 0,
+        "V8CompileDuration": 0,
+        "V8PerContextDatas": 0,
+        "WorkerGlobalScopes": 0
+      },
+      "notices": {
+        "present": true,
+        "items": [
+          "875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-midtown-core-cells-20260811-v3-s2: 142 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s2: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s2: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s2: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s2: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-midtown-core-cells-20260811-v3-s2: 142 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-lower-manhattan-cells-20260812-s2: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-southern-remainder-cells-20260812-s2: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-central-upper-manhattan-cells-20260812-s2: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-northern-manhattan-cells-20260812-s2: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "910 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s2: 910 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.",
+          "Exterior release manhattan-exterior-cells-20260811-v3-s2: 910 exterior artifacts were released to stay within the session cache budget; they reload on re-entry."
+        ],
+        "text": "Exterior streaming fallback Dismiss875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-midtown-core-cells-20260811-v3-s2: 142 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s2: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s2: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s2: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s2: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.910 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s2: 910 exterior artifacts were released to stay within the session cache budget; they reload on re-entry."
+      },
+      "still": {
+        "file": "captures/street-260m-midtown.png",
+        "byteSize": 913130,
+        "sha256": "647122b0120e88204a19b21a2a49b6e6728d504e7a37b2229f3b026907884710"
+      }
+    },
+    {
+      "stationId": "street-260m-w02-lower",
+      "role": "street level INSIDE served wave w02; a bar that never enters w02 measures the wrong thing",
+      "pose": {
+        "lon": -74.009,
+        "lat": 40.7069,
+        "height": 260,
+        "heading": 45,
+        "pitch": -25,
+        "roll": 0
+      },
+      "url": "http://127.0.0.1:4173/?data=real-pilot&release=manhattan-citywide-20260804&view=free&lon=-74.009000&lat=40.706900&height=260.000000&heading=45.000000&pitch=-25.000000&roll=0.000000",
+      "landing": {
+        "dispatchCount": 1,
+        "footprintSignature": "-74.008449:40.707322:-74.003000:40.710800:-74.005724:40.709061"
+      },
+      "settleMs": 45000,
+      "windowMs": 12000,
+      "frame": {
+        "sampleCount": 1441,
+        "p50Ms": 8.3,
+        "p95Ms": 10.2,
+        "p99Ms": 10.3,
+        "maxMs": 10.4
+      },
+      "frameMsHead": [
+        6.4,
+        8.3,
+        8.3,
+        10.1,
+        8.3,
+        7,
+        9.6,
+        6.8
+      ],
+      "decision": {
+        "hold": "none",
+        "visibleCount": 5,
+        "deferredCount": 5,
+        "retainedCount": 3,
+        "residentCount": 8,
+        "reserved": [
+          "manhattan-exterior-cell-w02-000163-16-19295-17946",
+          "manhattan-exterior-cell-w02-000166-16-19295-17947"
+        ],
+        "decisionIndex": 13,
+        "footprintSignature": "-74.008449:40.707322:-74.003000:40.710800:-74.005724:40.709061",
+        "heightBucket": 300,
+        "residentUnitIds": [
+          "manhattan-exterior-cell-w00-000000-block-00835",
+          "manhattan-exterior-cell-w01-000031-17-38598-35863",
+          "manhattan-exterior-cell-w01-000032-17-38599-35863",
+          "manhattan-exterior-cell-w02-000161-16-19295-17945",
+          "manhattan-exterior-cell-w02-000163-16-19295-17946",
+          "manhattan-exterior-cell-w02-000166-16-19295-17947",
+          "manhattan-exterior-cell-w02-000179-16-19296-17945",
+          "manhattan-exterior-cell-w02-000184-16-19296-17946"
+        ],
+        "distanceMetersByUnitId": [
+          [
+            "manhattan-exterior-cell-w02-000163-16-19295-17946",
+            0
+          ],
+          [
+            "manhattan-exterior-cell-w02-000166-16-19295-17947",
+            200.6128013300283
+          ],
+          [
+            "manhattan-exterior-cell-w02-000161-16-19295-17945",
+            61.81442062470278
+          ],
+          [
+            "manhattan-exterior-cell-w02-000184-16-19296-17946",
+            127.44558817300465
+          ],
+          [
+            "manhattan-exterior-cell-w02-000179-16-19296-17945",
+            166.93003812702986
+          ],
+          [
+            "manhattan-exterior-cell-w00-000000-block-00835",
+            4526.950893909416
+          ],
+          [
+            "manhattan-exterior-cell-w01-000031-17-38598-35863",
+            4605.195384096133
+          ],
+          [
+            "manhattan-exterior-cell-w01-000032-17-38599-35863",
+            4676.042713240429
+          ]
+        ]
+      },
+      "waves": [
+        {
+          "releaseId": "manhattan-exterior-cells-20260811-v3-s2",
+          "declaredCellCount": 1,
+          "scheduledCellCount": 1,
+          "deferredCellCount": 0,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-midtown-core-cells-20260811-v3-s2",
+          "declaredCellCount": 149,
+          "scheduledCellCount": 2,
+          "deferredCellCount": 147,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-lower-manhattan-cells-20260812-s2",
+          "declaredCellCount": 126,
+          "scheduledCellCount": 5,
+          "deferredCellCount": 121,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-southern-remainder-cells-20260812-s2",
+          "declaredCellCount": 176,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 176,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-central-upper-manhattan-cells-20260812-s2",
+          "declaredCellCount": 249,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 249,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        },
+        {
+          "releaseId": "manhattan-northern-manhattan-cells-20260812-s2",
+          "declaredCellCount": 182,
+          "scheduledCellCount": 0,
+          "deferredCellCount": 182,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        }
+      ],
+      "residentWaveCount": 3,
+      "sharedCache": {
+        "cacheEntries": 862,
+        "cachedBytes": 156509895,
+        "cacheEvictions": 92,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 30,
+        "loadedArtifactCount": 30,
+        "releasedArtifactCount": 1135,
+        "releasedArtifactBytes": 229726448,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s2",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "sharedCacheBeforeWindow": {
+        "cacheEntries": 862,
+        "cachedBytes": 156509895,
+        "cacheEvictions": 92,
+        "maxCacheEntries": 1024,
+        "maxCachedBytes": 268435456,
+        "activeRequests": 0,
+        "peakConcurrentRequests": 4,
+        "maxConcurrentRequests": 4,
+        "requestedArtifactCount": 30,
+        "loadedArtifactCount": 30,
+        "releasedArtifactCount": 1135,
+        "releasedArtifactBytes": 229726448,
+        "readFrom": "manhattan-exterior-cells-20260811-v3-s2",
+        "note": "SESSION-WIDE fields read from ONE wave and never summed across waves; see exterior-cell-runtime.ts."
+      },
+      "texture": {
+        "cesiumVersion": "1.143.0",
+        "exteriorReleaseIds": [
+          "manhattan-exterior-cells-20260811-v3-s2",
+          "manhattan-midtown-core-cells-20260811-v3-s2",
+          "manhattan-lower-manhattan-cells-20260812-s2",
+          "manhattan-southern-remainder-cells-20260812-s2",
+          "manhattan-central-upper-manhattan-cells-20260812-s2",
+          "manhattan-northern-manhattan-cells-20260812-s2"
+        ],
+        "exteriorStreamingActive": true,
+        "residentAssetCount": 401,
+        "reading": {
+          "texturesByteLength": 276911169,
+          "geometryByteLength": 102741408,
+          "resourceCacheEntryCount": 7068
+        }
+      },
+      "classTileUrlCount": 4,
+      "denseMetrics": {
+        "featureCount": 0,
+        "primitiveCount": 0,
+        "instanceCount": 0,
+        "buildingFeatureCount": 0,
+        "pointFeatureCount": 0,
+        "denseSuppressedInstanceCount": 0,
+        "planBuildCount": 6,
+        "planReuseCount": 23,
+        "planCancellationCount": 0,
+        "planSwapCount": 6,
+        "planSuppressionUpdateCount": 6,
+        "planSuppressionFlipCount": 1866,
+        "pendingLayerAddedAt": 294688.60000002384,
+        "doubleDrawOpenedAt": 294688.60000002384,
+        "previousLayerRemovedAt": 294717.3000000715,
+        "doubleDrawMs": 28.700000047683716,
+        "planFingerprint": "0:811c9dc5",
+        "selectionMs": 7,
+        "keyMs": 0,
+        "allocationMs": 0,
+        "allocationMaxSliceMs": 0,
+        "allocationChunkCount": 1,
+        "workerReadyMs": 11,
+        "totalBuildMs": 28.700000047683716,
+        "baseFeatureCount": 0,
+        "contextFeatureCount": 0,
+        "contextPartCount": 0,
+        "exteriorSuppressedFeatureCount": 87
+      },
+      "denseSampleCount": 13,
+      "denseSamplesWithDoubleDraw": [
+        {
+          "planFingerprint": "17048:3971771d",
+          "totalBuildMs": 6165.200000047684,
+          "doubleDrawMs": 6165.200000047684,
+          "allocationMs": 119.79999995231628,
+          "planBuildCount": 3,
+          "buildingFeatureCount": 42778
+        },
+        {
+          "planFingerprint": "17479:aee6269e",
+          "totalBuildMs": 6165.200000047684,
+          "doubleDrawMs": 6165.200000047684,
+          "allocationMs": 119.79999995231628,
+          "planBuildCount": 3,
+          "buildingFeatureCount": 42778
+        },
+        {
+          "planFingerprint": "17465:ae8eea1a",
+          "totalBuildMs": 6165.200000047684,
+          "doubleDrawMs": 6165.200000047684,
+          "allocationMs": 33.80000042915344,
+          "planBuildCount": 3,
+          "buildingFeatureCount": 13002
+        },
+        {
+          "planFingerprint": "17451:9aefa8ba",
+          "totalBuildMs": 1799.8999999761581,
+          "doubleDrawMs": 1799.8999999761581,
+          "allocationMs": 33.80000042915344,
+          "planBuildCount": 3,
+          "buildingFeatureCount": 13405
+        },
+        {
+          "planFingerprint": "17210:39c23f7",
+          "totalBuildMs": 1799.8999999761581,
+          "doubleDrawMs": 1799.8999999761581,
+          "allocationMs": 33.80000042915344,
+          "planBuildCount": 3,
+          "buildingFeatureCount": 13164
+        },
+        {
+          "planFingerprint": "8217:4bc0a271",
+          "totalBuildMs": 1799.8999999761581,
+          "doubleDrawMs": 1799.8999999761581,
+          "allocationMs": 33.80000042915344,
+          "planBuildCount": 4,
+          "buildingFeatureCount": 13164
+        },
+        {
+          "planFingerprint": "8138:2867ae0f",
+          "totalBuildMs": 901.1000000238419,
+          "doubleDrawMs": 901.1000000238419,
+          "allocationMs": 16.600000500679016,
+          "planBuildCount": 4,
+          "buildingFeatureCount": 5368
+        },
+        {
+          "planFingerprint": "390:5cdaf0c8",
+          "totalBuildMs": 901.1000000238419,
+          "doubleDrawMs": 901.1000000238419,
+          "allocationMs": 16.600000500679016,
+          "planBuildCount": 5,
+          "buildingFeatureCount": 5368
+        },
+        {
+          "planFingerprint": "216:37559edb",
+          "totalBuildMs": 188.29999995231628,
+          "doubleDrawMs": 188.29999995231628,
+          "allocationMs": 1.0999999046325684,
+          "planBuildCount": 5,
+          "buildingFeatureCount": 56
+        },
+        {
+          "planFingerprint": "0:811c9dc5",
+          "totalBuildMs": 188.29999995231628,
+          "doubleDrawMs": 188.29999995231628,
+          "allocationMs": 1.0999999046325684,
+          "planBuildCount": 6,
+          "buildingFeatureCount": 56
+        }
+      ],
+      "performanceMetricsDelta": {
+        "AdSubframes": 0,
+        "ArrayBufferContents": 0,
+        "AudioHandlers": 0,
+        "AudioWorkletProcessors": 0,
+        "ContextLifecycleStateObservers": 0,
+        "DetachedScriptStates": 0,
+        "DevToolsCommandDuration": 0.000121,
+        "Documents": 0,
+        "DomContentLoaded": 0,
+        "FirstMeaningfulPaint": 0,
+        "Frames": 0,
+        "JSEventListeners": 0,
+        "JSHeapTotalSize": 0,
+        "JSHeapUsedSize": 16356080,
+        "LayoutCount": 0,
+        "LayoutDuration": 0,
+        "LayoutObjects": 0,
+        "MediaKeySessions": 0,
+        "MediaKeys": 0,
+        "NavigationStart": 0,
+        "Nodes": 0,
+        "ProcessTime": 9.051918,
+        "RTCPeerConnections": 0,
+        "RecalcStyleCount": 0,
+        "RecalcStyleDuration": 0,
+        "ResourceFetchers": 0,
+        "Resources": 0,
+        "ScriptDuration": 8.102659,
+        "TaskDuration": 8.365383,
+        "TaskOtherDuration": 0.262603,
+        "ThreadTime": 8.409529,
+        "Timestamp": 12.017568,
+        "UACSSResources": 0,
+        "V8CompileDuration": 0,
+        "V8PerContextDatas": 0,
+        "WorkerGlobalScopes": 0
+      },
+      "notices": {
+        "present": true,
+        "items": [
+          "875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-midtown-core-cells-20260811-v3-s2: 147 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s2: 121 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s2: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s2: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s2: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-midtown-core-cells-20260811-v3-s2: 147 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-lower-manhattan-cells-20260812-s2: 121 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-southern-remainder-cells-20260812-s2: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-central-upper-manhattan-cells-20260812-s2: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-northern-manhattan-cells-20260812-s2: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "1135 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s2: 1135 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.",
+          "Exterior release manhattan-exterior-cells-20260811-v3-s2: 1135 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.",
+          "Exterior geometry for 314 verified buildings is not drawn: the matching base building record is not loaded, so there is no verified WGS84 anchor for it. It will be drawn once that base record loads.Show the 314 building IDsdoitt:10479, doitt:105101, doitt:1064441, doitt:107009, doitt:108179, doitt:109173, doitt:110009, doitt:1105835, doitt:1107962, doitt:1107967, doitt:1107968, doitt:1109927, doitt:1110161, doitt:1110400, doitt:1114709, doitt:1114748, doitt:1117123, doitt:1117168, doitt:1117747, doitt:1117830, doitt:1118676, doitt:114988, doitt:115663, doitt:115982, doitt:119028, doitt:1194347, doitt:120084, doitt:1214511, doitt:1215258, doitt:122706, doitt:1254684, doitt:1255837, doitt:1257097, doitt:1257098, doitt:1262668, doitt:1264524, doitt:1264525, doitt:1264530, doitt:1264531, doitt:1272401, doitt:1281127, doitt:1282656, doitt:1284002, doitt:1286114, doitt:1286710, doitt:1288033, doitt:1288530, doitt:1288531, doitt:1290742, doitt:1290752, doitt:1290756, doitt:1292491, doitt:1296931, doitt:1298488, doitt:1298813, doitt:1300995, doitt:1303988, doitt:1305599, doitt:130591, doitt:133460, doitt:141864, doitt:14301, doitt:145131, doitt:152132, doitt:153292, doitt:15422, doitt:156189, doitt:156567, doitt:157281, doitt:157976, doitt:163071, doitt:164935, doitt:168244, doitt:168795, doitt:171017, doitt:17286, doitt:178642, doitt:178750, doitt:179453, doitt:183810, doitt:191059, doitt:195813, doitt:199175, doitt:204474, doitt:204625, doitt:214630, doitt:215627, doitt:21855, doitt:225204, doitt:225765, doitt:233897, doitt:233956, doitt:236220, doitt:236658, doitt:247224, doitt:2480, doitt:252033, doitt:254194, doitt:255716, doitt:259711, doitt:2653, doitt:26807, doitt:268632, doitt:271276, doitt:271975, doitt:273523, doitt:27805, doitt:282685, doitt:291494, doitt:295522, doitt:296904, doitt:298626, doitt:306377, doitt:312379, doitt:313683, doitt:314602, doitt:327339, doitt:33067, doitt:331171, doitt:331481, doitt:332628, doitt:336352, doitt:33693, doitt:338830, doitt:339803, doitt:345550, doitt:34748, doitt:35774, doitt:361912, doitt:363379, doitt:366263, doitt:368472, doitt:368514, doitt:36890, doitt:375186, doitt:376436, doitt:376977, doitt:379944, doitt:38047, doitt:38618, doitt:393209, doitt:393702, doitt:395427, doitt:395976, doitt:396119, doitt:400003, doitt:400517, doitt:401853, doitt:40319, doitt:407309, doitt:413451, doitt:415535, doitt:416112, doitt:416183, doitt:417076, doitt:417769, doitt:418772, doitt:423164, doitt:42608, doitt:430396, doitt:43091, doitt:433411, doitt:441, doitt:442093, doitt:442630, doitt:446198, doitt:447482, doitt:449100, doitt:452569, doitt:458380, doitt:463091, doitt:463235, doitt:463752, doitt:46608, doitt:466788, doitt:469459, doitt:470295, doitt:473151, doitt:477555, doitt:484155, doitt:485075, doitt:488229, doitt:489953, doitt:490559, doitt:4912, doitt:491490, doitt:491585, doitt:49846, doitt:51009, doitt:512073, doitt:512384, doitt:512620, doitt:512632, doitt:512769, doitt:514330, doitt:515003, doitt:515967, doitt:517287, doitt:517421, doitt:525904, doitt:529760, doitt:537118, doitt:543202, doitt:544160, doitt:544216, doitt:544839, doitt:547650, doitt:54857, doitt:551986, doitt:553840, doitt:554844, doitt:559242, doitt:563686, doitt:564795, doitt:567916, doitt:570728, doitt:571001, doitt:575097, doitt:575623, doitt:585754, doitt:589899, doitt:593867, doitt:59657, doitt:596877, doitt:599596, doitt:606314, doitt:607105, doitt:622128, doitt:623732, doitt:624309, doitt:627314, doitt:632045, doitt:634410, doitt:635851, doitt:637829, doitt:640074, doitt:641650, doitt:644042, doitt:644681, doitt:647316, doitt:64983, doitt:650727, doitt:653459, doitt:658508, doitt:6598, doitt:662269, doitt:662850, doitt:664329, doitt:670392, doitt:671705, doitt:673746, doitt:676703, doitt:677517, doitt:680944, doitt:682317, doitt:685023, doitt:695189, doitt:696501, doitt:698508, doitt:699693, doitt:700577, doitt:702020, doitt:702588, doitt:703179, doitt:704166, doitt:709059, doitt:709987, doitt:711894, doitt:714151, doitt:716631, doitt:717046, doitt:718439, doitt:723319, doitt:72454, doitt:725586, doitt:730863, doitt:733450, doitt:73362, doitt:734118, doitt:734733, doitt:735939, doitt:735994, doitt:739005, doitt:740191, doitt:740308, doitt:746219, doitt:746543, doitt:746846, doitt:747228, doitt:747510, doitt:749040, doitt:749385, doitt:752907, doitt:768551, doitt:770512, doitt:774828, doitt:775375, doitt:777918, doitt:778441, doitt:778618, doitt:778806, doitt:781036, doitt:786392, doitt:787051, doitt:790556, doitt:795161, doitt:798490, doitt:798714, doitt:806724, doitt:80674, doitt:815321, doitt:820081, doitt:824425, doitt:824942"
+        ],
+        "text": "Exterior streaming fallback Dismiss875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-midtown-core-cells-20260811-v3-s2: 147 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s2: 121 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s2: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s2: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s2: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.1135 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Details by releaseExterior release manhattan-exterior-cells-20260811-v3-s2: 1135 exterior artifacts were released to stay within the session cache budget; they reload on re-entry.Exterior geometry for 314 verified buildings is not drawn: the matching base building record is not loaded, so there is no verified WGS84 anchor for it. It will be drawn once that base record loads.Show the 314 building IDsdoitt:10479, doitt:105101, doitt:1064441, doitt:107009, doitt:108179, doitt:109173, doitt:110009, doitt:1105835, doitt:1107962, doitt:1107967, doitt:1107968, doitt:1109927, doitt:1110161, doitt:1110400, doitt:1114709, doitt:1114748, doitt:1117123, doitt:1117168, doitt:1117747, doitt:1117830, doitt:1118676, doitt:114988, doitt:115663, doitt:115982, doitt:119028, doitt:1194347, doitt:120084, doitt:1214511, doitt:1215258, doitt:122706, doitt:1254684, doitt:1255837, doitt:1257097, doitt:1257098, doitt:1262668, doitt:1264524, doitt:1264525, doitt:1264530, doitt:1264531, doitt:1272401, doitt:1281127, doitt:1282656, doitt:1284002, doitt:1286114, doitt:1286710, doitt:1288033, doitt:1288530, doitt:1288531, doitt:1290742, doitt:1290752, doitt:1290756, doitt:1292491, doitt:1296931, doitt:1298488, doitt:1298813, doitt:1300995, doitt:1303988, doitt:1305599, doitt:130591, doitt:133460, doitt:141864, doitt:14301, doitt:145131, doitt:152132, doitt:153292, doitt:15422, doitt:156189, doitt:156567, doitt:157281, doitt:157976, doitt:163071, doitt:164935, doitt:168244, doitt:168795, doitt:171017, doitt:17286, doitt:178642, doitt:178750, doitt:179453, doitt:183810, doitt:191059, doitt:195813, doitt:199175, doitt:204474, doitt:204625, doitt:214630, doitt:215627, doitt:21855, doitt:225204, doitt:225765, doitt:233897, doitt:233956, doitt:236220, doitt:236658, doitt:247224, doitt:2480, doitt:252033, doitt:254194, doitt:255716, doitt:259711, doitt:2653, doitt:26807, doitt:268632, doitt:271276, doitt:271975, doitt:273523, doitt:27805, doitt:282685, doitt:291494, doitt:295522, doitt:296904, doitt:298626, doitt:306377, doitt:312379, doitt:313683, doitt:314602, doitt:327339, doitt:33067, doitt:331171, doitt:331481, doitt:332628, doitt:336352, doitt:33693, doitt:338830, doitt:339803, doitt:345550, doitt:34748, doitt:35774, doitt:361912, doitt:363379, doitt:366263, doitt:368472, doitt:368514, doitt:36890, doitt:375186, doitt:376436, doitt:376977, doitt:379944, doitt:38047, doitt:38618, doitt:393209, doitt:393702, doitt:395427, doitt:395976, doitt:396119, doitt:400003, doitt:400517, doitt:401853, doitt:40319, doitt:407309, doitt:413451, doitt:415535, doitt:416112, doitt:416183, doitt:417076, doitt:417769, doitt:418772, doitt:423164, doitt:42608, doitt:430396, doitt:43091, doitt:433411, doitt:441, doitt:442093, doitt:442630, doitt:446198, doitt:447482, doitt:449100, doitt:452569, doitt:458380, doitt:463091, doitt:463235, doitt:463752, doitt:46608, doitt:466788, doitt:469459, doitt:470295, doitt:473151, doitt:477555, doitt:484155, doitt:485075, doitt:488229, doitt:489"
+      },
+      "still": {
+        "file": "captures/street-260m-w02-lower.png",
+        "byteSize": 791741,
+        "sha256": "948193c0fae9bc0db0fd08c7e4c5dcd1cb0b0308c7d3b7f5ddfbf68ee89f3a7d"
+      }
+    }
+  ],
+  "control": {
+    "url": "about:blank",
+    "vsyncMode": "vsync-on",
+    "sampleCount": 1440,
+    "p50Ms": 8.3,
+    "p95Ms": 10,
+    "p99Ms": 10.3,
+    "maxMs": 11.1
+  },
+  "gates": {
+    "F1": {
+      "rule": "PASS if and only if, at EVERY station, p50 <= 16.7 ms AND p95 <= 25 ms over at least 600 sampled rAF deltas taken after 45,000 ms of settle.",
+      "bar": {
+        "p50Ms": 16.7,
+        "p95Ms": 25,
+        "minimumFrames": 600,
+        "settleMs": 45000,
+        "windowMs": 12000
+      },
+      "perStation": [
+        {
+          "stationId": "overview-52km-island",
+          "p50Ms": 16.8,
+          "p95Ms": 25.2,
+          "sampleCount": 621,
+          "minimumFrames": 600,
+          "frameFloorMet": true,
+          "p50WithinBar": false,
+          "p95WithinBar": false,
+          "pass": false,
+          "controlP95Ms": 10,
+          "instrumentLimited": false,
+          "interpretation": "The control is captured in the SAME browser session as the stations, in BOTH vsync modes, on about:blank. A station p95 verdict is only MEANINGFUL above the control's own p95 in the matching mode. A station p95 at or below the control's p95 is reported as instrument-limited, never as a scene result."
+        },
+        {
+          "stationId": "overview-2400m-anchor",
+          "p50Ms": 15.9,
+          "p95Ms": 18.2,
+          "sampleCount": 897,
+          "minimumFrames": 600,
+          "frameFloorMet": true,
+          "p50WithinBar": true,
+          "p95WithinBar": true,
+          "pass": true,
+          "controlP95Ms": 10,
+          "instrumentLimited": false,
+          "interpretation": "The control is captured in the SAME browser session as the stations, in BOTH vsync modes, on about:blank. A station p95 verdict is only MEANINGFUL above the control's own p95 in the matching mode. A station p95 at or below the control's p95 is reported as instrument-limited, never as a scene result."
+        },
+        {
+          "stationId": "transition-1200m-anchor",
+          "p50Ms": 16.7,
+          "p95Ms": 24.6,
+          "sampleCount": 704,
+          "minimumFrames": 600,
+          "frameFloorMet": true,
+          "p50WithinBar": true,
+          "p95WithinBar": true,
+          "pass": true,
+          "controlP95Ms": 10,
+          "instrumentLimited": false,
+          "interpretation": "The control is captured in the SAME browser session as the stations, in BOTH vsync modes, on about:blank. A station p95 verdict is only MEANINGFUL above the control's own p95 in the matching mode. A station p95 at or below the control's p95 is reported as instrument-limited, never as a scene result."
+        },
+        {
+          "stationId": "street-260m-midtown",
+          "p50Ms": 9.4,
+          "p95Ms": 17.8,
+          "sampleCount": 1028,
+          "minimumFrames": 600,
+          "frameFloorMet": true,
+          "p50WithinBar": true,
+          "p95WithinBar": true,
+          "pass": true,
+          "controlP95Ms": 10,
+          "instrumentLimited": false,
+          "interpretation": "The control is captured in the SAME browser session as the stations, in BOTH vsync modes, on about:blank. A station p95 verdict is only MEANINGFUL above the control's own p95 in the matching mode. A station p95 at or below the control's p95 is reported as instrument-limited, never as a scene result."
+        },
+        {
+          "stationId": "street-260m-w02-lower",
+          "p50Ms": 8.3,
+          "p95Ms": 10.2,
+          "sampleCount": 1441,
+          "minimumFrames": 600,
+          "frameFloorMet": true,
+          "p50WithinBar": true,
+          "p95WithinBar": true,
+          "pass": true,
+          "controlP95Ms": 10,
+          "instrumentLimited": false,
+          "interpretation": "The control is captured in the SAME browser session as the stations, in BOTH vsync modes, on about:blank. A station p95 verdict is only MEANINGFUL above the control's own p95 in the matching mode. A station p95 at or below the control's p95 is reported as instrument-limited, never as a scene result."
+        }
+      ],
+      "pass": false
+    },
+    "F2": {
+      "rule": "The control is captured in the SAME browser session as the stations, in BOTH vsync modes, on about:blank. A station p95 verdict is only MEANINGFUL above the control's own p95 in the matching mode. A station p95 at or below the control's p95 is reported as instrument-limited, never as a scene result.",
+      "control": {
+        "url": "about:blank",
+        "vsyncMode": "vsync-on",
+        "sampleCount": 1440,
+        "p50Ms": 8.3,
+        "p95Ms": 10,
+        "p99Ms": 10.3,
+        "maxMs": 11.1
+      },
+      "whyNotABar": "This gate cannot FAIL in the ordinary sense: it constrains interpretation. It is registered so that a p95 that merely reproduces the display cadence cannot later be quoted as evidence the scene is fast.",
+      "stationsAtOrBelowControlP95": []
+    },
+    "F4": {
+      "rule": "doubleDrawMs and totalBuildMs are REPORTED at every station and across the storm. Exceeding the 4,000 ms leg-Y bar is recorded as a named carry of D-11 with the measured value, NOT as a campaign failure. A value BELOW 4,000 ms is reported as such and does not close D-11 either, because one session is not the island-scale bounds rebuild D-11 names.",
+      "legYDoubleDrawMs": 4000,
+      "legXRebuildMs": 8000,
+      "measuredDoubleDrawMs": [
+        6165.200000047684,
+        6165.200000047684,
+        6165.200000047684,
+        1799.8999999761581,
+        1799.8999999761581,
+        6165.200000047684,
+        6165.200000047684,
+        6165.200000047684,
+        1799.8999999761581,
+        1799.8999999761581,
+        1799.8999999761581,
+        901.1000000238419,
+        6165.200000047684,
+        6165.200000047684,
+        6165.200000047684,
+        1799.8999999761581,
+        1799.8999999761581,
+        1799.8999999761581,
+        901.1000000238419,
+        901.1000000238419,
+        188.29999995231628,
+        6165.200000047684,
+        6165.200000047684,
+        6165.200000047684,
+        1799.8999999761581,
+        1799.8999999761581,
+        1799.8999999761581,
+        901.1000000238419,
+        901.1000000238419,
+        188.29999995231628,
+        188.29999995231628
+      ],
+      "maxDoubleDrawMs": 6165.200000047684,
+      "measuredTotalBuildMs": [
+        6165.200000047684,
+        1799.8999999761581,
+        901.1000000238419,
+        188.29999995231628,
+        28.700000047683716
+      ],
+      "maxTotalBuildMs": 6165.200000047684,
+      "exceedsLegYBar": true,
+      "outcome": "NAMED CARRY of ADR 0045 deferral D-11 with the measured value 6165.200000047684 ms against the 4,000 ms leg-Y bar. NOT a campaign failure: D-11 already records 5,746 ms measured and is carried forward unchanged by ADR 0052.",
+      "inheritedFrom": "ADR 0045 section 3.3 REVIVAL_BARS; the exceedance is ADR 0045 section 5.2 deferral D-11 (5,746 ms measured), carried forward unchanged by ADR 0052."
+    },
+    "G1": {
+      "gateId": "G1",
+      "attemptCount": 3,
+      "releaseId": "manhattan-exterior-cells-20260811-v3-s1",
+      "pose": {
+        "stationId": "gpu-validation-block835",
+        "lon": -73.98636,
+        "lat": 40.748775,
+        "height": 900,
+        "heading": 0,
+        "pitch": -45,
+        "roll": 0,
+        "role": "G1 instrument validation: a small scene whose unique class-tile count is known"
+      },
+      "declaredClassTileCount": 4,
+      "observedClassTileUrls": [
+        "http://127.0.0.1:4173/data/manhattan-exterior-cells-20260811-v3-s1/public/textures/brick-running-bond.png",
+        "http://127.0.0.1:4173/data/manhattan-exterior-cells-20260811-v3-s1/public/textures/curtain-mullion-grid.png",
+        "http://127.0.0.1:4173/data/manhattan-exterior-cells-20260811-v3-s1/public/textures/limestone-ashlar.png",
+        "http://127.0.0.1:4173/data/manhattan-exterior-cells-20260811-v3-s1/public/textures/spandrel-panel.png"
+      ],
+      "observedClassTileCount": 4,
+      "declaredAndObservedAgree": true,
+      "residentAssetCount": 14,
+      "reading": {
+        "texturesByteLength": 263367077,
+        "geometryByteLength": 98285864,
+        "resourceCacheEntryCount": 5062
+      },
+      "verdict": {
+        "uniqueTextureCount": 4,
+        "predictedTextureByteLength": 349524,
+        "measuredTextureByteLength": 263367077,
+        "deltaByteLength": 263017553,
+        "agrees": false
+      },
+      "barBytes": 0,
+      "pass": false,
+      "waves": [
+        {
+          "releaseId": "manhattan-exterior-cells-20260811-v3-s1",
+          "declaredCellCount": 1,
+          "scheduledCellCount": 1,
+          "deferredCellCount": 0,
+          "notShippedCellCount": 0,
+          "fallbackCellCount": 0,
+          "failedCellCount": 0,
+          "failedArtifactCount": 0
+        }
+      ],
+      "still": {
+        "file": "captures/gpu-validation-block835.png",
+        "byteSize": 462738,
+        "sha256": "41c03701a7cd165be8ab426808571f60c2e8554d52c602fead6733f7e4a0a95e"
+      },
+      "rule": "Instrument validation FIRST, on a scene with a known unique tile count: validateGpuTextureProbe(...).deltaByteLength MUST be exactly 0. Not a tolerance. A probe that disagrees with arithmetic on a small known scene has not earned the right to be quoted on a large one, and if G1 fails, G2-G4 are NOT reported as measurements."
+    },
+    "G2": {
+      "rule": "texturesByteLength <= 2097144 + n * 87381 with n <= 1, at the maximum-residency station.",
+      "stationId": "overview-52km-island",
+      "expectedByteLength": 2097144,
+      "expectedUniqueTileCount": 24,
+      "perTileByteLength": 87381,
+      "toleranceTiles": 1,
+      "barByteLength": 2184525,
+      "measuredByteLength": 283552146,
+      "measuredTileCount": 3245.0091667524975,
+      "residentAssetCount": 431,
+      "residentWaveCount": 1,
+      "pass": false,
+      "gatedOnG1": false
+    },
+    "G3": {
+      "rule": "Unique class tiles resident === 4 per RESIDENT WAVE, independent of resident building count. Captured at a station with >= 300 resident assets and again at a station with <= 20 resident assets; texturesByteLength must be explained by the resident WAVE count at both, never by the asset count.",
+      "residentAssetHigh": 300,
+      "residentAssetLow": 20,
+      "readings": [
+        {
+          "scope": "six-wave default station",
+          "stationId": "overview-52km-island",
+          "residentAssetCount": 431,
+          "residentWaveCount": 1,
+          "texturesByteLength": 283552146,
+          "impliedTileCount": 3245.0091667524975
+        },
+        {
+          "scope": "six-wave default station",
+          "stationId": "overview-2400m-anchor",
+          "residentAssetCount": 269,
+          "residentWaveCount": 2,
+          "texturesByteLength": 283989051,
+          "impliedTileCount": 3250.0091667524975
+        },
+        {
+          "scope": "six-wave default station",
+          "stationId": "transition-1200m-anchor",
+          "residentAssetCount": 348,
+          "residentWaveCount": 2,
+          "texturesByteLength": 283901670,
+          "impliedTileCount": 3249.0091667524975
+        },
+        {
+          "scope": "six-wave default station",
+          "stationId": "street-260m-midtown",
+          "residentAssetCount": 277,
+          "residentWaveCount": 2,
+          "texturesByteLength": 252881327,
+          "impliedTileCount": 2894.0081596685777
+        },
+        {
+          "scope": "six-wave default station",
+          "stationId": "street-260m-w02-lower",
+          "residentAssetCount": 401,
+          "residentWaveCount": 3,
+          "texturesByteLength": 276911169,
+          "impliedTileCount": 3169.008926425653
+        },
+        {
+          "scope": "single-wave G1 arm",
+          "stationId": "gpu-validation-block835",
+          "residentAssetCount": 14,
+          "residentWaveCount": 1,
+          "texturesByteLength": 263367077,
+          "impliedTileCount": 3014.0085029926413
+        }
+      ],
+      "whyItIsTheRealClaim": "G2 is a budget. G3 is the ARCHITECTURE claim: it is the reading that distinguishes shared per-class delivery from per-building duplication, because only duplication makes the number move with population."
+    },
+    "G4": {
+      "rule": "The embedded-texture counterfactual is REPORTED from the committed data/shared-class-textures-20260815/gpu-campaign.json arms (p1-embedded 15,204,294 B over 174 distinct textures vs t1-shared 349,524 B over 4). It is a CITATION of an earlier measurement restated beside this one, not a new capture, and it is labelled as such.",
+      "gating": false,
+      "citation": "data/shared-class-textures-20260815/gpu-campaign.json",
+      "restatedNotRecaptured": true
+    },
+    "requestCeilings": [
+      {
+        "stationId": "overview-52km-island",
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 451,
+        "entriesWithinCap": true,
+        "cachedBytes": 25729636,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      },
+      {
+        "stationId": "overview-2400m-anchor",
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 675,
+        "entriesWithinCap": true,
+        "cachedBytes": 58003202,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      },
+      {
+        "stationId": "transition-1200m-anchor",
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 766,
+        "entriesWithinCap": true,
+        "cachedBytes": 149062204,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      },
+      {
+        "stationId": "street-260m-midtown",
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 704,
+        "entriesWithinCap": true,
+        "cachedBytes": 118202541,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      },
+      {
+        "stationId": "street-260m-w02-lower",
+        "peakConcurrentRequests": 4,
+        "peakWithinFour": true,
+        "cacheEntries": 862,
+        "entriesWithinCap": true,
+        "cachedBytes": 156509895,
+        "bytesWithinCap": true,
+        "neverSum": "The exterior and composed probes report the SAME AggregateRequestBudget peak when a shared budget is installed. Their peaks are never summed and no combined '8' bar is registered or reported."
+      }
+    ],
+    "cleanCells": [
+      {
+        "stationId": "overview-52km-island",
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      {
+        "stationId": "overview-2400m-anchor",
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      {
+        "stationId": "transition-1200m-anchor",
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      {
+        "stationId": "street-260m-midtown",
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      },
+      {
+        "stationId": "street-260m-w02-lower",
+        "fallbackCellCount": 0,
+        "failedCellCount": 0,
+        "failedArtifactCount": 0,
+        "clean": true
+      }
+    ]
+  },
+  "headroomH2": {
+    "rule": "REPORTED, never gating. Deltas (not absolutes) are recorded so a reader sees the work attributable to the window rather than to the session's whole history.",
+    "caveat": "Performance.getMetrics counters are renderer-process accounting, not a GPU query. They are recorded as a second, independent view of the same window and are never reconciled into the rAF series.",
+    "source": "CDP Performance.getMetrics deltas across each station's frame window",
+    "perStation": [
+      {
+        "stationId": "overview-52km-island",
+        "delta": {
+          "AdSubframes": 0,
+          "ArrayBufferContents": 0,
+          "AudioHandlers": 0,
+          "AudioWorkletProcessors": 0,
+          "ContextLifecycleStateObservers": 0,
+          "DetachedScriptStates": 0,
+          "DevToolsCommandDuration": 0.000156,
+          "Documents": 0,
+          "DomContentLoaded": 0,
+          "FirstMeaningfulPaint": 0,
+          "Frames": 0,
+          "JSEventListeners": 0,
+          "JSHeapTotalSize": 0,
+          "JSHeapUsedSize": 2898976,
+          "LayoutCount": 0,
+          "LayoutDuration": 0,
+          "LayoutObjects": 0,
+          "MediaKeySessions": 0,
+          "MediaKeys": 0,
+          "NavigationStart": 0,
+          "Nodes": 0,
+          "ProcessTime": 12.509053,
+          "RTCPeerConnections": 0,
+          "RecalcStyleCount": 0,
+          "RecalcStyleDuration": 0,
+          "ResourceFetchers": 0,
+          "Resources": 0,
+          "ScriptDuration": 11.932615,
+          "TaskDuration": 12.024134,
+          "TaskOtherDuration": 0.091363,
+          "ThreadTime": 11.99517,
+          "Timestamp": 12.044796,
+          "UACSSResources": 0,
+          "V8CompileDuration": 0,
+          "V8PerContextDatas": 0,
+          "WorkerGlobalScopes": 0
+        }
+      },
+      {
+        "stationId": "overview-2400m-anchor",
+        "delta": {
+          "AdSubframes": 0,
+          "ArrayBufferContents": 0,
+          "AudioHandlers": 0,
+          "AudioWorkletProcessors": 0,
+          "ContextLifecycleStateObservers": 0,
+          "DetachedScriptStates": 0,
+          "DevToolsCommandDuration": 0.000095,
+          "Documents": 0,
+          "DomContentLoaded": 0,
+          "FirstMeaningfulPaint": 0,
+          "Frames": 0,
+          "JSEventListeners": 0,
+          "JSHeapTotalSize": 2097152,
+          "JSHeapUsedSize": 10442528,
+          "LayoutCount": 0,
+          "LayoutDuration": 0,
+          "LayoutObjects": 0,
+          "MediaKeySessions": 0,
+          "MediaKeys": 0,
+          "NavigationStart": 0,
+          "Nodes": 0,
+          "ProcessTime": 12.529955,
+          "RTCPeerConnections": 0,
+          "RecalcStyleCount": 0,
+          "RecalcStyleDuration": 0,
+          "ResourceFetchers": 0,
+          "Resources": 0,
+          "ScriptDuration": 11.856246,
+          "TaskDuration": 11.993903,
+          "TaskOtherDuration": 0.137562,
+          "ThreadTime": 11.999772,
+          "Timestamp": 12.038083,
+          "UACSSResources": 0,
+          "V8CompileDuration": 0,
+          "V8PerContextDatas": 0,
+          "WorkerGlobalScopes": 0
+        }
+      },
+      {
+        "stationId": "transition-1200m-anchor",
+        "delta": {
+          "AdSubframes": 0,
+          "ArrayBufferContents": 0,
+          "AudioHandlers": 0,
+          "AudioWorkletProcessors": 0,
+          "ContextLifecycleStateObservers": 0,
+          "DetachedScriptStates": 0,
+          "DevToolsCommandDuration": 0.000102,
+          "Documents": 0,
+          "DomContentLoaded": 0,
+          "FirstMeaningfulPaint": 0,
+          "Frames": 0,
+          "JSEventListeners": 0,
+          "JSHeapTotalSize": 0,
+          "JSHeapUsedSize": -26937508,
+          "LayoutCount": 0,
+          "LayoutDuration": 0,
+          "LayoutObjects": 0,
+          "MediaKeySessions": 0,
+          "MediaKeys": 0,
+          "NavigationStart": 0,
+          "Nodes": 0,
+          "ProcessTime": 12.598337,
+          "RTCPeerConnections": 0,
+          "RecalcStyleCount": 0,
+          "RecalcStyleDuration": 0,
+          "ResourceFetchers": 0,
+          "Resources": 0,
+          "ScriptDuration": 11.922401,
+          "TaskDuration": 12.021896,
+          "TaskOtherDuration": 0.099393,
+          "ThreadTime": 12.024222,
+          "Timestamp": 12.052019,
+          "UACSSResources": 0,
+          "V8CompileDuration": 0,
+          "V8PerContextDatas": 0,
+          "WorkerGlobalScopes": 0
+        }
+      },
+      {
+        "stationId": "street-260m-midtown",
+        "delta": {
+          "AdSubframes": 0,
+          "ArrayBufferContents": 0,
+          "AudioHandlers": 0,
+          "AudioWorkletProcessors": 0,
+          "ContextLifecycleStateObservers": 0,
+          "DetachedScriptStates": 0,
+          "DevToolsCommandDuration": 0.000081,
+          "Documents": 0,
+          "DomContentLoaded": 0,
+          "FirstMeaningfulPaint": 0,
+          "Frames": 0,
+          "JSEventListeners": 0,
+          "JSHeapTotalSize": 2359296,
+          "JSHeapUsedSize": -10537344,
+          "LayoutCount": 0,
+          "LayoutDuration": 0,
+          "LayoutObjects": 0,
+          "MediaKeySessions": 0,
+          "MediaKeys": 0,
+          "NavigationStart": 0,
+          "Nodes": 0,
+          "ProcessTime": 12.353732,
+          "RTCPeerConnections": 0,
+          "RecalcStyleCount": 0,
+          "RecalcStyleDuration": 0,
+          "ResourceFetchers": 0,
+          "Resources": 0,
+          "ScriptDuration": 11.489165,
+          "TaskDuration": 11.689656,
+          "TaskOtherDuration": 0.20041,
+          "ThreadTime": 11.70177,
+          "Timestamp": 12.026024,
+          "UACSSResources": 0,
+          "V8CompileDuration": 0,
+          "V8PerContextDatas": 0,
+          "WorkerGlobalScopes": 0
+        }
+      },
+      {
+        "stationId": "street-260m-w02-lower",
+        "delta": {
+          "AdSubframes": 0,
+          "ArrayBufferContents": 0,
+          "AudioHandlers": 0,
+          "AudioWorkletProcessors": 0,
+          "ContextLifecycleStateObservers": 0,
+          "DetachedScriptStates": 0,
+          "DevToolsCommandDuration": 0.000121,
+          "Documents": 0,
+          "DomContentLoaded": 0,
+          "FirstMeaningfulPaint": 0,
+          "Frames": 0,
+          "JSEventListeners": 0,
+          "JSHeapTotalSize": 0,
+          "JSHeapUsedSize": 16356080,
+          "LayoutCount": 0,
+          "LayoutDuration": 0,
+          "LayoutObjects": 0,
+          "MediaKeySessions": 0,
+          "MediaKeys": 0,
+          "NavigationStart": 0,
+          "Nodes": 0,
+          "ProcessTime": 9.051918,
+          "RTCPeerConnections": 0,
+          "RecalcStyleCount": 0,
+          "RecalcStyleDuration": 0,
+          "ResourceFetchers": 0,
+          "Resources": 0,
+          "ScriptDuration": 8.102659,
+          "TaskDuration": 8.365383,
+          "TaskOtherDuration": 0.262603,
+          "ThreadTime": 8.409529,
+          "Timestamp": 12.017568,
+          "UACSSResources": 0,
+          "V8CompileDuration": 0,
+          "V8PerContextDatas": 0,
+          "WorkerGlobalScopes": 0
+        }
+      }
+    ]
+  },
+  "externalHosts": [],
+  "networkFailures": [],
+  "networkFailureCount": 0,
+  "claim": "Frame percentiles, GPU texture bytes and residency at the five frozen stations of a SIX-WAVE DEFAULT session, with the instrument's own control captured in the same browser. It is not visual, geographic or factual acceptance and it is one session on one machine rather than a distribution.",
+  "uncapturedGap": "No canvas pick, no journey and no LOD reading is taken here; those are separate captures. The stills are what-is-drawn evidence at these five poses only."
+}
