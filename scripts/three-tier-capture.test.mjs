@@ -99,6 +99,18 @@ describe("tier composition is read, never inferred", () => {
     expect(composition.exteriorPresent).toBe(false);
   });
 
+  it("does not treat an advancing publish sequence as proof of a live scene", () => {
+    // publishSeq advancing means the publish path ran. It does NOT mean frames
+    // were being produced at a useful rate: a backgrounded tab in a browser
+    // without --disable-renderer-backgrounding still publishes while rAF is
+    // throttled to about 1 Hz, which is exactly what the Orca station captures
+    // showed (11 deltas at ~1,000 ms with publishSeq moving). Liveness of the
+    // publish and liveness of the frame loop are separate claims.
+    const composition = tierCompositionOf({ farTierStatus: { farTierDeclared: "840", farTierDrawn: "700" }, farTierViewport: { farTierPublishSeq: "9", farTierMassingActive: "10" } });
+    expect(composition.publishSeq).toBe(9);
+    expect(composition).not.toHaveProperty("frameRate");
+  });
+
   it("surfaces a missing publish sequence as null rather than zero", () => {
     // Zero would read as "the instrument published once"; null reads as "the
     // instrument never spoke", which is the T005 stalled-publish signature.
@@ -133,7 +145,8 @@ describe("the committed probe expressions carry their controls", () => {
     expect(TIER_STATE_PROBE).toContain("residentCount");
     // T005 lost a wire-level control to the 250-entry resource-timing cap; a
     // capture that silently hit the cap must be able to say so.
-    expect(TIER_STATE_PROBE).toContain("resourceBufferAtCap");
+    expect(TIER_STATE_PROBE).toContain("resourceBufferMayBeTruncated");
+    expect(TIER_STATE_PROBE).toContain("resourceTimingBufferConfigured");
     expect(TIER_STATE_PROBE).toContain("devicePixelRatio");
     expect(TIER_STATE_PROBE).toContain("getBoundingClientRect");
   });

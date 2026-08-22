@@ -17,6 +17,8 @@ import { FROZEN_EVIDENCE_ROOTS, F1_BAR } from "./three-tier-capture-cli.mjs";
 import { MASSING_REFUSAL_SHARE } from "./draw-composition.mjs";
 
 const ROOT = join("data", "three-tier-acceptance-20260821");
+/** Every record the campaign commits. Exact, so a vanished record fails here. */
+const EXPECTED_RECORD_COUNT = 16;
 const readText = (path) => new TextDecoder("utf-8", { fatal: true }).decode(readFileSync(path));
 const readRecord = (name) => {
   const text = readText(join(ROOT, `${name}.json`));
@@ -28,7 +30,9 @@ const readRecord = (name) => {
 describe("every record in the campaign root is bound to its sidecar", () => {
   it("covers all of them, derived from the directory rather than a hand-kept list", () => {
     const names = readdirSync(ROOT).filter((n) => n.endsWith(".json")).map((n) => n.replace(/\.json$/u, ""));
-    expect(names.length).toBeGreaterThanOrEqual(2);
+    // EXACT, not a floor. ">= 2" passed while nine records existed and would
+    // have passed if seven vanished.
+    expect(names.length).toBe(EXPECTED_RECORD_COUNT);
     for (const name of names) expect(readRecord(name), name).toBeTypeOf("object");
   });
 });
@@ -138,7 +142,10 @@ describe("the frozen evidence this campaign must not write", () => {
       "data/exterior-serving-20260817/eviction-at-scale.json": "84809b28ad88460a5bd3ee678bfed5a210b0ec3d859773824f8fe57bc18575cb",
     };
     for (const [path, digest] of Object.entries(pinned)) {
-      if (!existsSync(path)) continue;
+      // A MISSING frozen record must FAIL, not be skipped. `continue` here would
+      // turn "somebody deleted the baseline" into a silent pass, which is the
+      // failure mode this whole check exists to prevent.
+      expect(existsSync(path), `${path} is MISSING; the frozen baseline must be present`).toBe(true);
       expect(createHash("sha256").update(readFileSync(path)).digest("hex"), path).toBe(digest);
     }
   });

@@ -18,9 +18,16 @@
         "p50Ms": 16.8,
         "p95Ms": 25.2,
         "sampleCount": 621,
-        "verdict": "FAIL",
+        "verdict": "NOT-CAPTURED",
         "instrumentLimited": false,
-        "tiersObserved": null
+        "tiersObserved": null,
+        "withdrawnVerdict": "FAIL",
+        "reason": "landing failure: landed false, dispatchCount 12, in BOTH attempt 3 and attempt 4. The pre-registration classifies a landing failure as an instrument-failure abort that writes no verdict.",
+        "attempt4": {
+          "p50Ms": 16.7,
+          "p95Ms": 25.2,
+          "sampleCount": 624
+        }
       },
       {
         "stationId": "overview-2400m-anchor",
@@ -69,10 +76,19 @@
     ],
     "passCount": 4,
     "of": 5,
-    "overall": "FAIL",
-    "overallReason": "F1 is an every-station gate. overview-52km-island missed BOTH percentiles -- p50 16.8 against 16.7, p95 25.2 against 25 -- so the gate fails as a whole even though four of five stations passed comfortably.",
-    "wasThisPreDeclared": "YES. The pre-registration recorded, before any capture, that far-tier-dominated stations MAY FAIL F1 and that T005 had read p95 up to 198 ms at far-tier poses. The failing station is the 52 km island overview, the maximum-residency pose, where the far tier holds essentially the whole island. This is the pre-declared outcome arriving, not a surprise, and the bar was not moved to accommodate it.",
-    "marginHonesty": "The miss is small -- 0.1 ms on p50 and 0.2 ms on p95 -- and it is recorded as a FAIL rather than rounded into a pass. A bar with a tolerance nobody registered is not a bar."
+    "overall": "NOT-CAPTURED",
+    "overallReason": "F1 is an every-station gate. Four of five stations PASS in both attempts; the fifth (overview-52km-island) could not be captured -- it failed to land in both attempts, reproducibly, at dispatchCount 12. An every-station gate with an unmeasurable station is NOT-CAPTURED: it cannot be PASS without all stations, and it cannot be FAIL on the strength of a capture the registered rule says to discard.",
+    "wasThisPreDeclared": "The pre-registration did pre-declare that far-tier-dominated stations MAY FAIL F1. No such FAIL is reported: the one station that might have carried it could not be measured. The pre-declaration is recorded as unused rather than quietly claimed as borne out.",
+    "marginHonesty": "The miss is small -- 0.1 ms on p50 and 0.2 ms on p95 -- and it is recorded as a FAIL rather than rounded into a pass. A bar with a tolerance nobody registered is not a bar.",
+    "withdrawnVerdict": "An earlier revision of this record reported F1 OVERALL: FAIL on the strength of that station's attempt-3 numbers, without disclosing that the capture had not landed. That verdict is WITHDRAWN. See f1-island-station.json.",
+    "twoTierBaselineAtTheFifthStation": {
+      "source": "data/exterior-acceptance-20260817/frames-and-gpu.json (FROZEN)",
+      "p50Ms": 16.7,
+      "p95Ms": 24.9,
+      "sampleCount": 704,
+      "statement": "The two-tier city was ALREADY at the bar at this station before the far tier existed. Any attribution of a 0.1-0.3 ms movement here has to reckon with that first."
+    },
+    "attribution": "NOT ISOLATED. T007 does not attribute this station's frame time to the far tier. The station never landed; the two-tier baseline was already 16.7 / 24.9; and the isolation's ON arm could not be captured because the far tier does not finish declaring within F1's registered 45 s settle at this pose. The OFF arm captured cleanly and PASSED (p50 16.6, p95 18.2, n=796), but with no valid ON arm there is no controlled pair, and that OFF reading may not be differenced against a different instrument's ON reading from a different session."
   },
   "F2": {
     "disposition": "INTERPRETATION RULE, NOT A BAR, exactly as registered.",
@@ -166,5 +182,16 @@
     "One machine, one session, AC power. Not a distribution and no confidence interval.",
     "F1's FAIL is a reading of this vehicle at this pose, not a claim about other hardware.",
     "The committed G-series FAILs are scope failures of far-tier-blind instruments and are not evidence about GPU residency; B3/B4/B5 from G1-far are."
+  ],
+  "stationDenominator": {
+    "registeredStations": 7,
+    "capturedByTheRegisteredF1Instrument": 5,
+    "note": "The pre-registration registered SEVEN stations: the prior five plus far-tier-P2-oblique-2400m and far-tier-P5-island-12km. The committed frames harness iterates its own five and cannot be pointed at the other two, so F1 was never captured at either far-tier-dominated station. An earlier revision of the campaign summary said 'nine stations', which counted the two composition-only captures as stations. The registered denominator is 7."
+  },
+  "whatWasNotMeasuredHere": [
+    "F1 at far-tier-P2-oblique-2400m: NOT-CAPTURED. The registered F1 instrument iterates a fixed five-station list.",
+    "F1 at far-tier-P5-island-12km: NOT-CAPTURED, same reason.",
+    "F1 at overview-52km-island: NOT-CAPTURED, reproducible landing failure.",
+    "So F1 has 4 PASS out of 7 registered stations, with 3 not captured -- not 4 of 5."
   ]
 }

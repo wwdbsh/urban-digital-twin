@@ -851,18 +851,32 @@ captured, and the two FAILs belong to different changes.**
 
 Evidence: `data/three-tier-acceptance-20260821/`, nine records with sidecars.
 
-### What the far tier is answerable for
+### What the far tier is answerable for: on this evidence, nothing at F1
 
-**F1 FAILS at one station of five.** `overview-52km-island`, the maximum-residency
-pose where the far tier holds essentially the whole island, read **p50 16.8 ms**
-against a 16.7 ms bar and **p95 25.2 ms** against 25 ms, over 621 rAF deltas.
-Both percentiles missed. It is recorded as a FAIL and not rounded into a pass: a
-bar with a tolerance nobody registered is not a bar. The other four stations pass
-comfortably, and the same-session `about:blank` control (p50 8.3 / p95 10.0)
-shows no station was instrument-limited.
+**CORRECTED AFTER REVIEW.** An earlier revision of this amendment reported an F1
+FAIL at `overview-52km-island` and called it the far tier's. Both claims are
+**withdrawn**.
 
-This outcome was **pre-declared before any capture**, citing T005's p95 of 198 ms
-at far-tier poses. The bar was not moved when it arrived.
+The capture carried `landed: false, dispatchCount: 12`, and the campaign's own
+pre-registration classifies a landing failure as an instrument-failure abort that
+writes no verdict. A verdict was written from it anyway, and the landing failure
+was not disclosed. Re-running the registered instrument **reproduced** the
+landing failure at that station and only that station, at the same dispatch
+count, while the other four landed on the first dispatch in both attempts. The
+station is **NOT-CAPTURED**, and F1 as an every-station gate is NOT-CAPTURED with
+four PASSes of seven registered stations.
+
+The attribution is withdrawn for three independent reasons. The station never
+landed. The **two-tier baseline at the same station was already p50 16.7 / p95
+24.9** — at the bar before the far tier existed. And the isolation could not be
+completed: the far-tier-OFF arm captured cleanly and passed (p50 16.6, p95 18.2,
+n=796), but three ON arms were refused because the far tier had declared **zero**
+cells within F1's registered 45 s settle at that pose. With no valid ON arm there
+is no controlled pair, and the OFF reading may not be differenced against a
+different instrument's ON reading from a different session.
+
+The pre-declaration that far-tier stations *may* fail F1 is recorded as **unused**
+rather than claimed as borne out.
 
 ### What the far tier is NOT answerable for
 
@@ -900,6 +914,12 @@ bytes: 283,290,003 / 291,984,434 · 95,302,992 / 98,310,624 · 378,592,995 /
 Nothing was evicted: the 1,024-entry ceiling admits the island, so **no eviction
 pressure was exercised** and the 839-atlas residency is REPORTED, not offered as
 a B-series verdict.
+
+An earlier revision added that the 840th atlas "reconciles to the byte". That was
+a **tautology** — the island figure is itself the sum over all 840 with the same
+formula, so subtracting the 839-atlas sum can only return the missing term — and
+it is withdrawn. G1-far's exact-zero result is unaffected: it compares the probe
+against an independent computation from the shipped PNG headers.
 
 ### The acceptance instruments are far-tier-blind, and it shows
 

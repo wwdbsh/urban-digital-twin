@@ -296,5 +296,6 @@
   ],
   "ok": false,
   "claim": "Six journeys through the SHIPPED UI on the promoted six-wave default, each carrying a rendered still. They state what the app resolved, selected, said and drew at these poses. Passing them is not visual, geographic, factual or accessibility acceptance, and a still is evidence that pixels were produced rather than evidence of likeness.",
-  "uncapturedGap": "NO CANVAS PICK on exterior geometry is captured here. Every selection in this suite is reached through search or through a ?feature= deep link against the canonical base identity set. That is a real gap and is named rather than approximated."
+  "uncapturedGap": "NO CANVAS PICK on exterior geometry is captured here. Every selection in this suite is reached through search or through a ?feature= deep link against the canonical base identity set. That is a real gap and is named rather than approximated.",
+  "t007WrapperNote": "RECORD-ID PROVENANCE. This document was produced by a COMMITTED T006 harness re-run by T007 with --out redirection, so its recordId, task and internal gate text still identify themselves as T006's. The bytes are a T007 capture: attemptCount and the readings are this campaign's. The harness has no flag to override its own identity, and T007 may not modify src/ or rewrite a committed instrument's identity fields, so the correction is stated here rather than forged into the document."
 }

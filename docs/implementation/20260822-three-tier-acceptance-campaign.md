@@ -5,35 +5,63 @@ Branch: `fcp/107-acceptance`
 Date: 2026-08-22
 Status: **the three-tier default is NOT accepted**
 
+**Corrected after review.** The F1 FAIL and its far-tier attribution are
+withdrawn; see *What was withdrawn* below.
+
 | | count |
 | --- | --- |
-| PASS | 10 |
-| FAIL (product) | 2 |
+| PASS | 14 |
+| FAIL (product) | **1** |
 | FAIL (instrument scope) | 2 |
-| NOT-CAPTURED | 3 |
-| REPORTED | 5 |
+| NOT-CAPTURED | 7 |
+| REPORTED | 6 |
 
-## The two failures, and whose they are
+## What was withdrawn
 
-**F1 fails at one station of five, and it is the far tier's.**
-`overview-52km-island` — the maximum-residency pose, where the far tier holds
-essentially the whole island — read **p50 16.8 ms** against 16.7 and **p95
-25.2 ms** against 25, over 621 rAF deltas. Both percentiles missed by a tenth or
-two of a millisecond, and it is recorded as a FAIL rather than rounded into a
-pass. A bar with a tolerance nobody registered is not a bar.
+**The F1 FAIL, and every attribution of it to the far tier.**
 
-It was **pre-declared before any capture** that far-tier-dominated stations may
-fail F1, citing T005's p95 of 198 ms. The bar was not moved when the pre-declared
-outcome arrived.
+The failing capture carried `landed: false, dispatchCount: 12`. My own
+pre-registration classifies a landing failure as an instrument-failure abort that
+writes no verdict and repeats. I wrote a FAIL from it and did not disclose the
+landing failure — the same class of error this campaign was built to catch in
+others' work.
 
-**J2 fails, and it is not.** A searched building's details panel carries one of
-four rows where the frozen T006 baseline carried all four, at the same query and
-the same pose. Re-run with `farTier=off` and the loss reproduces exactly. The
-cause is the `-s1` → `-s2` two-LOD promotion changing which cells are resident,
-recorded against ADR 0057.
+Re-running the registered instrument **reproduced** the landing failure at that
+station and only that station, same dispatch count, while the other four landed
+on the first dispatch in both attempts. Meanwhile p50 moved 16.8 → **16.7**
+across the bar between attempts while p95 held: a tenth of a millisecond that
+changes a verdict is noise, not a measurement.
 
-The consequence for rollback is sharp: **flipping the far tier off would not fix
-the one user-visible failure this campaign found.**
+The attribution fails for three independent reasons:
+
+1. The station **never landed**, in either attempt.
+2. The **two-tier baseline at the same station was already p50 16.7 / p95 24.9** —
+   at the bar before the far tier existed.
+3. The **isolation could not be completed**. The far-tier-OFF arm captured
+   cleanly and passed (p50 16.6, p95 18.2, n=796, tier wholly disarmed). Three ON
+   arms were refused because the far tier had declared **zero** cells within F1's
+   registered 45 s settle at that pose — a 200 s pre-warm reaches 840/839, but
+   the sampler's own navigation resets it. With no valid ON arm there is no
+   controlled pair, and that OFF reading may **not** be differenced against a
+   different instrument's ON reading from a different session.
+
+Two smaller withdrawals: the G-series "reconciles to the byte" claim was a
+tautology (subtracting a sum from a superset of itself returns the missing term
+whatever the probe read), and the heap stopping rule was an **in-campaign
+judgement disclosed at the time**, not a pre-registered one as the record said.
+
+## The one product failure, and whose it is
+
+**J2 fails, and it is not the far tier's.** A searched building's details panel
+carries **1 of 4 required rows** — *Uncertainty* present, *Cell / release*,
+*Active asset* and *Truth tiers* absent — where the frozen T006 baseline carried
+all four at the same query and pose. Re-run with the far tier **wholly disarmed**
+(`farTierArmed: false`) and the loss is unchanged. Evidence is committed as
+`j2-far-tier-arms.json`; the earlier "proven/decisively" language was an
+overclaim while no machine-readable record of it existed.
+
+The consequence for rollback is sharp and now backed by a record: **flipping the
+far tier off would not fix the only user-visible failure this campaign found.**
 
 ## G1-far: the mip question, settled to the byte
 
@@ -64,9 +92,8 @@ exercised; the residency is REPORTED, not offered as a B-series verdict.
 
 The committed G1/G2/G3 gates FAIL for **scope**. G1 attributes every texture byte
 to a known count of wave class tiles; with the far tier armed it is short by
-exactly the far-tier residency — **263,367,077 − 263,017,553 = 349,524 =
-4 × 87,381**, the four-tile prediction to the byte. G2 implies 3,245 class tiles
-where 24 were expected. J1's boot-document filter is pinned to `-s1` ids. None of
+exactly the far-tier residency — G2 sets a bar of 2,184,525 bytes against a measurement of
+283,552,146, implying **3,245 class tiles where 25 were expected**. J1's boot-document filter is pinned to `-s1` ids. None of
 these is evidence about the product; all three are instruments left behind by a
 composition change.
 
@@ -75,6 +102,11 @@ committed acceptance harnesses do not read one `data-far-tier-*` attribute
 between them.
 
 ## What was not measured
+
+**F1 at three of seven registered stations: NOT-CAPTURED** — the island overview
+(reproducible landing failure) and both far-tier-dominated poses, which the
+committed instrument cannot be pointed at because it iterates a fixed five. F1 is
+therefore 4 PASS of **7 registered stations**, not 4 of 5.
 
 **M1 heap: NOT-CAPTURED**, three instrument-failure aborts, no attempt past lap 2
 of 9, no record written by the instrument on any of them. Its own guard —
@@ -121,6 +153,14 @@ Seven instrument-failure aborts across the campaign, none of them a verdict:
 Nothing was measured before it was committed; no bar moved after a capture; the
 frozen 20260817 and 20260815 evidence is byte-identical at **both** ends of the
 campaign, checked by the same pre-flight that opened it.
+
+## The Escape test
+
+`App.test.tsx > closes details with Escape and returns focus to the located-pick
+trigger` fails in the full suite. It is **not caused by this branch**:
+`git diff 8eca553..HEAD -- src/` is empty, and the failure is present at the base
+commit. It reproduces only under full-suite parallelism and passes 5/5 in
+isolation. Characterised here rather than left as an unexplained red line.
 
 ## Not claimed
 

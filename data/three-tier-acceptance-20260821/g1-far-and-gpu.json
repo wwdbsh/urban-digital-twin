@@ -38,7 +38,7 @@
       "128x128": 28,
       "64x64": 8
     },
-    "note": "839 of 840, not 840. The absent one is the Block 835 alias cell that T005's sweeps recorded as notDeclared. 283,639,528 (all 840, from the runtime's own v2 justification) minus 283,290,003 (the 839 measured here) = 349,525, which is exactly B2, the per-tile bound for one 256x256 atlas. The arithmetic reconciles to the byte."
+    "note": "839 of 840, not 840. The absent one is the Block 835 alias cell that T005's sweeps recorded as notDeclared. NOTE ON AN EARLIER CLAIM, NOW REMOVED: this record previously said the difference from the runtime's 283,639,528 island figure 'reconciles to the byte' at 349,525 = B2. That was a TAUTOLOGY -- 283,639,528 is itself computed as the sum over all 840 atlases with the same formula, so subtracting the 839-atlas sum can only return the 840th, whatever the probe read. It demonstrated arithmetic, not agreement, and it is withdrawn. The exact-zero G1-far result below rests on the probe versus an INDEPENDENT computation from the shipped PNG headers, and is unaffected."
   },
   "theMipQuestionResolvedByMeasurement": {
     "question": "Far-tier atlases are baked with bakedMipLevels 0 and sampled LINEAR_MIPMAP_LINEAR. Does Cesium generate the chain, and if so how does it account for it?",
@@ -117,5 +117,6 @@
     "One machine, one session. Not a distribution, no confidence interval.",
     "This is the far tier ALONE at one pose with the wave tier disabled. It is not a three-tier residency total.",
     "G1-far validates the probe against far-tier atlases. It does not validate it against wave-tier textures, which the prior campaign's G-series covered."
-  ]
+  ],
+  "gSeriesScopeNote": "The committed G-series scope conclusion does NOT depend on the withdrawn claim. It rests on G2 -- a bar of 2,184,525 bytes against a measurement of 283,552,146, implying 3,245 class tiles where 25 were expected -- and on the structural fact that those instruments attribute every texture byte to wave class tiles and cannot see far-tier atlases at all."
 }

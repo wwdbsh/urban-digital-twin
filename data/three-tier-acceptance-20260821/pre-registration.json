@@ -6,12 +6,10 @@
   "artifact": "three-tier-acceptance-campaign-pre-registration",
   "capturedAt": null,
   "capturedAtStatement": "NULL BY CONSTRUCTION. This record and every instrument it names are committed BEFORE the first capture. A pre-registration that can be edited after a reading is not a pre-registration.",
-
   "whatIsBeingAccepted": {
     "statement": "The three-tier composition as it now ships by default: dense procedural massing, the exterior-wave near/mid tier at two levels of detail, and the far-tier HLOD promoted by T005.",
     "whyThisCampaignIsNotTheEarlierOnes": "Every prior acceptance campaign measured a TWO-tier city. The far tier became the default in T005 and no acceptance instrument has ever read it: none of the three committed harnesses touches a single data-far-tier-* attribute. A three-tier campaign run on far-tier-blind instruments would report a two-tier scene and call it three."
   },
-
   "verdictVocabulary": {
     "PASS": "Reading is inside a bar that was registered before it was taken.",
     "FAIL": "Reading is outside such a bar. Recorded, not fixed: fixes are T008 dispositions.",
@@ -20,7 +18,6 @@
     "NOT-CAPTURED": "Attempted and did not yield a usable reading (too few frames, a stalled publish, an aborted run). Never silently upgraded to a verdict.",
     "REPORTED": "Measured and published with no bar, because no bar exists that this campaign is entitled to set."
   },
-
   "instrumentInventory": [
     {
       "gate": "F1 / F2 / F4 frame time, GPU G-series, headroom, storm, eviction, LOD",
@@ -67,7 +64,6 @@
       "validation": "G1-far, defined below. Until it passes, B3/B4/B5 readings are INCONCLUSIVE and are not quoted."
     }
   ],
-
   "failClosedPreFlight": {
     "runsBefore": "lap 0 of anything, and aborts the campaign rather than degrading it",
     "conditions": [
@@ -79,7 +75,6 @@
       "Every frozen record named in scripts/exterior-acceptance-preregistration.test.mjs still matches its pinned checksum, checked again at the END of the campaign as well as the start."
     ]
   },
-
   "frames": {
     "F1": {
       "bar": "p50 <= 16.7 ms AND p95 <= 25 ms, over >= 600 sampled rAF deltas, in a 12,000 ms window taken after 45,000 ms of settle, AT EVERY STATION.",
@@ -93,18 +88,68 @@
       "disposition": "REPORTED. doubleDrawMs and totalBuildMs are published at every station and across the storm."
     }
   },
-
   "stations": {
     "priorFive": [
-      { "stationId": "overview-52km-island", "lon": -73.9712, "lat": 40.7831, "height": 52000, "heading": 0, "pitch": -90 },
-      { "stationId": "overview-2400m-anchor", "lon": -73.98636, "lat": 40.748775, "height": 2400, "heading": 45, "pitch": -50 },
-      { "stationId": "transition-1200m-anchor", "lon": -73.98636, "lat": 40.748775, "height": 1200, "heading": 45, "pitch": -45 },
-      { "stationId": "street-260m-midtown", "lon": -73.98636, "lat": 40.748775, "height": 260, "heading": 45, "pitch": -25 },
-      { "stationId": "street-260m-w02-lower", "lon": -74.009, "lat": 40.7069, "height": 260, "heading": 45, "pitch": -25 }
+      {
+        "stationId": "overview-52km-island",
+        "lon": -73.9712,
+        "lat": 40.7831,
+        "height": 52000,
+        "heading": 0,
+        "pitch": -90
+      },
+      {
+        "stationId": "overview-2400m-anchor",
+        "lon": -73.98636,
+        "lat": 40.748775,
+        "height": 2400,
+        "heading": 45,
+        "pitch": -50
+      },
+      {
+        "stationId": "transition-1200m-anchor",
+        "lon": -73.98636,
+        "lat": 40.748775,
+        "height": 1200,
+        "heading": 45,
+        "pitch": -45
+      },
+      {
+        "stationId": "street-260m-midtown",
+        "lon": -73.98636,
+        "lat": 40.748775,
+        "height": 260,
+        "heading": 45,
+        "pitch": -25
+      },
+      {
+        "stationId": "street-260m-w02-lower",
+        "lon": -74.009,
+        "lat": 40.7069,
+        "height": 260,
+        "heading": 45,
+        "pitch": -25
+      }
     ],
     "farTierDominated": [
-      { "stationId": "far-tier-P2-oblique-2400m", "provenance": "T005 pose registry P2, the pose whose sweep failed and was re-run", "lon": -73.984, "lat": 40.7549, "height": 2400, "heading": 20, "pitch": -35 },
-      { "stationId": "far-tier-P5-island-12km", "provenance": "T005 pose registry P5", "lon": -73.9712, "lat": 40.7831, "height": 12000, "heading": 0, "pitch": -90 }
+      {
+        "stationId": "far-tier-P2-oblique-2400m",
+        "provenance": "T005 pose registry P2, the pose whose sweep failed and was re-run",
+        "lon": -73.984,
+        "lat": 40.7549,
+        "height": 2400,
+        "heading": 20,
+        "pitch": -35
+      },
+      {
+        "stationId": "far-tier-P5-island-12km",
+        "provenance": "T005 pose registry P5",
+        "lon": -73.9712,
+        "lat": 40.7831,
+        "height": 12000,
+        "heading": 0,
+        "pitch": -90
+      }
     ],
     "threeTierBelowTheBucket": {
       "requirement": "At least one station genuinely carrying all three tiers with camera height below 450 m — below the bucket boundary where the served level flips — or an explicit statement that no such station exists.",
@@ -114,7 +159,6 @@
     },
     "everyStationCarries": "farTierArmed, farTierDrawnCells, farTierDeclaredCells, farTierNearCells, publish-seq, massing active/suppressible/covered/uncovered, scheduler residentCount, canvas origin and size, devicePixelRatio, and whether the resource-timing buffer hit its 250-entry cap."
   },
-
   "gpu": {
     "G1far": {
       "runsFirst": true,
@@ -124,13 +168,16 @@
     },
     "unitDiscipline": {
       "prohibition": "THE 288 MiB RUNTIME CEILING AND residentBytes() ARE DECLARED FILE BYTES. B3/B4/B5 AND CRITERION #30 ARE DECODED GPU BYTES. THEY ARE NEVER COMPARED, SUBTRACTED, OR ADDED TO ONE ANOTHER IN THIS CAMPAIGN.",
-      "bars": { "B3residentTextureBytes": 291984434, "B4residentGeometryBytes": 98310624, "B5residentTotalBytes": 390295058 },
+      "bars": {
+        "B3residentTextureBytes": 291984434,
+        "B4residentGeometryBytes": 98310624,
+        "B5residentTotalBytes": 390295058
+      },
       "amendmentHistory": "B3/B4/B5 HAVE NEVER BEEN AMENDED since ADR 0058 froze them. What moved beside them is the runtime cache ceiling: FAR_TIER_RUNTIME_BUDGETS v1 (256 entries / 64 MiB, eviction deferred) became v2 (1,024 entries / 288 MiB declared FILE bytes, eviction discharged by analysis). v2 re-argues the frozen B5 bar in GPU units in its gpuJustification block — island resident upper bound 382,457,884 B against the frozen 390,295,058 B, a 2.0 per cent margin, described by its own author as 'inside, and not comfortably'.",
       "criterion30": "The exterior 256 MiB cache cap is CLOSED and the far tier is deliberately outside it. It is reported SEPARATELY here and added to nothing, except where a stated total explicitly names both pools.",
       "whatB3toB5DoNotBound": "They bound the instantaneous steady-state residency of ONE SELECTED CUT. They are not a peak bound for a streaming runtime: transitional double residency while a replacement uploads, retained eviction caches, and upload staging are all OUTSIDE them. The 1,024-entry cache retains beyond the cut. The runtime's own peak observation is therefore REPORTED separately and never presented as a B-series verdict."
     }
   },
-
   "d11": {
     "disposition": "CARRY-ONLY, and this is registered before any reading.",
     "bar": "4,000 ms leg-Y double draw, inherited from ADR 0045 section 3.3 and carried unchanged by ADR 0052.",
@@ -138,7 +185,6 @@
     "rule": "Exceeding 4,000 ms is a NAMED CARRY with the measured value, not a campaign failure. A value BELOW 4,000 ms does NOT close D-11 either, because one session is not the island-scale bounds rebuild D-11 names. D-11 WILL NOT BE REPORTED CLOSED BY THIS CAMPAIGN under any reading.",
     "openQuestionToAnswer": "Whether doubleDrawMs now includes far-tier covered-set work. The telemetry was written for a two-tier scene; the far tier's covered-set application runs inside the dense commit path that the double-draw window brackets. This campaign states which, by reading the instrumented path, rather than assuming the number still means what it meant."
   },
-
   "arms": {
     "cross": "farTier on/off x exteriorScheduler on/off, for journeys J1-J7.",
     "outRedirection": "EVERY arm passes --out=three-tier-acceptance-20260821. The frozen 20260817 evidence is untouched, and the frozenCliProhibition is honoured: the seven curated journey CLIs and their seven committed journey-evidence.json records are neither run nor modified.",
@@ -146,7 +192,6 @@
     "doesSchedulerOffAlsoDisarmTheFarTier": "PRE-REGISTERED AS A QUESTION TO ANSWER BY READING, NOT AN ASSUMPTION. The far tier has its own parameter and its own default; whether exteriorStreaming=off also disarms it is read from the DOM in that arm — farTierArmed distinguishes a disarmed tier from an armed tier drawing nothing.",
     "theOffArmIsUnmeasuredTerritory": "T005 said it plainly and it is restated here: FAR_TIER_DEFAULT_ON=false restores the pre-HLOD COMPOSITION but does NOT restore the raised residency ceilings or the swapped inventory pin, both of which stay in the build. The OFF arm is therefore a THIRD CONFIGURATION that nobody has measured, and any reading taken in it is a reading of that third thing."
   },
-
   "heap": {
     "instrument": "scripts/citywide-heap-repeat-cli.mjs --out three-tier-acceptance-20260821",
     "inheritedRules": "M1 unchanged (first-half vs second-half median growthRatio <= 0.10 AND monotonicGrowthDetected === false over >= 6 sampled repeats, each after an explicit in-page window.gc()); M2 unchanged (every sample requires activeRequests === 0, and a violation is an instrument-failure abort, never a heap failure); M3 and M4 unchanged.",
@@ -154,7 +199,6 @@
     "capDerivation": "RE-DERIVED FOR THREE TIERS, in the pre-registration commit, before any lap ran. The inherited 75-minute cap was sized for six waves from an arithmetic floor of 9 laps x 5 poses x (45 s settle + >= 5 s landing dwell) = 37.5 min, doubled for headroom. The far tier adds 840 tiles and 258,644,848 declared file bytes per lap, and T005 measured its covered set taking up to ~48 s to stop moving at wide poses — the 840-tile fetch and verify itself lands within ~7 s; the rest is the massing suppression settling behind it. The new floor is 9 x 5 x (45 + 5 + 48) s = 73.5 min, which the inherited 75-minute cap would clear by 1.5 minutes: it would fire on a healthy slow run. Doubling the new floor as the precedent doubled the old gives 147 min, rounded to 150 minutes (9,000,000 ms).",
     "whyThisMattersMoreThanItSounds": "A wall-clock cap that fires on a healthy slow run is an instrument failure masquerading as a result. The cap is raised in this record, before any lap ran, so that raising it can never be a response to a run that took too long."
   },
-
   "noBarDispositions": [
     {
       "item": "Bright-luminance appearance of far-tier tiles",
@@ -162,21 +206,22 @@
       "why": "The only prior characterisation is EEVEE, and EEVEE is not the shipped renderer. Setting an in-app bar here would mean inventing an error budget for a brand-new in-app instrument in the same commit that uses it, which is what T006 honest-stopped over.",
       "namedMissingCapability": "A forced-LOD and isolation hook: the ability to render a named building or tile at a chosen level, alone, from a camera the measurement picks rather than the ring dictates."
     },
-    { "item": "Honest-stop-cell appearance (the 43 cells the bake refused)", "disposition": "REPORTED" },
+    {
+      "item": "Honest-stop-cell appearance (the 43 cells the bake refused)",
+      "disposition": "REPORTED"
+    },
     {
       "item": "Load times",
       "disposition": "REPORTED",
       "why": "A bar derived from the only measurement that exists is a bar fitted to its own data. Unless a bar can be derived from a stated product requirement, none is set — and none is available."
     }
   ],
-
   "controlsOnEveryAppearanceOrIdentityReading": {
     "rule": "BOTH controls, or the reading is INCONCLUSIVE.",
     "pickControl": "Click the registered point and read which feature the app reports. T006's pick returned no feature at all twelve of its poses and eight further probes, which is the reason its campaign could not attribute a single reading.",
     "drawCompositionControl": "Classify what is actually drawn in the region with scripts/draw-composition.mjs. A region more than 2 per cent procedural massing cannot carry a claim about wave or far-tier geometry and is refused rather than scored.",
     "fetchIsNotDraw": "A wire-level fetch proves a byte ARRIVED. It does not prove that byte was RASTERIZED where the reading was taken. Both controls exist because that distinction has already produced one false PASS in this project."
   },
-
   "captureOrderAndTimeBudget": {
     "order": [
       "0. Fail-closed pre-flight (minutes).",
@@ -195,7 +240,6 @@
     },
     "attemptPolicy": "SINGLE attempt per gate. Every additional pass is disclosed with its reason, including any capture discarded for failing a precondition. A gate is never re-run because its number looked wrong."
   },
-
   "hardwareDisclosure": {
     "statement": "THIS IS WHAT THE MACHINE IS. There is no 'reference MacBook' in this project and none is implied.",
     "model": "MacBook Pro, Mac16,7",
@@ -207,20 +251,17 @@
     "powerIsAPreFlightCondition": "Battery operation is a material confound for an hours-long timing campaign in two ways: early stations run cool and full while late stations run warm and drained, which puts an uncontrolled trend under per-station F1 comparisons; and a sustained GPU load over 840 tiles can exhaust the battery mid-campaign, turning a single-attempt run into a disclosed re-run. THE CAMPAIGN REQUESTS AC POWER BEFORE TIMING CAPTURES. If it is run on battery anyway, the power state at every station is recorded and attached to every timing verdict as a stated limitation.",
     "oneMachineOneSession": "EVERY TIMING VERDICT IN THIS CAMPAIGN IS ONE MACHINE, ONE SESSION. It is not a distribution, it carries no confidence interval, and it does not generalise to other hardware."
   },
-
   "vehicle": {
     "one": "A single production build with VITE_EXTERIOR_SCHEDULER_PROBE=1, VITE_CITYWIDE_OVERVIEW_PROBE=1 and VITE_EXTERIOR_TEXTURE_PROBE=1, served by vite preview at 127.0.0.1:4173, for every gate where one vehicle can serve.",
     "disclosedSplit": "The three committed harnesses drive their own scratch Chrome over CDP (ports 9223/9224/9225). The far-tier reads have no committed harness and are driven through the Orca embedded browser, as both T005 sweeps were. THAT IS A VEHICLE SPLIT AND IT IS DISCLOSED RATHER THAN GLOSSED: CDP Chrome and the Orca browser are different browsers, and a comparison across them is not vehicle-controlled.",
     "settleRule": "45,000 ms settle before any frame window, per FRAME_F1. For far-tier state reads, T005's sweep-2 rule: massing-active > 0, then the triple (active, suppressible, covered) identical across consecutive reads, with a cap after which the capture is NOT-CAPTURED.",
     "canvasGeometryRecordedEveryCapture": "Origin, size, devicePixelRatio and window size, because T006 invalidated an entire campaign by applying canvas-space regions to whole-window captures with no origin correction."
   },
-
   "rollbackStatement": {
     "ifTheCampaignFails": "A FAIL in this campaign does not automatically flip FAR_TIER_DEFAULT_ON to false, and this record says so before any reading so that the flip cannot be presented afterwards as the campaign's obvious consequence.",
     "whyNot": "FAR_TIER_DEFAULT_ON=false restores the pre-HLOD COMPOSITION and nothing else: the raised residency ceilings, the swapped inventory pin and the merged inventory all stay in the build. That is a THIRD CONFIGURATION nobody has measured. Rolling back on a FAIL would trade a measured configuration with a known defect for an unmeasured one with unknown defects.",
     "whatACampaignFailActuallyProduces": "A named disposition for T008, with the measured number attached. FIXES ARE OUT OF SCOPE HERE."
   },
-
   "nonClaims": [
     "Not a distribution and not a confidence interval: one machine, one session, single attempt per gate.",
     "Not a claim about other hardware, other displays, or other power states.",
@@ -228,5 +269,11 @@
     "The OFF arm measures a third configuration that no campaign has characterised, not 'the previous behaviour'.",
     "D-11 is not closed by this campaign under any reading.",
     "Criterion #30 is closed and is not re-litigated here; it is reported separately and in its own units."
-  ]
+  ],
+  "errata": {
+    "statement": "Corrections recorded AFTER capture, in errata rather than by editing a claim. Nothing here changes a bar.",
+    "frozenRootCount": "This record says the new harness's write guard refuses SIX named frozen roots. It refuses NINETEEN: the six -20260817 and -20260815 acceptance roots, three far-tier record roots, and the seven curated journey-evidence roots, plus anything outside the campaign's own root. The count was written before the list was finished and was never updated. The guard is wider than the claim, not narrower.",
+    "stationDenominator": "The campaign registered SEVEN stations. The committed F1 instrument iterates a fixed FIVE and cannot be pointed at the two far-tier-dominated poses, so F1 was never captured at either. See frames-analysis.stationDenominator.",
+    "preflightConditionSet": "The opening pre-flight checked 12 conditions and the closing one 13; a harness-required-releases check was added mid-campaign after two aborts. The two runs are not the same test and the records say so individually."
+  }
 }

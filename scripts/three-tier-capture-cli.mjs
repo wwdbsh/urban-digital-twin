@@ -85,10 +85,34 @@ export const FROZEN_EVIDENCE_ROOTS = [
  * via `..` — is refused before any byte is written.
  */
 export function guardedWrite(path, text, root = RECORD_ROOT) {
-  const target = resolve(path);
-  const rel = relative(resolve(root), target);
-  if (rel === "" || rel.startsWith("..") || resolve(root, rel) !== target) {
-    fail(`REFUSING to write outside the T007 record root.\n  target: ${target}\n  root:   ${resolve(root)}\n  This harness may not write frozen acceptance evidence or source.`);
+  // Both sides canonicalised before comparison, so a symlinked worktree cannot
+  // make containment arithmetic pass on a path that resolves somewhere else.
+  // The target usually does not exist yet, so its NEAREST EXISTING ANCESTOR is
+  // the thing that can be canonicalised; the remainder is appended lexically.
+  const canonical = (candidate) => {
+    let head = resolve(candidate);
+    const tail = [];
+    for (;;) {
+      try { return join(realpathSync(head), ...tail); } catch { /* keep walking up */ }
+      const parent = dirname(head);
+      if (parent === head) return resolve(candidate);
+      tail.unshift(head.slice(parent.length + 1));
+      head = parent;
+    }
+  };
+  const target = canonical(path);
+  const realRoot = canonical(root);
+  // The frozen list is consulted EXPLICITLY as well as by containment, so the
+  // refusal survives a refactor of the containment check.
+  for (const frozen of FROZEN_EVIDENCE_ROOTS) {
+    const frozenAbsolute = canonical(join(repositoryRoot, frozen));
+    if (target === frozenAbsolute || target.startsWith(`${frozenAbsolute}/`)) {
+      fail(`REFUSING to write inside a FROZEN evidence root.\n  target: ${target}\n  frozen: ${frozen}`);
+    }
+  }
+  const rel = relative(realRoot, target);
+  if (rel === "" || rel.startsWith("..") || resolve(realRoot, rel) !== target) {
+    fail(`REFUSING to write outside the T007 record root.\n  target: ${target}\n  root:   ${realRoot}\n  This harness may not write frozen acceptance evidence or source.`);
   }
   mkdirSync(dirname(target), { recursive: true });
   writeFileSync(target, text);
@@ -134,7 +158,12 @@ export const TIER_STATE_PROBE = `(() => {
     devicePixelRatio: window.devicePixelRatio,
     windowInner: { width: window.innerWidth, height: window.innerHeight },
     resourceCount: resources.length,
-    resourceBufferAtCap: resources.length >= 250,
+    // The DEFAULT resource-timing buffer is 250 entries. Callers raise it to
+    // 50,000 before load, so "over 250" is not "truncated" -- reporting the
+    // configured size alongside the count lets a reader tell those apart instead
+    // of reading a false alarm, which is what the first revision produced.
+    resourceTimingBufferConfigured: (window.__t7BufferSize ?? null),
+    resourceBufferMayBeTruncated: (window.__t7BufferSize ?? 250) <= resources.length,
     glbCount: glb.length,
     farTierGlbCount: glb.filter((n) => n.includes('.far_0.')).length,
     lod0Count: glb.filter((n) => n.includes('__lod_0')).length,
@@ -216,7 +245,13 @@ export function tierCompositionOf(state) {
   const massingActive = num(viewport.farTierMassingActive);
   const resident = state.schedulerDecision?.residentCount ?? null;
   const publishSeq = num(viewport.farTierPublishSeq);
-  const farTierAttributesPresent = Object.keys(status).length > 0 || viewport.farTierPublishSeq !== undefined;
+  // NARROWED. An earlier revision used a disjunction and read "armed" true in a
+  // G1 arm where every far-tier byte was zero: the viewport publish-seq attribute
+  // is written by the dense pass whether or not the tier is armed. Arming now
+  // requires the STATUS ELEMENT, which App.tsx renders only when the far tier is
+  // requested, AND at least one declared-state attribute on it.
+  const statusElementPresent = Object.keys(status).length > 0;
+  const farTierAttributesPresent = statusElementPresent && status.farTierDeclared !== undefined;
   return {
     farTierAttributesPresent,
     farTierArmed: farTierAttributesPresent,

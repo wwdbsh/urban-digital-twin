@@ -66,7 +66,8 @@
           "Active asset",
           "Truth tiers"
         ],
-        "panelStatement": "A verified exterior asset ships for this building, but its cell is not streamed at this camera yet. Move closer to load it."
+        "panelStatement": "A verified exterior asset ships for this building, but its cell is not streamed at this camera yet. Move closer to load it.",
+        "rowsPresentOfRequired": "1 of 4 required rows: Uncertainty present; Cell / release, Active asset and Truth tiers absent."
       },
       "frozenBaseline": {
         "query": "doitt:100022",
@@ -80,8 +81,10 @@
         "pass": true
       },
       "attribution": "A REAL BEHAVIOURAL DIFFERENCE, NOT AN INSTRUMENT ARTIFACT. Same query (doitt:100022), same pose, same single search result. The frozen baseline carried all four rows -- Cell / release, Active asset, Truth tiers, Uncertainty. The shipped default carries one. The panel is HONEST about why: 'A verified exterior asset ships for this building, but its cell is not streamed at this camera yet. Move closer to load it.' It states what is unavailable rather than silently drawing less, which is the property J5 independently passes on.",
-      "isolation": "NOT THE FAR TIER. Re-run at the same pose with farTier=off -- far-tier status element absent, farTierDrawn null -- the panel still shows 1 of 4 rows and the same not-streamed notice. The cause is the -s1 to -s2 two-LOD serving promotion changing which cells are resident at that camera, NOT the far tier this campaign was convened to accept.",
-      "disposition": "RECORDED FAIL with a named T008 disposition. Fixes are out of scope here. The user-visible consequence: a searched building at that camera no longer shows its cell/release, active asset or truth-tier rows."
+      "isolation": "Re-run at the same pose with farTier=off: the far-tier status element is ABSENT (farTierArmed false) and the panel still carries one of the four required rows with the same not-streamed statement. The evidence is committed as j2-far-tier-arms.json with a sidecar; an earlier revision asserted this as 'proven' and 'decisively' while retaining no machine-readable record of it, which was an overclaim.",
+      "disposition": "RECORDED FAIL with a named T008 disposition. Fixes are out of scope here. The user-visible consequence: a searched building at that camera no longer shows its cell/release, active asset or truth-tier rows.",
+      "evidenceRecord": "j2-far-tier-arms.json",
+      "armCaveat": "In the far-tier-ON arm of that record the tier was armed but had drawn 0 cells at sample time, so it is not a fully-loaded far-tier scene. The conclusion rests on the OFF arm, where the tier was wholly disarmed and the loss was unchanged."
     },
     {
       "journeyId": "block835-opt-in",
