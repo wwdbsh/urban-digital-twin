@@ -1,0 +1,230 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "three-tier-acceptance-20260821:campaign-summary",
+  "task": "T007",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION.",
+  "revision": "CORRECTED after review. The F1 FAIL is withdrawn and the far-tier attribution is withdrawn; see supersededClaims.",
+  "headline": "THE THREE-TIER DEFAULT IS NOT ACCEPTED. One product FAIL stands, and it is NOT the far tier's. The central frame-time gate could not be captured at three of its seven registered stations, and the heap gate could not be captured at all.",
+  "supersededClaims": [
+    "WITHDRAWN: 'F1 FAIL at overview-52km-island'. That capture had landed:false, dispatchCount 12, undisclosed. The registered rule classifies a landing failure as an instrument-failure abort. Re-run reproduced the landing failure. The station is NOT-CAPTURED.",
+    "WITHDRAWN: every attribution of that station's frame time to 'the far tier's'. The two-tier baseline at the SAME station was already p50 16.7 / p95 24.9 before the far tier existed, and the isolation's ON arm could not be captured. NOT ISOLATED.",
+    "WITHDRAWN: the G-series 'reconciles to the byte' claim, which subtracted a sum from a superset of itself and could only return the missing term. A tautology, not agreement.",
+    "CORRECTED: 'nine stations' to the registered SEVEN; '24 class tiles expected' to 25; the heap stopping rule from 'pre-registered' to an in-campaign judgement disclosed at the time.",
+    "WITHDRAWN AGAIN, at a second site: ADR 0058 restated the G-series 'to the byte' subtraction three sections after withdrawing it. Both instances are now gone. The scope conclusion rests on G2's 3,245-tiles-where-25-expected, which is not a restatement of the harness's own delta."
+  ],
+  "gates": [
+    {
+      "gate": "PRE-FLIGHT opening",
+      "verdict": "PASS",
+      "decisive": "12/12. 93,564 staged files re-verified; far-tier inventory at its pin; 840+43=883 reconciled; six -s2 manifests real JSON; both probe markers in the served bytes; 7 frozen records byte-identical; AC power read."
+    },
+    {
+      "gate": "G1-far (new instrument validation)",
+      "verdict": "PASS",
+      "decisive": "Delta EXACTLY 0 over 839 tiles against an INDEPENDENT computation from shipped PNG headers. H1 no-mips short 70,822,291; H3 exact pyramid short exactly 839 = one byte per tile. Cesium generates mips, accounts with truncated 4/3."
+    },
+    {
+      "gate": "B3 resident texture",
+      "verdict": "PASS",
+      "decisive": "283,290,003 vs 291,984,434 bar; 3.0% headroom. Decoded GPU bytes."
+    },
+    {
+      "gate": "B4 resident geometry",
+      "verdict": "PASS",
+      "decisive": "95,302,992 vs 98,310,624; 3.1%."
+    },
+    {
+      "gate": "B5 resident total",
+      "verdict": "PASS",
+      "decisive": "378,592,995 vs 390,295,058; 3.0%. 3,864,889 B under the runtime v2 prediction."
+    },
+    {
+      "gate": "F1 overview-52km-island",
+      "verdict": "NOT-CAPTURED",
+      "decisive": "landed false, dispatchCount 12, in BOTH attempts 3 and 4. Registered rule: a landing failure is an instrument-failure abort. Earlier FAIL verdict WITHDRAWN. Numbers, for the record only: attempt 3 p50 16.8 / p95 25.2; attempt 4 p50 16.7 / p95 25.2."
+    },
+    {
+      "gate": "F1 overview-2400m-anchor",
+      "verdict": "PASS",
+      "decisive": "p50 15.4, p95 17.7, n=924 (attempt 4)."
+    },
+    {
+      "gate": "F1 transition-1200m-anchor",
+      "verdict": "PASS",
+      "decisive": "p50 16.7, p95 18.7, n=717."
+    },
+    {
+      "gate": "F1 street-260m-midtown",
+      "verdict": "PASS",
+      "decisive": "p50 9.8, p95 18.0, n=1023."
+    },
+    {
+      "gate": "F1 street-260m-w02-lower",
+      "verdict": "PASS",
+      "decisive": "p50 8.3, p95 10.3, n=1440."
+    },
+    {
+      "gate": "F1 far-tier-P2-oblique-2400m",
+      "verdict": "NOT-CAPTURED",
+      "decisive": "Registered as a station; the committed F1 instrument iterates a fixed five-station list and cannot be pointed at it."
+    },
+    {
+      "gate": "F1 far-tier-P5-island-12km",
+      "verdict": "NOT-CAPTURED",
+      "decisive": "Same reason."
+    },
+    {
+      "gate": "F1 OVERALL (every-station gate)",
+      "verdict": "NOT-CAPTURED",
+      "decisive": "4 PASS of 7 REGISTERED stations; 3 not captured. Cannot be PASS without all stations and cannot be FAIL from a capture the rule says to discard."
+    },
+    {
+      "gate": "F1 island isolation arm (far tier OFF)",
+      "verdict": "REPORTED",
+      "decisive": "p50 16.6, p95 18.2, n=796, far tier wholly disarmed, composition matched intent. NO valid ON arm: three attempts refused because the far tier had declared 0 cells within the registered 45 s settle. ISOLATION INCOMPLETE."
+    },
+    {
+      "gate": "F2 vsync interpretation",
+      "verdict": "REPORTED",
+      "decisive": "about:blank control same session p50 8.3 / p95 10.0, n=1440. No station instrument-limited. Not a bar."
+    },
+    {
+      "gate": "F4 double draw",
+      "verdict": "REPORTED (named carry of D-11)",
+      "decisive": "max 6,165.2 ms vs 4,000 ms leg-Y. D-11 NOT closed either way."
+    },
+    {
+      "gate": "Committed G1/G2/G3 (wave tier)",
+      "verdict": "FAIL-INSTRUMENT-SCOPE",
+      "decisive": "G2: bar 2,184,525 vs measured 283,552,146, implying 3,245 class tiles where 25 were expected. Far-tier-blind instruments attributing every texture byte to wave class tiles."
+    },
+    {
+      "gate": "Three-tier composition below 450 m",
+      "verdict": "PASS (requirement MET)",
+      "decisive": "Both 260 m stations: massing 251/154, exterior resident 8, far tier drawn 738/811, publish-seq advancing. Counter-finding: the three overview stations and P2 are TWO-tier (massingActive 0)."
+    },
+    {
+      "gate": "J1 cold default six wave",
+      "verdict": "FAIL-INSTRUMENT-SCOPE",
+      "decisive": "Boot-doc filter pins -s1 ids; default activates six -s2. Frozen baseline: six -s1, 18 boot docs. Substantive half holds."
+    },
+    {
+      "gate": "J2 search select details",
+      "verdict": "FAIL (product)",
+      "decisive": "1 of 4 required rows (Uncertainty present; Cell / release, Active asset, Truth tiers absent) vs 4 of 4 in the frozen baseline, same query and pose. Reproduces with the far tier WHOLLY DISARMED -- evidence committed as j2-far-tier-arms.json."
+    },
+    {
+      "gate": "J3 block835 opt-in",
+      "verdict": "PASS",
+      "decisive": "Opt-in release active, 8 resident cells."
+    },
+    {
+      "gate": "J4 deep-link identity",
+      "verdict": "PASS",
+      "decisive": "Round trip true, panel digests match."
+    },
+    {
+      "gate": "J5 streaming-off honesty",
+      "verdict": "PASS",
+      "decisive": "States unavailability in words; still differs by checksum."
+    },
+    {
+      "gate": "J6 eviction cross-reference",
+      "verdict": "NOT-CAPTURED",
+      "decisive": "Reads an eviction record this campaign did not produce."
+    },
+    {
+      "gate": "J7 refused-parent honesty",
+      "verdict": "NOT-CAPTURED",
+      "decisive": "Separate invocation not reached."
+    },
+    {
+      "gate": "M1-M4 heap",
+      "verdict": "NOT-CAPTURED",
+      "decisive": "Three instrument-failure aborts; no attempt past lap 2 of 9; instrument wrote no record on any."
+    },
+    {
+      "gate": "Bright luminance",
+      "verdict": "REPORTED",
+      "decisive": "P2 oblique surface mean luminance 0.3596, max 0.8700, 0.0000 massing share."
+    },
+    {
+      "gate": "Honest-stop-cell appearance",
+      "verdict": "REPORTED",
+      "decisive": "P3 nadir mean 0.1564, max 0.3461."
+    },
+    {
+      "gate": "Load times",
+      "verdict": "REPORTED",
+      "decisive": "195 and 199 ms first far-tier attribute -- WARM CACHE, not comparable with T005's cold 4,511-7,529 ms."
+    },
+    {
+      "gate": "PRE-FLIGHT closing",
+      "verdict": "PASS",
+      "decisive": "13/13. Condition set GREW from 12 mid-campaign. Identical at both ends: the 7 frozen records, byte-identical."
+    }
+  ],
+  "verdictCounts": {
+    "PASS": 13,
+    "NOT-CAPTURED": 7,
+    "REPORTED": 5,
+    "REPORTED (named carry of D-11)": 1,
+    "FAIL-INSTRUMENT-SCOPE": 2,
+    "PASS (requirement MET)": 1,
+    "FAIL (product)": 1
+  },
+  "boundRecords": {
+    "campaign-summary": "982cab77128c9f823d5b672bf166e1c0a00ffc93e86c64136d9025405674c530",
+    "chrome-cleanup": "628c0e8a8b338c2ccf59537ed67e574bbbcb94c5b11550c81c37546fae0c4bcf",
+    "f1-island-station": "67bb19e5acabc769f6d0a48ca17fe7de8b4a44c4675de36025515b3a04a92e9b",
+    "frames-analysis": "2ba419c122923e1952db83dc5c4129381ca8eeafbb6fd01e240bb6d330179f9d",
+    "frames-and-gpu": "e4436dd262cfd45bc1e098e622126a0d231ec4b418c8d6ab608be856abb32cfc",
+    "g1-far-and-gpu": "9f9ba000c2590f5eff14700e19512679c531dc9cfd8a77650b553868e6a85144",
+    "heap": "6d84d38f7b863c627d9a910644f217cedf3c1b1c8f397ba3500fa993947092ed",
+    "j2-far-tier-arms": "e7c694ad7e2402894893c06d7206663acf2837c6c5ab02c2e119896bd4429c1d",
+    "journeys-analysis": "9e91fb7ed11b57f9a6080251cfcbec1a0758931c7eee99dee42aa07be2556b26",
+    "journeys": "b4717dfc2c51c472eee86b5b12537c3f089d1278bfaef595f2319c8723a629f1",
+    "pre-registration": "2c0a21fc424dc25d39e008f7ba25b5b7be0e11b535e7dc292d4c1ed2cc90359a",
+    "preflight-closing": "452634adb930108bfdedbc90af4b1a3d815211d4ba0e2b4e9655384f692f589a",
+    "preflight-opening": "ca463d1edc712dc004a961c200eadeb583016739d5d8b390d156a2000b0d7f30",
+    "preflight": "452634adb930108bfdedbc90af4b1a3d815211d4ba0e2b4e9655384f692f589a",
+    "reported-no-bar": "1b1dc380c247738c5066106518fe421da8f4cbe6d74eba7c06cc795f5f971177",
+    "staging-provenance": "373a7af4c6fa4d83c9b82c025fd5b170095937d82a3f28810751bd868ecfbe3f"
+  },
+  "whatFailedAndWhose": {
+    "J2": "The ONLY product FAIL, and it is NOT the far tier's. It reproduces with the far tier wholly disarmed. Attributed to the -s1 to -s2 two-LOD serving promotion changing residency; recorded against ADR 0057.",
+    "F1": "NOTHING is attributed. The one station that might have carried a far-tier cost could not be measured, twice, and was already at the bar as a two-tier city."
+  },
+  "whatWasNotMeasured": [
+    "F1 at three of seven registered stations: overview-52km-island (reproducible landing failure) and both far-tier-dominated poses (the committed instrument iterates a fixed five).",
+    "A controlled far-tier ON/OFF isolation at the island station: the OFF arm captured, the ON arm could not, three times.",
+    "M1 heap growth: three aborts, no series.",
+    "J6 and J7.",
+    "Wave-tier GPU accounting in a three-tier scene: the committed G-series cannot express it.",
+    "Any appearance verdict: all appearance items are REPORTED."
+  ],
+  "rollback": {
+    "statement": "A campaign FAIL does NOT automatically flip FAR_TIER_DEFAULT_ON, as registered before any reading.",
+    "reason": "false restores the pre-HLOD composition and nothing else; the raised ceilings and swapped pin stay. That is a third configuration nobody has measured.",
+    "andItWouldNotHelp": "The one product FAIL reproduces with the far tier disarmed. Flipping it off would not fix it, and this is now backed by a committed record rather than an assertion."
+  },
+  "t008Dispositions": [
+    "J2: a searched building at the 260 m midtown pose shows 1 of 4 required detail rows because its cell is not resident under -s2.",
+    "overview-52km-island will not land (dispatchCount 12, reproducible). Until it does, F1 cannot be measured at the island overview at all.",
+    "The committed F1 instrument cannot be pointed at a registered station outside its fixed five.",
+    "J1's boot-document filter and the G-series byte accounting are pinned to the -s1 era.",
+    "M1 needs sampling that does not depend on window focus, or a dedicated quiet session.",
+    "The pre-flight CLI overwrites its own record each run; the opening record had to be recovered from git.",
+    "The far tier does not finish declaring within F1's registered 45 s settle at the 52 km pose, which blocks any same-settle isolation there."
+  ],
+  "nonClaims": [
+    "One machine, one session, AC power. No distribution, no confidence interval.",
+    "Passing gates are not visual, geographic or accessibility acceptance.",
+    "D-11 is not closed.",
+    "Criterion #30 is closed elsewhere, reported in its own units, added to nothing.",
+    "The far-tier OFF arm reading may not be differenced against a different instrument's ON reading from a different session."
+  ],
+  "preflightNote": "The closing pre-flight ABORTED once, correctly, because it ran while the correction commit was still uncommitted -- worktree-clean is one of its conditions. Re-run on the clean tree: PASS 13/13. Both the abort and the re-run are disclosed; the guard refusing its own operator's untidiness is the guard working.",
+  "instrumentReusePreconditions": "scripts/station-arm-frames-cli.mjs carries three named preconditions before reuse -- no tests, bypasses guardedWrite, asymmetric composition predicate -- recorded in the implementation record. No number in this campaign depends on them; they are T008 preconditions, not defects found in a reading."
+}

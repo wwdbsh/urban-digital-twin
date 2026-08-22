@@ -1,0 +1,99 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "three-tier-acceptance-20260821:f1-island-station",
+  "task": "T007",
+  "phase": "2b",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION.",
+  "headline": "F1 AT overview-52km-island IS NOT-CAPTURED, NOT A FAIL. The earlier FAIL verdict is WITHDRAWN.",
+  "theWithdrawal": {
+    "whatWasRecorded": "T007 recorded F1 FAIL at this station from attempt 3 (p50 16.8, p95 25.2, n=621).",
+    "whyItIsWithdrawn": "That capture carries landing {landed:false, dispatchCount:12}. The campaign's own pre-registration classifies a LANDING FAILURE as an instrument-failure abort that writes no verdict and repeats. A verdict was written from it anyway, and the landing failure was not disclosed. That is the error, and it is mine.",
+    "reRun": "Attempt 4 re-ran the registered instrument at every station. The landing failure REPRODUCED at this station and only this station: landed false, dispatchCount 12 again, while the other four landed on dispatch 1 in both attempts.",
+    "consequence": "A station that will not land cannot yield an F1 verdict under the registered rule. It is NOT-CAPTURED in both attempts, and F1 as an every-station gate therefore has no FAIL to report -- it has four PASSes and one station it could not measure."
+  },
+  "readings": {
+    "attempt3": {
+      "p50Ms": 16.8,
+      "p95Ms": 25.2,
+      "sampleCount": 621,
+      "landed": false,
+      "dispatchCount": 12
+    },
+    "attempt4": {
+      "p50Ms": 16.7,
+      "p95Ms": 25.2,
+      "sampleCount": 624,
+      "landed": false,
+      "dispatchCount": 12
+    },
+    "noteOnTheNumbers": "p50 moved 16.8 to 16.7 between attempts -- across the bar -- while p95 held at 25.2. A tenth of a millisecond that changes a verdict is noise, not a measurement."
+  },
+  "twoTierBaselineAtTheSameStation": {
+    "source": "data/exterior-acceptance-20260817/frames-and-gpu.json (FROZEN T006 record, read only)",
+    "p50Ms": 16.7,
+    "p95Ms": 24.9,
+    "sampleCount": 704,
+    "statement": "THE TWO-TIER CITY WAS ALREADY AT THE BAR HERE, BEFORE THE FAR TIER EXISTED: p50 16.7 against a 16.7 bar, p95 24.9 against 25. This station was marginal without the far tier, and any attribution of a 0.1-0.3 ms movement to the far tier has to reckon with that first."
+  },
+  "isolationAttempt": {
+    "instrument": "scripts/station-arm-frames-cli.mjs, NEW for this correction. Samples one station under a caller-chosen URL so the far tier can be switched, which the committed frames harness cannot do.",
+    "refusalRulesFixedBeforeTheArmsRan": "Focus is REPORTED, not a refusal, because the registered F1 instrument does not gate on it and both Chromes launch with --disable-renderer-backgrounding. COMPOSITION is a refusal, because the pre-registration requires expected tier composition to be verified by DOM read.",
+    "armOff": {
+      "verdict": "PASS",
+      "p50Ms": 16.599999999998545,
+      "p95Ms": 18.200000000004366,
+      "sampleCount": 796,
+      "farTierArmed": false,
+      "massingActive": 42833,
+      "compositionMatchedIntent": true
+    },
+    "armOnAttempts": [
+      {
+        "label": "island-ON-validation",
+        "order": 1,
+        "preWarmSeconds": 0,
+        "verdict": "NOT-CAPTURED",
+        "refusalReason": "Refused under the refusal rules as they stood at that moment, which treated a focus change as fatal: focus did not hold across the window. The composition read would ALSO have refused it -- the far tier had declared 0 cells -- so it fails both the rule that was in force and the rule that replaced it.",
+        "p50Ms": 16.80000000000291,
+        "p95Ms": 26,
+        "sampleCount": 620,
+        "farTierDeclaredCells": 0,
+        "note": "This attempt predates the refusal-rule fix. It is enumerated so the record's 'three ON attempts' can be counted rather than taken on trust."
+      },
+      {
+        "label": "island-ON",
+        "verdict": "NOT-CAPTURED",
+        "p50Ms": 23.099999999998545,
+        "p95Ms": 26.599999999998545,
+        "sampleCount": 573,
+        "farTierDeclaredCells": 0,
+        "order": 2,
+        "preWarmSeconds": 90,
+        "refusalReason": "tier composition does not match the arm's intent (expected far tier on; armed=true, declared=0, massingActive=41881)"
+      },
+      {
+        "label": "island-ON-attempt2",
+        "verdict": "NOT-CAPTURED",
+        "p50Ms": 16.69999999999709,
+        "p95Ms": 25,
+        "sampleCount": 702,
+        "farTierDeclaredCells": 0,
+        "order": 3,
+        "preWarmSeconds": 200,
+        "refusalReason": "tier composition does not match the arm's intent (expected far tier on; armed=true, declared=0, massingActive=41881)",
+        "note": "THE 200-SECOND PRE-WARM ATTEMPT. Immediately before this sample the same page, left to settle for 200 s, read 840 declared / 839 drawn -- the far tier does reach full residency at this pose given enough time. The sampler's own Page.navigate then resets the document and the tier must declare again from scratch, which it does not finish inside F1's registered 45 s settle. That is why a longer warm does not rescue the arm."
+      }
+    ],
+    "whyTheOnArmCouldNotBeCaptured": "At this pose the far tier had not finished DECLARING within F1's registered 45 s settle: it read 0 declared cells while the massing layer drew ~42,000 buildings. A 200 s pre-warm brought it to 840 declared / 839 drawn, but the sampler's own Page.navigate resets the page and the tier must re-declare, so the settle the bar registers is not enough here. Three ON attempts, all refused on composition.",
+    "verdict": "ISOLATION INCOMPLETE. The OFF arm captured cleanly and PASSES (p50 16.6, p95 18.2, n=796, far tier wholly disarmed). No valid ON arm exists from the same instrument, so there is no controlled pair.",
+    "whatMayNotBeConcluded": "The OFF arm's 18.2 ms p95 may NOT be differenced against the committed harness's 25.2: different instruments, different sessions, and the harness's own reading never landed. That comparison is suggestive and is not an isolation.",
+    "armOnAttemptCount": 3
+  },
+  "attribution": {
+    "statement": "NOT ISOLATED. T007 does not attribute this station's frame time to the far tier.",
+    "basis": "Three reasons together: the station never landed in either attempt; the two-tier baseline was already at 16.7 / 24.9 before the far tier existed; and the ON arm of the isolation could not be captured.",
+    "whatWasSaidBefore": "Earlier T007 records called this 'the far tier's'. That attribution is WITHDRAWN wherever it appeared -- campaign summary, ADR 0058, implementation record."
+  },
+  "attemptDisclosure": "Registered instrument: attempts 3 and 4, both disclosed, both landing-failed at this station. Isolation instrument: one OFF arm captured, three ON arms refused on composition. No reading was discarded for its numbers; every refusal names a precondition."
+}

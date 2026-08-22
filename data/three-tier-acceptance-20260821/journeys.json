@@ -1,0 +1,301 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "exterior-acceptance-20260817:journeys",
+  "task": "T006",
+  "artifact": "serving-journeys",
+  "capturedAt": "2026-08-22T12:13:46.949Z",
+  "attemptCount": 2,
+  "attemptPolicy": "SINGLE attempt per capture. attemptCount is recorded on every record. A capture is repeated ONLY for a NAMED instrument failure (a pre-flight abort, an M2 activeRequests violation, a pose-landing failure, a probe that never mounted), never because a reading looked wrong. The name of the failure is recorded with the attempt.",
+  "browser": "Chrome/151.0.7922.172",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "deviceScaleFactor": 1
+  },
+  "base": "http://127.0.0.1:4173/",
+  "pose": {
+    "stationId": "street-260m-midtown",
+    "lon": -73.98636,
+    "lat": 40.748775,
+    "height": 260,
+    "heading": 45,
+    "pitch": -25,
+    "roll": 0,
+    "role": "street level over the promoted midtown wave"
+  },
+  "selectionFeatureId": "doitt:100022",
+  "selectionReleaseId": "manhattan-midtown-core-cells-20260811-v3-s1",
+  "servedBundle": {
+    "previewBase": "http://127.0.0.1:4173/",
+    "indexHtmlChecksumSha256": "a9d167157e5a653f0fa97eba3072b67f214fa06a426a284f6a8fdcf7727647ff",
+    "localDistIndexHtmlChecksumSha256": "a9d167157e5a653f0fa97eba3072b67f214fa06a426a284f6a8fdcf7727647ff",
+    "matchesLocalDist": true,
+    "assets": [
+      {
+        "ref": "/assets/index-CGAuZ-c1.js",
+        "byteSize": 5852913,
+        "sha256": "f0d559e5894faedb3e0c8608ea4be010fe50bd95e0789aa62e8438bad5d0dd13"
+      }
+    ],
+    "schedulerProbePresent": true,
+    "statement": "Checked BEFORE Chrome is launched and fail-closed: the served index.html is byte-identical to this worktree's dist/index.html, and the served bytes carry the scheduler probe marker the journeys read wave activation from."
+  },
+  "chromeLaunchCommand": "open -na \"Google Chrome\" --args --remote-debugging-port=9225 --user-data-dir=/tmp/t006-journeys-chrome --no-first-run --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding",
+  "chromeDiscipline": "T008 discipline: a scratch user-data-dir per capture session, killed after, with the surviving-process count READ rather than assumed and recorded as a number.",
+  "survivingChromeProcessCount": 0,
+  "preRegistration": "data/exterior-acceptance-20260817/pre-registration.json",
+  "frozenCliProhibition": "The seven curated journey CLIs and their seven committed journey-evidence.json records are not run and not modified. The drift test asserts their checksums are unchanged.",
+  "visualRule": "Rendered stills are captured at every station in STATIONS and at every journey, checksummed, and committed as what-is-drawn evidence.",
+  "blenderInheritance": {
+    "claim": "The T004 Blender re-import agreement (94 of 94 sampled buildings) INHERITS to the shipped -s1 serving releases and is NOT re-run.",
+    "argument": "The agreement was measured on the -c1 retention payloads. The -s1 serving releases are BYTE COPIES of the -c1 GLBs - the serving cut changes which artifacts a release declares and where the class tiles live, not the geometry bytes - and every served byte is re-verified at load against the same declared size and SHA-256. A re-import of a byte-identical GLB is arithmetically guaranteed to reproduce the same measurement, so re-running it would generate evidence that could not differ.",
+    "honesty": "This is an INHERITANCE ARGUMENT resting on the byte-copy proof, stated as such. If the byte-copy proof does not hold for a wave, the inheritance does not hold for that wave either, and the campaign records that rather than asserting agreement it did not measure.",
+    "source": "data/mass-generation-20260816/blender-agreement.json"
+  },
+  "journeys": [
+    {
+      "journeyId": "cold-default-six-wave",
+      "claim": "A cold default session activates all six promoted serving waves with no opt-in parameter.",
+      "url": "http://127.0.0.1:4173/?data=real-pilot&release=manhattan-citywide-20260804&view=free&lon=-73.986360&lat=40.748775&height=260.000000&heading=45.000000&pitch=-25.000000&roll=0.000000",
+      "activeWaveIds": [
+        "manhattan-central-upper-manhattan-cells-20260812-s2",
+        "manhattan-exterior-cells-20260811-v3-s2",
+        "manhattan-lower-manhattan-cells-20260812-s2",
+        "manhattan-midtown-core-cells-20260811-v3-s2",
+        "manhattan-northern-manhattan-cells-20260812-s2",
+        "manhattan-southern-remainder-cells-20260812-s2"
+      ],
+      "activeWaveCount": 6,
+      "declaredCellTotal": 883,
+      "bootReleases": [],
+      "bootDocumentTotal": 0,
+      "bootDocumentsComplete": false,
+      "notices": {
+        "present": true,
+        "items": [
+          "875 exterior cells are not loaded for this camera; they load when the camera reaches them.Details by releaseExterior release manhattan-midtown-core-cells-20260811-v3-s2: 142 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-lower-manhattan-cells-20260812-s2: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-southern-remainder-cells-20260812-s2: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-central-upper-manhattan-cells-20260812-s2: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.Exterior release manhattan-northern-manhattan-cells-20260812-s2: 182 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-midtown-core-cells-20260811-v3-s2: 142 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-lower-manhattan-cells-20260812-s2: 126 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-southern-remainder-cells-20260812-s2: 176 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-central-upper-manhattan-cells-20260812-s2: 249 exterior cells are not loaded for this camera; they load when the camera reaches them.",
+          "Exterior release manhattan-northern-manhattan-cells-20260812-s2: 182 exterior cells are not loaded for this camera; they load when the camera reaches them."
+        ]
+      },
+      "externalHosts": [],
+      "still": {
+        "file": "captures/journey-j1-cold-default.png",
+        "byteSize": 946393,
+        "sha256": "cd1136e7a424307a3ec99eb70e1298705620c009f5cd30febc490638bfe926bb"
+      },
+      "pass": false,
+      "passRule": "Six promoted serving waves active, each having fetched its three boot documents, with no exterior parameter in the URL and no external host contacted."
+    },
+    {
+      "journeyId": "search-select-details",
+      "claim": "Search resolves a served building, selection opens the details panel, and the panel carries cell/release, active asset, truth tiers and uncertainty rows.",
+      "url": "http://127.0.0.1:4173/?data=real-pilot&release=manhattan-citywide-20260804&view=free&lon=-73.986360&lat=40.748775&height=260.000000&heading=45.000000&pitch=-25.000000&roll=0.000000",
+      "query": "doitt:100022",
+      "searchResultCount": 1,
+      "searchResults": [
+        "BBuilding 100022Building · Buildings · text"
+      ],
+      "resultActivated": true,
+      "panel": {
+        "present": true,
+        "digest": "74535c36",
+        "length": 1832,
+        "head": "Building 100022OverviewLocationManhattan, New YorkCoordinates40.7541, -73.9701 (13.4 m)GeometryPolygon · normalized EPSG:4326Feature IDdoitt:100022Confidencehigh (0.96)UncertaintySnapshot-relative sou",
+        "rows": {
+          "Location": "Manhattan, New York",
+          "Coordinates": "40.7541, -73.9701 (13.4 m)",
+          "Geometry": "Polygon · normalized EPSG:4326",
+          "Feature ID": "doitt:100022",
+          "Confidence": "high (0.96)",
+          "Uncertainty": "Snapshot-relative source record; no unsourced hours, ratings, routing, imagery, or facade claim.",
+          "Freshness": "2026-08-04T08:25:05.580Z",
+          "Render profile": "Inspection (finest verified LOD)",
+          "Selected feature": "A verified exterior asset ships for this building, but its cell is not streamed at this camera yet. Move closer to load it.",
+          "Source URL": "https://data.cityofnewyork.us/resource/jh45-qr5r.json",
+          "Captured": "2026-08-04T08:25:05.580Z",
+          "Updated": "2026-08-02T02:17:27.174Z",
+          "Source record": "100022",
+          "Ingestion rejects": "Citywide source accounting is snapshot-relative; procedural footprint/height massing carries source height where present and explicit unknown height otherwise."
+        },
+        "sectionLabels": [
+          "Exterior streaming provenance",
+          "3D asset diagnostics"
+        ],
+        "exteriorUnavailableStatements": [],
+        "href": "http://127.0.0.1:4173/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&lon=-73.972079&lat=40.751573&height=240.000000&heading=35.000000&pitch=-35.000000&roll=0.000000&layers=areas%2Cbuildings%2Centrances%2Clandmarks%2Cparks%2Cpois%2Croutes%2Cstations%2Cstatistical-areas&feature=doitt%3A100022&q=Building+100022"
+      },
+      "requiredRows": [
+        "Cell / release",
+        "Active asset",
+        "Truth tiers",
+        "Uncertainty"
+      ],
+      "presentRows": [
+        "Uncertainty"
+      ],
+      "missingRows": [
+        "Cell / release",
+        "Active asset",
+        "Truth tiers"
+      ],
+      "still": {
+        "file": "captures/journey-j2-search-select.png",
+        "byteSize": 286508,
+        "sha256": "933f2948996bbd6a8b15829a7faa4e41167e631b520c13828dfc4480492440a1"
+      },
+      "pass": false,
+      "passRule": "The typed query returns at least one result, activating it opens the details panel, and the panel carries the cell/release, active asset, truth tiers and uncertainty rows with non-empty values."
+    },
+    {
+      "journeyId": "block835-opt-in",
+      "claim": "The Block 835 -v3 opt-in still resolves through ?exteriorCells= and renders beside the promoted default.",
+      "url": "http://127.0.0.1:4173/?data=real-pilot&release=manhattan-citywide-20260804&view=free&exteriorCells=manhattan-exterior-cells-20260811-v3&exteriorProfile=inspection&lon=-73.986360&lat=40.748775&height=900.000000&heading=0.000000&pitch=-45.000000&roll=0.000000",
+      "activeWaveIds": [
+        "manhattan-exterior-cells-20260811-v3"
+      ],
+      "resolvedOptIn": true,
+      "declaredCellTotal": 1,
+      "residentCount": 8,
+      "notices": {
+        "present": false,
+        "items": []
+      },
+      "still": {
+        "file": "captures/journey-j3-block835-opt-in.png",
+        "byteSize": 462738,
+        "sha256": "41c03701a7cd165be8ab426808571f60c2e8554d52c602fead6733f7e4a0a95e"
+      },
+      "pass": true,
+      "passRule": "The opt-in release is the active exterior wave and the scheduler holds at least one resident cell for it.",
+      "claimCorrection": "THE CLAIM'S PHRASING IS CORRECTED BY THE CODE, and the correction is recorded rather than argued away. `resolveExteriorActivationSet` (src/runtime/exterior-default-activation.ts) takes the `?exteriorCells=` branch and returns EXACTLY ONE target, so an explicit opt-in REPLACES the promoted six-wave set; it does not render beside it. What this journey establishes is that the opt-in still resolves, activates and renders over the citywide base — not that two exterior sets are co-resident. That would be a different arrangement and no capture here produces it."
+    },
+    {
+      "journeyId": "deep-link-identity",
+      "claim": "A ?feature= deep link resolves the same building to the same sourced information as an interactive selection, and the URL round-trips.",
+      "url": "http://127.0.0.1:4173/?data=real-pilot&release=manhattan-citywide-20260804&view=free&feature=doitt%3A100022&lon=-73.986360&lat=40.748775&height=260.000000&heading=45.000000&pitch=-25.000000&roll=0.000000",
+      "featureId": "doitt:100022",
+      "panel": {
+        "present": true,
+        "digest": "74535c36",
+        "length": 1832,
+        "head": "Building 100022OverviewLocationManhattan, New YorkCoordinates40.7541, -73.9701 (13.4 m)GeometryPolygon · normalized EPSG:4326Feature IDdoitt:100022Confidencehigh (0.96)UncertaintySnapshot-relative sou",
+        "rows": {
+          "Location": "Manhattan, New York",
+          "Coordinates": "40.7541, -73.9701 (13.4 m)",
+          "Geometry": "Polygon · normalized EPSG:4326",
+          "Feature ID": "doitt:100022",
+          "Confidence": "high (0.96)",
+          "Uncertainty": "Snapshot-relative source record; no unsourced hours, ratings, routing, imagery, or facade claim.",
+          "Freshness": "2026-08-04T08:25:05.580Z",
+          "Render profile": "Inspection (finest verified LOD)",
+          "Selected feature": "A verified exterior asset ships for this building, but its cell is not streamed at this camera yet. Move closer to load it.",
+          "Source URL": "https://data.cityofnewyork.us/resource/jh45-qr5r.json",
+          "Captured": "2026-08-04T08:25:05.580Z",
+          "Updated": "2026-08-02T02:17:27.174Z",
+          "Source record": "100022",
+          "Ingestion rejects": "Citywide source accounting is snapshot-relative; procedural footprint/height massing carries source height where present and explicit unknown height otherwise."
+        },
+        "sectionLabels": [
+          "Exterior streaming provenance",
+          "3D asset diagnostics"
+        ],
+        "exteriorUnavailableStatements": [],
+        "href": "http://127.0.0.1:4173/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&feature=doitt%3A100022&lon=-73.986360&lat=40.748775&height=260.000000&heading=45.000000&pitch=-25.000000&roll=0.000000&layers=areas%2Cbuildings%2Centrances%2Clandmarks%2Cparks%2Cpois%2Croutes%2Cstations%2Cstatistical-areas"
+      },
+      "href": "http://127.0.0.1:4173/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&feature=doitt%3A100022&lon=-73.986360&lat=40.748775&height=260.000000&heading=45.000000&pitch=-25.000000&roll=0.000000&layers=areas%2Cbuildings%2Centrances%2Clandmarks%2Cparks%2Cpois%2Croutes%2Cstations%2Cstatistical-areas",
+      "urlRoundTripped": true,
+      "interactiveDigest": "74535c36",
+      "deepLinkDigest": "74535c36",
+      "digestsMatch": true,
+      "bothNonNull": true,
+      "still": {
+        "file": "captures/journey-j4-deep-link.png",
+        "byteSize": 776892,
+        "sha256": "5056d5ad5fd594fb77c7f25ca5f73648f1e8a6d930b17fba69b303470d18973f"
+      },
+      "pass": true,
+      "passRule": "The deep-linked panel is present, the URL still carries the feature parameter after the app has rewritten it, and the panel digest EQUALS the digest of the same building selected interactively in J2 — both non-null.",
+      "digestNote": "The digest is a hash of the whole panel's rendered text. Equality therefore says the deep link and the interactive selection produced the same sourced information, not merely the same identifier."
+    },
+    {
+      "journeyId": "streaming-off-honesty",
+      "claim": "With exterior streaming off, the app states what is unavailable rather than silently drawing less, and the still differs from the default arm.",
+      "url": "http://127.0.0.1:4173/?data=real-pilot&release=manhattan-citywide-20260804&view=free&feature=doitt%3A100022&exteriorStreaming=off&lon=-73.986360&lat=40.748775&height=260.000000&heading=45.000000&pitch=-25.000000&roll=0.000000",
+      "exteriorStreamingActive": false,
+      "unavailableStatements": [
+        "Exterior streaming is switched off for this session, so base massing from release manhattan-citywide-20260804 is shown; no substitute exterior was selected."
+      ],
+      "panel": {
+        "present": true,
+        "digest": "7128e0f5",
+        "length": 1601,
+        "head": "Building 100022OverviewLocationManhattan, New YorkCoordinates40.7541, -73.9701 (13.4 m)GeometryPolygon · normalized EPSG:4326Feature IDdoitt:100022Confidencehigh (0.96)UncertaintySnapshot-relative sou",
+        "rows": {
+          "Location": "Manhattan, New York",
+          "Coordinates": "40.7541, -73.9701 (13.4 m)",
+          "Geometry": "Polygon · normalized EPSG:4326",
+          "Feature ID": "doitt:100022",
+          "Confidence": "high (0.96)",
+          "Uncertainty": "Snapshot-relative source record; no unsourced hours, ratings, routing, imagery, or facade claim.",
+          "Freshness": "2026-08-04T08:25:05.580Z",
+          "Source URL": "https://data.cityofnewyork.us/resource/jh45-qr5r.json",
+          "Captured": "2026-08-04T08:25:05.580Z",
+          "Updated": "2026-08-02T02:17:27.174Z",
+          "Source record": "100022",
+          "Ingestion rejects": "Citywide source accounting is snapshot-relative; procedural footprint/height massing carries source height where present and explicit unknown height otherwise."
+        },
+        "sectionLabels": [
+          "Exterior streaming provenance",
+          "3D asset diagnostics"
+        ],
+        "exteriorUnavailableStatements": [
+          "Exterior streaming is switched off for this session, so base massing from release manhattan-citywide-20260804 is shown; no substitute exterior was selected."
+        ],
+        "href": "http://127.0.0.1:4173/?data=manhattan-citywide-20260804&release=manhattan-citywide-20260804&view=explore&feature=doitt%3A100022&exteriorStreaming=off&lon=-73.986360&lat=40.748775&height=260.000000&heading=45.000000&pitch=-25.000000&roll=0.000000&layers=areas%2Cbuildings%2Centrances%2Clandmarks%2Cparks%2Cpois%2Croutes%2Cstations%2Cstatistical-areas"
+      },
+      "notices": {
+        "present": false,
+        "items": []
+      },
+      "still": {
+        "file": "captures/journey-j5-streaming-off.png",
+        "byteSize": 357907,
+        "sha256": "82d599b7928400cf02b145eeb57afcc4f7561de627f6ec9f81c549a3e1b02236"
+      },
+      "comparedStill": {
+        "file": "captures/journey-j4-deep-link.png",
+        "byteSize": 776892,
+        "sha256": "5056d5ad5fd594fb77c7f25ca5f73648f1e8a6d930b17fba69b303470d18973f"
+      },
+      "stillDiffersFromDefaultArm": true,
+      "pass": true,
+      "passRule": "Exterior streaming is off, the details panel STATES what is unavailable in words rather than silently drawing less, and the still differs by checksum from the default arm's still at the same pose."
+    },
+    {
+      "journeyId": "eviction-identity-cross-reference",
+      "claim": "Selection identity across an eviction cycle.",
+      "crossReference": "CROSS-REFERENCES E-1e rather than duplicating it. The eviction loop is the E-1 capture; this journey records the E-1e digest pair and its verdict by reference, so one measurement is reported once. It does not re-run the loop.",
+      "source": "data/exterior-acceptance-20260817/eviction-loop.json",
+      "available": false,
+      "pass": null,
+      "statement": "THE E-1 RECORD IS NOT PRESENT, so this journey reports nothing rather than running a second, differently-shaped loop and calling it the same measurement. J6 is a cross-reference by construction; without its referent it has no content."
+    }
+  ],
+  "passedJourneyIds": [
+    "block835-opt-in",
+    "deep-link-identity",
+    "streaming-off-honesty"
+  ],
+  "failedJourneyIds": [
+    "cold-default-six-wave",
+    "search-select-details"
+  ],
+  "ok": false,
+  "claim": "Six journeys through the SHIPPED UI on the promoted six-wave default, each carrying a rendered still. They state what the app resolved, selected, said and drew at these poses. Passing them is not visual, geographic, factual or accessibility acceptance, and a still is evidence that pixels were produced rather than evidence of likeness.",
+  "uncapturedGap": "NO CANVAS PICK on exterior geometry is captured here. Every selection in this suite is reached through search or through a ?feature= deep link against the canonical base identity set. That is a real gap and is named rather than approximated.",
+  "t007WrapperNote": "RECORD-ID PROVENANCE. This document was produced by a COMMITTED T006 harness re-run by T007 with --out redirection, so its recordId, task and internal gate text still identify themselves as T006's. The bytes are a T007 capture: attemptCount and the readings are this campaign's. The harness has no flag to override its own identity, and T007 may not modify src/ or rewrite a committed instrument's identity fields, so the correction is stated here rather than forged into the document."
+}

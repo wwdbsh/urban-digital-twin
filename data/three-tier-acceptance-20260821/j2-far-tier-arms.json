@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "three-tier-acceptance-20260821:j2-far-tier-arms",
+  "task": "T007",
+  "phase": "3b",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION.",
+  "why": "T007 first asserted, without committing the evidence, that J2's panel-row loss is not the far tier's. This record IS that evidence: the same query at the same pose with the far tier armed and disarmed, captured over CDP and committed with a sidecar. Until it existed, 'proven' was an overclaim.",
+  "query": "doitt:100022",
+  "pose": "street-260m-midtown: lon -73.986360, lat 40.748775, height 260, heading 45, pitch -25",
+  "requiredRows": [
+    "Cell / release",
+    "Active asset",
+    "Truth tiers",
+    "Uncertainty"
+  ],
+  "arms": [
+    {
+      "label": "farTier-on",
+      "expectedFarTier": "on",
+      "url": "http://127.0.0.1:4173/?data=real-pilot&release=manhattan-citywide-20260804&view=free&lon=-73.986360&lat=40.748775&height=260.000000&heading=45.000000&pitch=-25.000000&roll=0.000000",
+      "resultActivated": true,
+      "presentRows": [
+        "Uncertainty"
+      ],
+      "missingRows": [
+        "Cell / release",
+        "Active asset",
+        "Truth tiers"
+      ],
+      "rows": {
+        "Cell / release": null,
+        "Active asset": null,
+        "Truth tiers": null,
+        "Uncertainty": "Snapshot-relative source record; no unsourced hours, ratings, routing"
+      },
+      "selectedFeatureStatement": "A verified exterior asset ships for this building, but its cell is not streamed at this camera yet. Move closer to load it.",
+      "panelPresent": true,
+      "farTierArmed": true,
+      "farTierDrawn": 0,
+      "farTierDeclared": 0,
+      "massingActive": 1196
+    },
+    {
+      "label": "farTier-off",
+      "expectedFarTier": "off",
+      "url": "http://127.0.0.1:4173/?data=real-pilot&release=manhattan-citywide-20260804&view=free&farTier=off&lon=-73.986360&lat=40.748775&height=260.000000&heading=45.000000&pitch=-25.000000&roll=0.000000",
+      "resultActivated": true,
+      "presentRows": [
+        "Uncertainty"
+      ],
+      "missingRows": [
+        "Cell / release",
+        "Active asset",
+        "Truth tiers"
+      ],
+      "rows": {
+        "Cell / release": null,
+        "Active asset": null,
+        "Truth tiers": null,
+        "Uncertainty": "Snapshot-relative source record; no unsourced hours, ratings, routing"
+      },
+      "selectedFeatureStatement": "A verified exterior asset ships for this building, but its cell is not streamed at this camera yet. Move closer to load it.",
+      "panelPresent": true,
+      "farTierArmed": false,
+      "farTierDrawn": null,
+      "farTierDeclared": null,
+      "massingActive": 1196
+    }
+  ],
+  "finding": "BOTH ARMS SHOW THE SAME LOSS: one of four required rows present ('Uncertainty'), with the same not-streamed statement. In the OFF arm the far-tier status element is ABSENT entirely (farTierArmed false), so the tier contributed nothing at all, and the loss is unchanged.",
+  "armCaveat": "In the ON arm the far tier was armed but had drawn 0 cells at sample time -- at this pose it had not finished declaring within the 50 s dwell. That weakens the ON arm as a 'far tier fully present' reading. It does NOT weaken the conclusion, which rests on the OFF arm: with the tier wholly disarmed the rows are still missing.",
+  "conclusion": "The row loss is NOT caused by the far tier. It is consistent with the -s1 to -s2 two-LOD serving promotion changing which cells are resident at this camera, and is recorded against ADR 0057.",
+  "whatThisDoesNotShow": [
+    "It does not measure how many buildings are affected -- one building, one pose.",
+    "It does not identify which specific change in the -s2 promotion moved residency; it excludes the far tier and points at the promotion."
+  ]
+}

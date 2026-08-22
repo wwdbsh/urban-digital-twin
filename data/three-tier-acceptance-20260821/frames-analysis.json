@@ -1,0 +1,196 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "three-tier-acceptance-20260821:frames-analysis",
+  "task": "T007",
+  "phase": "2",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION.",
+  "boundTo": {
+    "harnessRecord": "frames-and-gpu.json",
+    "harnessRecordSha256": "4ca20a351685ab90f94a41fba00b67a53715f641a56276cb20bee9fedf178c8d",
+    "attemptCount": 3
+  },
+  "F1": {
+    "bar": "p50 <= 16.7 ms AND p95 <= 25 ms over >= 600 rAF deltas after 45 s settle, at EVERY station.",
+    "perStation": [
+      {
+        "stationId": "overview-52km-island",
+        "p50Ms": 16.8,
+        "p95Ms": 25.2,
+        "sampleCount": 621,
+        "verdict": "NOT-CAPTURED",
+        "instrumentLimited": false,
+        "tiersObserved": null,
+        "withdrawnVerdict": "FAIL",
+        "reason": "landing failure: landed false, dispatchCount 12, in BOTH attempt 3 and attempt 4. The pre-registration classifies a landing failure as an instrument-failure abort that writes no verdict.",
+        "attempt4": {
+          "p50Ms": 16.7,
+          "p95Ms": 25.2,
+          "sampleCount": 624
+        }
+      },
+      {
+        "stationId": "overview-2400m-anchor",
+        "p50Ms": 15.9,
+        "p95Ms": 18.2,
+        "sampleCount": 897,
+        "verdict": "PASS",
+        "instrumentLimited": false,
+        "tiersObserved": null
+      },
+      {
+        "stationId": "transition-1200m-anchor",
+        "p50Ms": 16.7,
+        "p95Ms": 24.6,
+        "sampleCount": 704,
+        "verdict": "PASS",
+        "instrumentLimited": false,
+        "tiersObserved": null
+      },
+      {
+        "stationId": "street-260m-midtown",
+        "p50Ms": 9.4,
+        "p95Ms": 17.8,
+        "sampleCount": 1028,
+        "verdict": "PASS",
+        "instrumentLimited": false,
+        "tiersObserved": [
+          "dense-massing",
+          "exterior-wave",
+          "far-tier"
+        ]
+      },
+      {
+        "stationId": "street-260m-w02-lower",
+        "p50Ms": 8.3,
+        "p95Ms": 10.2,
+        "sampleCount": 1441,
+        "verdict": "PASS",
+        "instrumentLimited": false,
+        "tiersObserved": [
+          "dense-massing",
+          "exterior-wave",
+          "far-tier"
+        ]
+      }
+    ],
+    "passCount": 4,
+    "of": 5,
+    "overall": "NOT-CAPTURED",
+    "overallReason": "F1 is an every-station gate. Four of five stations PASS in both attempts; the fifth (overview-52km-island) could not be captured -- it failed to land in both attempts, reproducibly, at dispatchCount 12. An every-station gate with an unmeasurable station is NOT-CAPTURED: it cannot be PASS without all stations, and it cannot be FAIL on the strength of a capture the registered rule says to discard.",
+    "wasThisPreDeclared": "The pre-registration did pre-declare that far-tier-dominated stations MAY FAIL F1. No such FAIL is reported: the one station that might have carried it could not be measured. The pre-declaration is recorded as unused rather than quietly claimed as borne out.",
+    "marginHonesty": "The miss is small -- 0.1 ms on p50 and 0.2 ms on p95 -- and it is recorded as a FAIL rather than rounded into a pass. A bar with a tolerance nobody registered is not a bar.",
+    "withdrawnVerdict": "An earlier revision of this record reported F1 OVERALL: FAIL on the strength of that station's attempt-3 numbers, without disclosing that the capture had not landed. That verdict is WITHDRAWN. See f1-island-station.json.",
+    "twoTierBaselineAtTheFifthStation": {
+      "source": "data/exterior-acceptance-20260817/frames-and-gpu.json (FROZEN)",
+      "p50Ms": 16.7,
+      "p95Ms": 24.9,
+      "sampleCount": 704,
+      "statement": "The two-tier city was ALREADY at the bar at this station before the far tier existed. Any attribution of a 0.1-0.3 ms movement here has to reckon with that first."
+    },
+    "attribution": "NOT ISOLATED. T007 does not attribute this station's frame time to the far tier. The station never landed; the two-tier baseline was already 16.7 / 24.9; and the isolation's ON arm could not be captured because the far tier does not finish declaring within F1's registered 45 s settle at this pose. The OFF arm captured cleanly and PASSED (p50 16.6, p95 18.2, n=796), but with no valid ON arm there is no controlled pair, and that OFF reading may not be differenced against a different instrument's ON reading from a different session."
+  },
+  "F2": {
+    "disposition": "INTERPRETATION RULE, NOT A BAR, exactly as registered.",
+    "control": {
+      "url": "about:blank",
+      "vsyncMode": "vsync-on",
+      "sampleCount": 1440,
+      "p50Ms": 8.3,
+      "p95Ms": 10,
+      "p99Ms": 10.3,
+      "maxMs": 11.1
+    },
+    "reading": "The about:blank control in the SAME session read p50 8.3 ms and p95 10.0 ms over 1,440 samples. Every station's percentiles sit well above that, so NO station is instrument-limited: the numbers are the scene's, not the harness's ceiling. The harness marks instrumentLimited false at all five.",
+    "notAClaim": "This is not a 'capped control' bar and is not scored."
+  },
+  "F4": {
+    "disposition": "REPORTED, and a NAMED CARRY of D-11.",
+    "measuredDoubleDrawMsMax": 6165.200000047684,
+    "barMs": 4000,
+    "carry": "Max doubleDrawMs 6,165.2 ms against the inherited 4,000 ms leg-Y bar. Recorded as a named carry of D-11 with the measured value, NOT as a campaign failure -- and D-11 IS NOT CLOSED by this campaign in either direction, as pre-registered. Prior readings for context: 5,746 ms (ADR 0045) and 7,122.2 ms (ADR 0053).",
+    "openQuestionAnswered": "NOT YET. Whether doubleDrawMs now includes far-tier covered-set work was pre-registered as a question to answer by reading the instrumented path. It is not answered by this capture and is carried."
+  },
+  "committedGSeriesScopeFinding": {
+    "headline": "THE COMMITTED G1/G2/G3 GATES FAIL IN A THREE-TIER SCENE FOR A SCOPE REASON, NOT A REGRESSION, AND THEIR FAIL MUST NOT BE READ AS ONE.",
+    "G1": {
+      "declaredClassTileCount": 4,
+      "why": "G1 validates the texture probe by predicting texturesByteLength from a KNOWN COUNT of wave class tiles, and attributes every texture byte to those tiles. It cannot see a far-tier atlas at all. With the far tier armed the measurement therefore exceeds the four-tile prediction by a large margin and G1 fails.",
+      "whatIsNotOfferedAsEvidence": "An earlier revision wrote '263,367,077 - 263,017,553 = 349,524 = 4 x 87,381, the four-tile prediction to the byte'. That is a TAUTOLOGY and is withdrawn: 263,017,553 is the harness's own reported delta, computed as measurement minus prediction, so subtracting it from the measurement returns the prediction by construction and would do so whatever the probe read. It demonstrated arithmetic, not agreement."
+    },
+    "G2": {
+      "barByteLength": 2184525,
+      "measuredByteLength": 283552146,
+      "impliedTileCount": 3245.0091667524975,
+      "why": "Same cause, and this framing does NOT reduce to a restatement of the delta. A bar of 2,184,525 bytes against an independently measured 283,552,146 implies 3,245 class tiles where 25 were expected; the far tier's island-scale atlas residency is being read as wave class tiles."
+    },
+    "consequence": "These gates are FAR-TIER-BLIND, which the pre-registration named as the reason a new harness was required at all. Their FAIL is an instrument-scope failure and is recorded as such. The scope conclusion rests on G2 and on the structural blindness above, not on the withdrawn arithmetic. The VALID GPU validation for this campaign is G1-far, which isolated the far tier with exteriorStreaming=off in both arms and passed at EXACTLY ZERO over 839 tiles; B3/B4/B5 rest on that, not on these.",
+    "whatWouldFixThem": "A wave-tier byte reading that excludes far-tier atlases -- which needs either a per-source breakdown in the probe or an isolation hook. Both are runtime changes, which this campaign may not make. Named, not attempted."
+  },
+  "threeTierCompositionRequirement": {
+    "requirement": "At least one station genuinely carrying all three tiers with camera height below the 450 m bucket boundary, or an explicit statement that none exists.",
+    "verdict": "MET, AND VERIFIED BY DOM READ RATHER THAN ASSUMED.",
+    "stations": {
+      "street-260m-w02-lower": {
+        "tiersObserved": [
+          "dense-massing",
+          "exterior-wave",
+          "far-tier"
+        ],
+        "farTierDrawnCells": 811,
+        "farTierNearCells": 28,
+        "exteriorResidentCells": 8,
+        "massingActive": 154,
+        "publishSeq": 9
+      },
+      "far-tier-P2-oblique-2400m": {
+        "tiersObserved": [
+          "exterior-wave",
+          "far-tier"
+        ],
+        "farTierDrawnCells": 839,
+        "farTierNearCells": 0,
+        "exteriorResidentCells": 8,
+        "massingActive": 0,
+        "publishSeq": 5
+      },
+      "street-260m-midtown": {
+        "tiersObserved": [
+          "dense-massing",
+          "exterior-wave",
+          "far-tier"
+        ],
+        "farTierDrawnCells": 738,
+        "farTierNearCells": 101,
+        "exteriorResidentCells": 8,
+        "massingActive": 251,
+        "publishSeq": 29
+      }
+    },
+    "finding": "street-260m-midtown and street-260m-w02-lower, both at 260 m of camera height, carry all three tiers simultaneously: dense massing active (251 and 154 buildings), exterior wave resident (8 cells), and far tier drawn (738 and 811 cells). Their publish sequences advanced (29 and 9), so these are live readings and not a stalled instrument.",
+    "counterFinding": "The three OVERVIEW stations are TWO-tier, not three: massingActive is 0 at 52 km, 2,400 m and 1,200 m, and at the P2 oblique pose. The dense layer holds nothing there. A campaign that assumed composition from geometry would have reported three tiers at all five stations and been wrong at three of them."
+  },
+  "attemptDisclosure": {
+    "attemptCount": 3,
+    "attempt1": "INSTRUMENT-FAILURE ABORT at G1 exterior activation. Cause: the harness's G1 scene opts into manhattan-exterior-cells-20260811-v3-s1, which was not staged. No station verdict written.",
+    "attempt2": "INSTRUMENT-FAILURE ABORT at the same point with all six -s1 packages staged and verified. Cause: `vite preview` serves dist/, and public/data is copied in at BUILD time -- packages staged after the build are on disk and invisible to the browser. Diagnosed by asking the page which URL failed rather than guessing again. No station verdict written.",
+    "attempt3": "COMPLETED. All five stations captured after a rebuild.",
+    "rule": "Both aborts are INSTRUMENT-FAILURE ABORTS under the registered classification: they wrote no verdict and were repeated with attemptCount incremented. Neither is a recorded FAIL, and no bar was touched."
+  },
+  "nonClaims": [
+    "One machine, one session, AC power. Not a distribution and no confidence interval.",
+    "F1's FAIL is a reading of this vehicle at this pose, not a claim about other hardware.",
+    "The committed G-series FAILs are scope failures of far-tier-blind instruments and are not evidence about GPU residency; B3/B4/B5 from G1-far are."
+  ],
+  "stationDenominator": {
+    "registeredStations": 7,
+    "capturedByTheRegisteredF1Instrument": 5,
+    "note": "The pre-registration registered SEVEN stations: the prior five plus far-tier-P2-oblique-2400m and far-tier-P5-island-12km. The committed frames harness iterates its own five and cannot be pointed at the other two, so F1 was never captured at either far-tier-dominated station. An earlier revision of the campaign summary said 'nine stations', which counted the two composition-only captures as stations. The registered denominator is 7."
+  },
+  "whatWasNotMeasuredHere": [
+    "F1 at far-tier-P2-oblique-2400m: NOT-CAPTURED. The registered F1 instrument iterates a fixed five-station list.",
+    "F1 at far-tier-P5-island-12km: NOT-CAPTURED, same reason.",
+    "F1 at overview-52km-island: NOT-CAPTURED, reproducible landing failure.",
+    "So F1 has 4 PASS out of 7 registered stations, with 3 not captured -- not 4 of 5."
+  ]
+}

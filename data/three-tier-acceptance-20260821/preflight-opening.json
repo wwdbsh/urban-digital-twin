@@ -1,0 +1,134 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "three-tier-acceptance-20260821:preflight-opening",
+  "task": "T007",
+  "phase": "0-opening",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION.",
+  "verdict": "PASS",
+  "rule": "FAIL CLOSED. Any unmet condition aborts the campaign rather than degrading it. There is no partial pass.",
+  "whyThisExists": "T005 shipped two promotion sweeps whose vehicle was missing the entire exterior wave tier, because the server answered every absent package with index.html and nothing checked. A campaign that quietly measures two tiers and reports three is worse than one that refuses to start.",
+  "worktreeHead": "63852e5180bfc0019b758b6e9f5862910ed406f3",
+  "base": "http://127.0.0.1:4173",
+  "hardwareAtCapture": {
+    "note": "The committed pre-registration recorded this machine on BATTERY and made AC power a pre-flight condition. That record is NOT edited -- a pre-registration that changes after the fact is not one. The capture-time state is recorded HERE instead.",
+    "model": "MacBook Pro, Mac16,7",
+    "chip": "Apple M4 Pro, 14 cores (10 performance, 4 efficiency)",
+    "memoryGb": 24,
+    "os": "macOS 26.5.2 (build 25F84)",
+    "display": "Built-in Liquid Retina XDR, 3456x2234",
+    "power": {
+      "source": "AC Power",
+      "onAcPower": true,
+      "chargePercent": 89,
+      "adapterWatts": 68,
+      "thermalWarningRecorded": "unknown",
+      "raw": "Now drawing from 'AC Power' |  -InternalBattery-0 (id=6946915)\t89%; charging; 1:00 remaining present: true"
+    },
+    "oneMachineOneSession": "Every timing verdict from this campaign is one machine, one session. Not a distribution, no confidence interval, does not generalise."
+  },
+  "checks": [
+    {
+      "id": "worktree-clean",
+      "ok": true,
+      "detail": "clean at 63852e5180bfc0019b758b6e9f5862910ed406f3"
+    },
+    {
+      "id": "pre-registration-unedited",
+      "ok": true,
+      "detail": "7cdd1c4f396970824e406a6ff69119ebd74ee53dc1fddfa95723a8a0f39cc49b"
+    },
+    {
+      "id": "staged-serving-bytes",
+      "ok": true,
+      "detail": "93564 files re-verified"
+    },
+    {
+      "id": "far-tier-payload-inventory",
+      "ok": true,
+      "detail": "cf8e26480eecc91f2e7b473d217a0d3551d0be59b4d8da39ee1217a6e0538f0a"
+    },
+    {
+      "id": "far-tier-sweep-exemptions",
+      "ok": true,
+      "detail": "6354676da304ab03783132730f75dafdfce60c82f509dd740b9fc18c92e8d430"
+    },
+    {
+      "id": "far-tier-sweep-poses",
+      "ok": true,
+      "detail": "94a40e8acd377539d61e8c06767859a4a95a43823c97dd9a31b43cae54e149b0"
+    },
+    {
+      "id": "far-tier-promoted-inventory",
+      "ok": true,
+      "detail": "cf8e26480eecc91f2e7b473d217a0d3551d0be59b4d8da39ee1217a6e0538f0a"
+    },
+    {
+      "id": "promoted-set-reconciles",
+      "ok": true,
+      "detail": "baked 840 + stops 43 = 883 against ledger 883; 44076 member ids; 143 refusals"
+    },
+    {
+      "id": "six-packages-answer-real-manifests",
+      "ok": true,
+      "detail": "manhattan-exterior-cells-20260811-v3-s2:200 manhattan-midtown-core-cells-20260811-v3-s2:200 manhattan-lower-manhattan-cells-20260812-s2:200 manhattan-southern-remainder-cells-20260812-s2:200 manhattan-central-upper-manhattan-cells-20260812-s2:200 manhattan-northern-manhattan-cells-20260812-s2:200"
+    },
+    {
+      "id": "bundle-probe-armed",
+      "ok": true,
+      "detail": "{\"data-exterior-texture-probe\":true,\"data-exterior-scheduler-probe\":true}"
+    },
+    {
+      "id": "frozen-evidence-untouched",
+      "ok": true,
+      "detail": "7 records byte-identical"
+    },
+    {
+      "id": "ac-power",
+      "ok": true,
+      "detail": "AC Power 68W 89%"
+    }
+  ],
+  "manifests": [
+    {
+      "releaseId": "manhattan-exterior-cells-20260811-v3-s2",
+      "status": 200,
+      "doctype": false,
+      "looksJson": true
+    },
+    {
+      "releaseId": "manhattan-midtown-core-cells-20260811-v3-s2",
+      "status": 200,
+      "doctype": false,
+      "looksJson": true
+    },
+    {
+      "releaseId": "manhattan-lower-manhattan-cells-20260812-s2",
+      "status": 200,
+      "doctype": false,
+      "looksJson": true
+    },
+    {
+      "releaseId": "manhattan-southern-remainder-cells-20260812-s2",
+      "status": 200,
+      "doctype": false,
+      "looksJson": true
+    },
+    {
+      "releaseId": "manhattan-central-upper-manhattan-cells-20260812-s2",
+      "status": 200,
+      "doctype": false,
+      "looksJson": true
+    },
+    {
+      "releaseId": "manhattan-northern-manhattan-cells-20260812-s2",
+      "status": 200,
+      "doctype": false,
+      "looksJson": true
+    }
+  ],
+  "passedCount": 12,
+  "ofCount": 12,
+  "conditionSetNote": "THIS OPENING RUN CHECKED 12 CONDITIONS. The closing run checks 13. The set GREW mid-campaign: after the frames harness aborted twice on releases the committed instruments require but the campaign's own subject list does not name, a 'harness-required-releases-served' condition was added, and it verifies the SERVED bytes over HTTP rather than the presence of a file on disk. The two runs are therefore NOT the same test, and saying '13/13 at both ends' would paper over a mid-campaign change. What IS identical at both ends is the frozen-evidence check: 7 records byte-identical, start and end.",
+  "whyThisRecordExists": "The pre-flight CLI writes to a single path, so each run overwrote the last and the opening run's record was lost from the working tree. It is recovered here from commit ea0d2aa and given its own recordId so both ends of the campaign are inspectable. That the tool overwrites is itself a defect, named in the T008 dispositions."
+}

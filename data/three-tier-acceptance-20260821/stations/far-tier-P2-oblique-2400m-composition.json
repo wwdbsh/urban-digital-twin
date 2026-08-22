@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "three-tier-acceptance-20260821:station:far-tier-P2-oblique-2400m-composition",
+  "task": "T007",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION.",
+  "station": "far-tier-P2-oblique-2400m-composition",
+  "tierComposition": {
+    "farTierAttributesPresent": true,
+    "farTierArmed": true,
+    "farTierDrawnCells": 839,
+    "farTierDeclaredCells": 840,
+    "farTierNearCells": 0,
+    "farTierPresent": true,
+    "exteriorResidentCells": 8,
+    "exteriorPresent": true,
+    "massingActive": 0,
+    "massingSuppressible": 0,
+    "massingCovered": 0,
+    "massingUncovered": 0,
+    "publishSeq": 5,
+    "tiersObserved": [
+      "exterior-wave",
+      "far-tier"
+    ],
+    "unreadable": []
+  },
+  "frames": null,
+  "f1": {
+    "verdict": "NOT-CAPTURED",
+    "reason": "no frame sample"
+  },
+  "raw": {
+    "frames": null,
+    "state": {
+      "farTierViewport": {
+        "farTierMassingActive": "0",
+        "farTierMassingSuppressible": "0",
+        "farTierMassingCovered": "0",
+        "farTierMassingUncovered": "0",
+        "farTierMassingUncoveredHidden": "0",
+        "farTierMassingUncoveredDesired": "0",
+        "farTierMassingUncoveredNotDesired": "0",
+        "farTierPublishSeq": "5",
+        "farTierPassUncovered": "0",
+        "farTierPassDrawn": "839",
+        "farTierPublishDrawn": "839",
+        "farTierDesiredCovered": "23176",
+        "farTierAppliedCovered": "0"
+      },
+      "farTierStatus": {
+        "farTierDeclared": "840",
+        "farTierDrawn": "839",
+        "farTierNear": "0",
+        "farTierNotDeclared": "1",
+        "farTierAbsent": "0",
+        "farTierChecksumMismatch": "0",
+        "farTierBuildFailure": "0",
+        "farTierOverBudget": "0"
+      },
+      "schedulerDecision": {
+        "residentCount": 8,
+        "visibleCount": 498,
+        "deferredCount": 490,
+        "retainedCount": 0,
+        "heightBucket": 2400
+      },
+      "exteriorStreamingActive": true,
+      "canvas": {
+        "cssX": 92,
+        "cssY": 60,
+        "cssWidth": 1005,
+        "cssHeight": 790
+      },
+      "devicePixelRatio": 2,
+      "windowInner": {
+        "width": 1097,
+        "height": 894
+      },
+      "resourceCount": 2651,
+      "resourceBufferAtCap": true,
+      "glbCount": 1580,
+      "farTierGlbCount": 839,
+      "lod0Count": 3,
+      "lod1Count": 738
+    }
+  },
+  "stillSha256": null
+}

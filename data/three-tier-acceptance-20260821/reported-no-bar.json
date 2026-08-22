@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "three-tier-acceptance-20260821:reported-no-bar",
+  "task": "T007",
+  "phase": "5",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION.",
+  "disposition": "ALL THREE ITEMS ARE REPORTED. No bar is set for any of them, and none is scored PASS or FAIL.",
+  "whyNoBars": "A bar derived from the only measurement that exists is a bar fitted to its own data. Each item below states what would be needed to set one instead of inventing one here.",
+  "controlsApplied": {
+    "drawComposition": "Both stills classified with scripts/draw-composition.mjs before any appearance number was quoted. Both regions read 0.0000 procedural massing and 1.000 surface, so both are ADMISSIBLE: these are readings of drawn tier geometry, not of the massing fallback. T006 published a 0.008 per cent 'PASS' on a region that was 100 per cent massing in both arms, which is why this check runs first and not last.",
+    "regionAndCoordinateSpace": "The region is the centre half of the CANVAS, converted to IMAGE coordinates by adding the canvas origin. T006 invalidated a whole campaign by applying canvas-space regions to whole-window captures; the origin is recorded with every reading here.",
+    "pickControl": "NOT RUN for these two items, and that is a limitation rather than an omission: both are whole-scene appearance readings over a canvas-centre region, not claims about a NAMED building, so there is no single feature id for a pick to confirm. Any future claim about a specific tile's appearance would need one."
+  },
+  "brightLuminance": {
+    "item": "Bright-luminance appearance of far-tier tiles",
+    "disposition": "REPORTED",
+    "pose": "T005 pose registry P2, oblique 2,400 m over Midtown",
+    "tierState": {
+      "farTierDrawn": "839",
+      "farTierDeclared": "840",
+      "farTierNear": "0",
+      "massingActive": "0",
+      "publishSeq": "5"
+    },
+    "reading": {
+      "surfaceMeanLuminance": 0.359584218761776,
+      "surfaceMaxLuminance": 0.8700376470588236,
+      "surfacePixels": 795960,
+      "proceduralMassingShare": 0,
+      "meanRgb": [
+        89,
+        92,
+        93
+      ]
+    },
+    "stillSha256": "0d8e268a106b9d5968a6606b4b1798a9433c48aa2f162e760049c47fe170116a",
+    "whyNoBar": "The only prior characterisation of far-tier tone is EEVEE, and EEVEE is not the shipped renderer. Setting an in-app bar here would mean inventing an error budget for a brand-new in-app instrument in the same act that uses it -- which is what T006 honest-stopped over.",
+    "namedMissingCapability": "A forced-LOD and isolation hook: render a named tile at a chosen level, alone, from a camera the measurement picks rather than the ring dictates. Without it, tile appearance cannot be separated from everything drawn around it."
+  },
+  "honestStopCellAppearance": {
+    "item": "Appearance over an honest-stop cell (one of the 43 the bake refused)",
+    "disposition": "REPORTED",
+    "pose": "T005 pose registry P3, nadir 1,600 m over a cell the bake honest-stopped",
+    "tierState": {
+      "farTierDrawn": "839",
+      "farTierDeclared": "840",
+      "farTierNear": "0",
+      "massingActive": "3",
+      "publishSeq": "8"
+    },
+    "reading": {
+      "surfaceMeanLuminance": 0.15643015455239243,
+      "surfaceMaxLuminance": 0.3460713725490196,
+      "proceduralMassingShare": 0,
+      "meanRgb": [
+        31,
+        42,
+        49
+      ]
+    },
+    "stillSha256": "6ef3e3650a0179971c82092a7614ec027baf6c6177b8b5e85173fdbef92b73dd",
+    "observation": "Three dense-massing buildings are active at this pose (massingActive 3) while 839 far-tier cells draw. The centre-half region reads 0.0000 procedural massing, so those three sit outside it. The scene over an honest-stop cell is materially darker than the P2 far-tier scene -- surface mean luminance 0.156 against 0.360 -- which is consistent with a nadir view of ground and low roofs rather than a lit oblique cityscape, and is NOT offered as a defect.",
+    "whyNoBar": "Nothing in the project states what an honest-stop cell SHOULD look like. It is a cell the bake refused; the runtime's contract is that it draws massing there rather than nothing, and that contract is a count, not an appearance."
+  },
+  "loadTimes": {
+    "item": "Load times",
+    "disposition": "REPORTED",
+    "readings": [
+      {
+        "pose": "far-tier-P2-oblique",
+        "firstFarTierAttributeMs": 195.29999995231628,
+        "farTierGlbFetched": 839,
+        "atlasesFetched": 839,
+        "resourceCount": 2830
+      },
+      {
+        "pose": "honest-stop-cell-P3",
+        "firstFarTierAttributeMs": 198.79999995231628,
+        "farTierGlbFetched": 839,
+        "atlasesFetched": 839,
+        "resourceCount": 2362
+      }
+    ],
+    "warmCacheCaveat": "THESE ARE WARM-CACHE READINGS AND MUST NOT BE COMPARED WITH T005's. T005 measured a first far-tier attribute at 4,511-7,529 ms on a cold load; 195 and 199 ms here reflect a browser that has already fetched all 839 tiles at these poses several times during this campaign. The number is real and the condition is stated; it is not a speedup.",
+    "whyNoBar": "A bar would have to come from a stated product requirement about how long a user may wait. No such requirement exists in this project, and deriving one from this campaign's own two readings would be fitting a bar to its own data."
+  },
+  "nonClaims": [
+    "REPORTED means measured and published, not accepted.",
+    "One machine, one session, AC power, warm cache where stated.",
+    "Neither still is evidence that the tiers look right; a screenshot cannot carry an appearance verdict, and no appearance verdict is offered."
+  ]
+}

@@ -148,7 +148,23 @@ const POSE_LANDING_DISCLOSURE = "A pose is dispatched, then RE-DISPATCHED at 5 s
  * result.
  */
 const T008_LAP_PHASE_CAP_MS = 50 * 60 * 1_000;
+/**
+ * An OPTIONAL override, added by T007 for the same reason `--out` was added:
+ * the default is unchanged, so nothing that ran before this flag existed
+ * behaves differently.
+ *
+ * T007 measures a THREE-tier city. The 75-minute cap above was re-derived for
+ * SIX WAVES from a ~37.5-minute floor; the far tier adds 840 tiles and 258 MiB
+ * per lap, and T005 measured its covered set taking up to ~48 s to stop moving
+ * at wide poses. The three-tier floor is 9 laps x 5 poses x (45 s settle + 5 s
+ * landing + 48 s convergence) = 73.5 min, which the 75-minute cap clears by
+ * ninety seconds -- it would fire on a healthy slow run, and a cap that fires on
+ * a healthy slow run is an instrument failure masquerading as a result. The
+ * override must be passed explicitly and is recorded in the emitted evidence.
+ */
+let lapPhaseCapOverrideMs = null;
 function lapPhaseCapMs() {
+  if (lapPhaseCapOverrideMs !== null) return lapPhaseCapOverrideMs;
   return evidenceId === DEFAULT_EVIDENCE_ID ? T008_LAP_PHASE_CAP_MS : HEAP_GATES.lapPhaseCapMs;
 }
 
@@ -590,6 +606,13 @@ async function run(argv) {
   if (!Number.isInteger(attemptCount) || attemptCount < 1) fail("--attempt must be a positive integer; the record states how many attempts this capture took");
   evidenceId = argValue(argv, "--out", DEFAULT_EVIDENCE_ID);
   evidenceRoot = join(repositoryRoot, "data", evidenceId);
+  const capOverride = argValue(argv, "--lap-phase-cap-ms", "");
+  if (capOverride !== "") {
+    const parsed = Number(capOverride);
+    if (!Number.isInteger(parsed) || parsed <= 0) fail("--lap-phase-cap-ms must be a positive integer number of milliseconds");
+    if (evidenceId === DEFAULT_EVIDENCE_ID) fail("--lap-phase-cap-ms may not be combined with the FROZEN default output root; pass --out first");
+    lapPhaseCapOverrideMs = parsed;
+  }
 
   const servedBundle = await servedBundleGate(dev);
   const browserVersion = await (await fetch(`http://127.0.0.1:${port}/json/version`)).json();
@@ -816,6 +839,7 @@ async function run(argv) {
         m2OnViolation: HEAP_GATES.M2.onViolation,
         m2WhyItIsNew: HEAP_GATES.M2.whyItIsNew,
         lapPhaseCapMs: lapPhaseCapMs(),
+        lapPhaseCapOverridden: lapPhaseCapOverrideMs !== null,
         lapPhaseCapReason: HEAP_GATES.lapPhaseCapReason,
         frozenPathProhibition: HEAP_GATES.frozenPathProhibition,
         writtenTo: `data/${evidenceId}/`,
