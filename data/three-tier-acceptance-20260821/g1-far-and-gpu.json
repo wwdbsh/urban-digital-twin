@@ -1,0 +1,121 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "three-tier-acceptance-20260821:g1-far-and-gpu",
+  "task": "T007",
+  "phase": "1",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION.",
+  "gate": "G1-far, then B3/B4/B5",
+  "whyG1FarRunsFirst": "The committed GPU texture probe has never been validated against a far-tier tile. The pre-registration gates B3/B4/B5 behind an EXACTLY ZERO delta on a known scene; without it the B readings would be INCONCLUSIVE and unquotable.",
+  "method": {
+    "pose": "Island overview, 12,000 m nadir at -73.9712/40.7831 (the T005 pose registry's P5), the maximum-residency pose.",
+    "isolation": "exteriorStreaming=off in BOTH arms, so the wave tier contributes no textures at all and the far tier is measured alone. Arm A additionally sets farTier=off.",
+    "armA": "farTier=off",
+    "armB": "farTier=on",
+    "why": "A difference between two arms at one pose isolates the far tier's own contribution without needing to disentangle it from the wave tier's."
+  },
+  "readings": {
+    "armA": {
+      "texturesByteLength": 0,
+      "geometryByteLength": 0,
+      "atlasesFetched": 0,
+      "farTierGlbFetched": 0
+    },
+    "armB": {
+      "texturesByteLength": 283290003,
+      "geometryByteLength": 95302992,
+      "atlasesFetched": 839,
+      "farTierGlbFetched": 839,
+      "farTierDrawnCells": "839",
+      "farTierDeclaredCells": "840"
+    },
+    "armABaselineIsExactlyZero": "Arm A reads 0 textures and 0 geometry. The subtraction is therefore not a subtraction at all -- arm B IS the far tier's contribution -- which makes the exact-zero claim below stronger, not weaker."
+  },
+  "atlasPopulationMeasured": {
+    "fetched": 839,
+    "dimensions": {
+      "256x256": 803,
+      "128x128": 28,
+      "64x64": 8
+    },
+    "note": "839 of 840, not 840. The absent one is the Block 835 alias cell that T005's sweeps recorded as notDeclared. 283,639,528 (all 840, from the runtime's own v2 justification) minus 283,290,003 (the 839 measured here) = 349,525, which is exactly B2, the per-tile bound for one 256x256 atlas. The arithmetic reconciles to the byte."
+  },
+  "theMipQuestionResolvedByMeasurement": {
+    "question": "Far-tier atlases are baked with bakedMipLevels 0 and sampled LINEAR_MIPMAP_LINEAR. Does Cesium generate the chain, and if so how does it account for it?",
+    "hypotheses": {
+      "H1_noMips": {
+        "bytes": 212467712,
+        "delta": 70822291
+      },
+      "H2_truncatedFourThirds": {
+        "bytes": 283290003,
+        "delta": 0,
+        "formula": "sum over tiles of trunc(w*h*4*4/3) -- the repository's existing PROBE_MIP_CHAIN_MULTIPLIER"
+      },
+      "H3_exactMipChainSum": {
+        "bytes": 283289164,
+        "delta": 839,
+        "formula": "sum over tiles of the true per-level pyramid"
+      }
+    },
+    "answer": "CESIUM GENERATES THE MIP CHAIN, AND ACCOUNTS FOR IT WITH THE TRUNCATED 4/3 APPROXIMATION. H2 matches EXACTLY, delta 0 over 839 tiles. H1 is short by 70,822,291 bytes, which settles the 'does it generate mips' half beyond argument. H3, the true pyramid sum, is short by exactly 839 bytes -- one byte per tile -- which is the truncation residue and identifies Cesium's accounting convention precisely rather than merely bounding it.",
+    "consequence": "The repository's existing probe arithmetic was right, and is now measured rather than assumed."
+  },
+  "g1FarVerdict": {
+    "verdict": "PASS",
+    "delta": 0,
+    "rule": "Delta must be EXACTLY ZERO or B3/B4/B5 are INCONCLUSIVE and go unquoted.",
+    "tilesCovered": 839
+  },
+  "bSeries": {
+    "quotableBecause": "G1-far passed at exactly zero.",
+    "units": "DECODED GPU BYTES. These are never compared with the 288 MiB runtime ceiling or residentBytes(), which are DECLARED FILE BYTES, and never added to criterion #30.",
+    "B3": {
+      "bar": 291984434,
+      "measured": 283290003,
+      "insideBar": true,
+      "headroomBytes": 8694431,
+      "marginShare": 0.0298,
+      "verdict": "PASS"
+    },
+    "B4": {
+      "bar": 98310624,
+      "measured": 95302992,
+      "insideBar": true,
+      "headroomBytes": 3007632,
+      "marginShare": 0.0306,
+      "verdict": "PASS"
+    },
+    "B5": {
+      "bar": 390295058,
+      "measured": 378592995,
+      "insideBar": true,
+      "headroomBytes": 11702063,
+      "marginShare": 0.03,
+      "verdict": "PASS"
+    },
+    "amendmentHistoryLabel": "B3/B4/B5 have NEVER been amended since ADR 0058 froze them. What moved beside them post-bake is the runtime cache ceiling: FAR_TIER_RUNTIME_BUDGETS v1 (256 entries / 64 MiB, eviction deferred) became v2 (1,024 entries / 288 MiB of DECLARED FILE BYTES, eviction discharged by analysis). v2's gpuJustification predicted an island resident upper bound of 382,457,884 GPU bytes against B5, a 2.0 per cent margin its own author called 'inside, and not comfortably'. THIS CAMPAIGN MEASURES 378,592,995 -- inside that prediction by 3,864,889 bytes, and inside B5 by 3.0 per cent.",
+    "whatB3toB5DoNotBound": [
+      "They bound the instantaneous steady-state residency of ONE SELECTED CUT, not a streaming peak.",
+      "Transitional double residency while a replacement uploads is OUTSIDE them.",
+      "Retained eviction caches are OUTSIDE them: the 1,024-entry cache retains beyond the cut, and at 840 tiles the whole island fits inside it, so nothing was evicted here and no eviction pressure was exercised.",
+      "Upload staging is OUTSIDE them.",
+      "The runtime's own peak observation is REPORTED separately and is not a B-series verdict."
+    ],
+    "runtimePeakObservationReported": {
+      "atlasesFetched": 839,
+      "farTierGlbFetched": 839,
+      "statement": "At this pose the runtime held 839 atlases and 839 far-tier GLBs simultaneously with no eviction, because the 1,024-entry ceiling admits the whole island. That is the residency this campaign observed; it is REPORTED, not compared with a bound that excludes retention."
+    }
+  },
+  "instrumentCaveats": [
+    "The resourceBufferAtCap flag in the raw capture reads true simply because the resource count exceeds 250. The harness raises the resource-timing buffer to 50,000 before load, so no entry was dropped; the flag's threshold is the DEFAULT cap and is a false alarm here. Recorded rather than quietly reinterpreted.",
+    "Arm A reported farTierArmed true from a viewport publish-seq attribute while the far-tier status element was absent and every far-tier byte was zero. The tier contributed nothing in arm A; the flag's disjunction is wider than it should be and is noted."
+  ],
+  "attemptDisclosure": "One capture per arm. No arm was re-captured. An earlier attempt at both arms produced no readings at all because this worktree had no Orca browser tab open; that produced no numbers and is disclosed here rather than omitted.",
+  "nonClaims": [
+    "One machine, one session. Not a distribution, no confidence interval.",
+    "This is the far tier ALONE at one pose with the wave tier disabled. It is not a three-tier residency total.",
+    "G1-far validates the probe against far-tier atlases. It does not validate it against wave-tier textures, which the prior campaign's G-series covered."
+  ]
+}
