@@ -420,6 +420,60 @@ streaming, the near-field band, and the citywide default flip) and
 retention, assembly partitioning, and the generation-replay proof — which also
 carries an append-only correction to `0032`'s citywide UV share).
 
+## The three-tier city (far tier default-on, 2026-08-19)
+
+**What a default session draws today**, with no URL parameter of any kind:
+
+| tier | what it is | how it is selected |
+| --- | --- | --- |
+| near | textured `lod_0` exterior geometry | the six **`-s2`** two-LOD serving releases |
+| mid | textured `lod_1` | the same releases — **declared eligible**, selected past the ring; *not* rendered-verified, see below |
+| far | baked HLOD tiles, one per ownership cell | 840 tiles, `FAR_TIER_DEFAULT_ON = true` |
+| fallback | procedural tan massing | wherever no tier above it draws |
+
+The wave table above this section names the `-v3`/`-p1` releases that were the
+default until the two-LOD promotion. **They are no longer what ships**; the six
+`-s2` releases are, and the far tier sits behind them.
+
+### The honest limits, stated where a reader will find them
+
+- **43 of 883 ledger cells carry no baked tile.** The bake honest-stopped on
+  them; they fall back to wave geometry and massing. 143 individual buildings
+  were refused inside otherwise-baked cells. Both sets are committed as an
+  exemption set and reconciled by machine.
+- **90.95% of island cells ship under-resolved** — 764 of 840, at a median
+  applied scale of **0.707**. The far tier is visibly coarser than its source at
+  most cells. That is a property of the adopted recipe at the adopted atlas
+  ceiling, measured rather than estimated.
+- **The adopted hue bar `A3'' = 0.035` is post-hoc.** It supersedes a
+  pre-registered `A3' = 0.032`. Recipe v3 scores 6 of 6 against it, and anyone
+  comparing these numbers with the original pre-registration needs to know the
+  bar moved.
+- **The mid tier's selection is verified by declaration, not by rendering.** 44,565 of 44,989 shipped assets declare an eligible `lod_1` and the runtime selects it past the ring, but no rendered lod_0-to-lod_1 comparison was ever produced — see the next point. A further 424 parents declare a `lod_1` that is marked **ineligible**: its content is the full-geometry fallback, the runtime never selects it, and those buildings therefore have no transition at all.
+- **There is no rendered 2% LOD-transition gate.** It is not measurable in the
+  shipped app: at the 400 m ring the instrument's own error budget runs 5.98% to
+  35.06% against a 2% bar, and moving closer to gain resolution destroys the
+  transition being tested. Recorded as an honest stop with committed arithmetic,
+  not as a failed attempt.
+- **The acceptance campaign returned NOT ACCEPTED.** One user-visible regression
+  (a searched building loses three details-panel rows), frame time uncapturable
+  at three of seven registered stations, and heap growth unmeasurable on this
+  vehicle. The regression reproduces with the far tier disarmed, so it belongs to
+  the two-LOD promotion rather than to the far tier.
+- **Rolling the far tier off does not restore the previous city.** It restores
+  the pre-HLOD *composition* only; the raised residency ceilings and the swapped
+  inventory pin stay in the build. That is a third configuration nobody has
+  measured.
+- **Every timing figure is one machine, one session.** No distribution, no
+  confidence interval, no cross-machine claim. The bake's byte-determinism *is*
+  established across process boundaries; the rendering and timing results are
+  not established across machines.
+
+The goal's own acceptance record closes at **2 MET, 4 MET-AS-ADJUDICATED, 5
+NOT-MET**, with a sixteen-item residual register and a completion decision left
+to the reader rather than taken. Full criterion-by-criterion evidence:
+`data/manhattan-hlod-far-tier-acceptance-20260822/reconciliation.json`.
+
 ## Prerequisites and setup
 
 - Node.js `>=22.12.0`
@@ -612,6 +666,16 @@ feedback; geometry and Cesium picking remain available for all visible records.
   facade imagery or photorealistic models. Bounded-pilot GLBs remain inactive.
 - Citywide mode does not activate the three protected landmark GLBs; verified
   landmark integration is bounded-pilot behavior.
+- The far tier is **visual only**: picking, identity, provenance and deep links
+  run against the base building records underneath it, unchanged.
+- No rendered LOD-transition gate exists, and none can be produced in-app at the
+  2% bar without a forced-LOD and isolation hook the runtime does not offer.
+- Frame time at the 52 km island overview is **unmeasured**, not slow: that
+  station would not land in either capture attempt. Nothing here claims it is
+  fast or slow.
+- The double-draw transient carries at 6,165 ms against an inherited 4,000 ms
+  bar. It is a named carry of deferral D-11, which this work does not close in
+  either direction.
 - Real neighborhoods, parks, shops beyond DOHMH restaurant observations,
   attractions beyond the bounded assets, transit, routing, hours, live status,
   reviews, ratings, photos, street imagery, traffic, and pedestrian/street-level

@@ -960,3 +960,83 @@ reading. `false` restores the pre-HLOD composition and nothing else — the rais
 ceilings and swapped pin stay — which is a third configuration nobody has
 measured. And J2 reproduces with the far tier off, so the rollback would not buy
 the one user-visible fix on offer.
+
+---
+
+## Amendment — T008, the goal closes (Issue #108, 2026-08-22)
+
+**Status: the goal ships its acceptance record with 2 MET, 4
+MET-AS-ADJUDICATED, 5 NOT-MET, and a sixteen-item residual register. The
+completion decision is presented to the user, not taken here.**
+
+Record: `data/manhattan-hlod-far-tier-acceptance-20260822/reconciliation.json`.
+
+### D-19 is characterised, not closed
+
+The prior goal's criterion-4 NOT-MET verdict is amended **by statement**, and
+that is a **deliberate departure from the established convention**, not
+conformance to it. The precedent — commit `fba2569` — amended its target **in
+place**: 24 insertions, 9 deletions, flipping a verdict and adding
+`priorVerdict` and `closedBy` to the record itself. In-place editing with
+prior-verdict preservation *is* the convention here.
+
+The departure is justified by one fact: **the verdict does not move.** The
+in-place convention exists to record a transition, and there is none —
+criterion 4 was NOT-MET and remains NOT-MET. So
+`data/exterior-completion-acceptance-20260817/reconciliation.json` is **not
+edited**: its bytes and both sidecars are unchanged, and a test binds that by
+re-hashing the bytes and checking no transition fields were injected. It is
+cited by path **and by hash**; an earlier revision of this amendment claimed a
+hash citation would be circular, which was false — that record contains no
+reference to this closure at all.
+
+**The frozen stop had FOUR legs, and only one is falsified.**
+
+> **(a)** "All six promoted `-s1` serving releases declare `shippedLodIds
+> `['lod_0']` only. There is no rendered lod_0-to-lod_1 transition anywhere in
+> the served set."
+
+Leg (a) is **falsified**: two-LOD serving is the default and **44,565 of 44,989
+shipped assets declare an eligible `lod_1`**. Legs **(b)** — 424 measured
+fallbacks with five of six waves above 0.02 on the retained set — **(c)** — the
+2% figures are declared, not rendered — and **(d)** — L1 does not discharge this
+criterion by its own pre-registration — all **survive untouched**, and each is
+independently sufficient to keep the criterion unmet.
+
+What replaces leg (a) is measured: the in-app instrument's error budget exceeds
+the 2% bar for every building in every realistic stratum — 5.98%–35.06% across
+the 424-parent census, 6.57%–20.65% across the 53 near-cap buildings, **zero
+under the bar in either**. Magnification is pinned by the 400 m ring, so moving
+closer to gain resolution destroys the transition being tested.
+
+**What T006 actually established** — and the amendment says this rather than
+implying more: an arithmetic honest stop, a dual-derived census of 424, and five
+shed-tone pairs that are INCONCLUSIVE-BY-INSTRUMENT. **Not a met 2% gate.**
+
+**A correction to an earlier revision of this amendment.** It said the 424
+parents "have no `lod_1` at all by construction". That is false. They **declare**
+a `lod_1` — the census rule is `lod_0.maxDistanceMeters === null AND
+lod_1.eligible === false`, which requires the level to exist in order to be
+marked ineligible — and its content is the full-geometry fallback ADR 0050's
+measured-fallback policy specifies. What they lack is an **eligible** coarse
+level, so the runtime never selects it and no transition is ever rendered for
+them.
+
+Three successor paths are named: a forced-LOD and isolation hook; render-target
+resolution (which clears the bar for 97 of 424 at 8× and 382 at 16×, but selects
+a size-biased stratum, not the census); and an identity check that works from
+outside the renderer.
+
+### What this ADR should not be read as saying
+
+The far tier is built, measured and pinned. It does **not** have a rendered
+transition gate, a stills-verified default-session massing sweep, a frame-time
+result at its most demanding station, or an identical journey suite.
+
+On that last one: re-running the same pose with the far tier disarmed reproduces
+the regression, which excludes the far-tier **draw path**. It does not exonerate
+this goal wholesale — both arms ran the same build, so the raised residency
+ceilings and the swapped inventory pin were never controlled for. The promotion
+is indicated; the attribution is not closed.
+
+The acceptance campaign's **NOT ACCEPTED** verdict stands unchanged.

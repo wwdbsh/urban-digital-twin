@@ -276,3 +276,47 @@ which repeats one island-scale path eight times in a single document with a
 forced collection before every sample and passes its pre-registered rule while
 stating its own detection floor. Both records carry residual risks by number
 rather than closing quietly.
+
+## The far-tier HLOD goal, closed honestly (2026-08-22)
+
+The `manhattan-hlod-far-tier` goal added a third tier beneath the two-LOD
+exterior waves: 840 baked HLOD tiles, one per ownership cell, default-on. Its
+own criterion-by-criterion record is
+`data/manhattan-hlod-far-tier-acceptance-20260822/reconciliation.json` —
+**2 MET, 4 MET-AS-ADJUDICATED, 5 NOT-MET**, with a sixteen-item residual
+register and a completion decision that is *presented to the user rather than
+taken*.
+
+What is genuinely established: a deterministic, byte-reproducible bake through
+committed CLIs, reconciling by machine to the 883-cell ledger; a three-tier
+composition verified by DOM read rather than inferred; GPU residency **measured**
+behind an instrument validated at a delta of exactly zero; and a rehearsed
+one-token rollback.
+
+What is not, and is recorded as not:
+
+- **No rendered 2% LOD-transition gate.** An honest stop with committed
+  arithmetic — the in-app instrument's error budget exceeds the bar for every
+  building in every realistic stratum. Prior-goal residual **D-19 is
+  characterised, not closed**: its original stop rested on single-LOD serving,
+  a premise the two-LOD promotion made false, and it is replaced by a measured
+  reason with three named successor paths. The exterior-completion record's
+  criterion-4 verdict **remains NOT-MET**, amended by statement with that
+  record's bytes untouched.
+- **No stills-verified default-session massing sweep.** Zero uncovered massing is
+  established at the registered poses by DOM state, but no stills were retained,
+  the exterior wave tier was absent from both sweep vehicles, and the 205-parent
+  tombstone census the criterion names does not exist.
+- **Frame budgets not shown to hold** at three-tier scale: uncapturable at three
+  of seven registered stations, including the maximum-residency one.
+- **One user-visible regression** in the journey suite. Re-running the same pose
+  with the far tier disarmed reproduces it, which excludes the far-tier **draw
+  path** — but both arms ran the same build, so this goal's raised ceilings and
+  swapped pin were never controlled for. The promotion is indicated, not proven.
+
+The acceptance campaign's verdict was **NOT ACCEPTED**, and this closure does not
+soften it. The pattern the goal actually demonstrates is narrower than "a
+three-tier city works": it is that a tier can be built, measured where
+measurement is possible, and have its unmeasurable parts named instead of
+guessed — including four criteria left unmet and a bar (`A3'' = 0.035`) disclosed
+as post-hoc rather than presented as the original.
