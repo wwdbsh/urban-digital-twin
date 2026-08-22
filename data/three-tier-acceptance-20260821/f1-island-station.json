@@ -50,27 +50,45 @@
     },
     "armOnAttempts": [
       {
+        "label": "island-ON-validation",
+        "order": 1,
+        "preWarmSeconds": 0,
+        "verdict": "NOT-CAPTURED",
+        "refusalReason": "Refused under the refusal rules as they stood at that moment, which treated a focus change as fatal: focus did not hold across the window. The composition read would ALSO have refused it -- the far tier had declared 0 cells -- so it fails both the rule that was in force and the rule that replaced it.",
+        "p50Ms": 16.80000000000291,
+        "p95Ms": 26,
+        "sampleCount": 620,
+        "farTierDeclaredCells": 0,
+        "note": "This attempt predates the refusal-rule fix. It is enumerated so the record's 'three ON attempts' can be counted rather than taken on trust."
+      },
+      {
         "label": "island-ON",
         "verdict": "NOT-CAPTURED",
-        "reason": "tier composition does not match the arm's intent (expected far tier on; armed=true, declared=0, massingActive=41881)",
         "p50Ms": 23.099999999998545,
         "p95Ms": 26.599999999998545,
         "sampleCount": 573,
-        "farTierDeclaredCells": 0
+        "farTierDeclaredCells": 0,
+        "order": 2,
+        "preWarmSeconds": 90,
+        "refusalReason": "tier composition does not match the arm's intent (expected far tier on; armed=true, declared=0, massingActive=41881)"
       },
       {
         "label": "island-ON-attempt2",
         "verdict": "NOT-CAPTURED",
-        "reason": "tier composition does not match the arm's intent (expected far tier on; armed=true, declared=0, massingActive=41881)",
         "p50Ms": 16.69999999999709,
         "p95Ms": 25,
         "sampleCount": 702,
-        "farTierDeclaredCells": 0
+        "farTierDeclaredCells": 0,
+        "order": 3,
+        "preWarmSeconds": 200,
+        "refusalReason": "tier composition does not match the arm's intent (expected far tier on; armed=true, declared=0, massingActive=41881)",
+        "note": "THE 200-SECOND PRE-WARM ATTEMPT. Immediately before this sample the same page, left to settle for 200 s, read 840 declared / 839 drawn -- the far tier does reach full residency at this pose given enough time. The sampler's own Page.navigate then resets the document and the tier must declare again from scratch, which it does not finish inside F1's registered 45 s settle. That is why a longer warm does not rescue the arm."
       }
     ],
     "whyTheOnArmCouldNotBeCaptured": "At this pose the far tier had not finished DECLARING within F1's registered 45 s settle: it read 0 declared cells while the massing layer drew ~42,000 buildings. A 200 s pre-warm brought it to 840 declared / 839 drawn, but the sampler's own Page.navigate resets the page and the tier must re-declare, so the settle the bar registers is not enough here. Three ON attempts, all refused on composition.",
     "verdict": "ISOLATION INCOMPLETE. The OFF arm captured cleanly and PASSES (p50 16.6, p95 18.2, n=796, far tier wholly disarmed). No valid ON arm exists from the same instrument, so there is no controlled pair.",
-    "whatMayNotBeConcluded": "The OFF arm's 18.2 ms p95 may NOT be differenced against the committed harness's 25.2: different instruments, different sessions, and the harness's own reading never landed. That comparison is suggestive and is not an isolation."
+    "whatMayNotBeConcluded": "The OFF arm's 18.2 ms p95 may NOT be differenced against the committed harness's 25.2: different instruments, different sessions, and the harness's own reading never landed. That comparison is suggestive and is not an isolation.",
+    "armOnAttemptCount": 3
   },
   "attribution": {
     "statement": "NOT ISOLATED. T007 does not attribute this station's frame time to the far tier.",

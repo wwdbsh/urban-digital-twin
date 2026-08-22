@@ -10,7 +10,8 @@
     "WITHDRAWN: 'F1 FAIL at overview-52km-island'. That capture had landed:false, dispatchCount 12, undisclosed. The registered rule classifies a landing failure as an instrument-failure abort. Re-run reproduced the landing failure. The station is NOT-CAPTURED.",
     "WITHDRAWN: every attribution of that station's frame time to 'the far tier's'. The two-tier baseline at the SAME station was already p50 16.7 / p95 24.9 before the far tier existed, and the isolation's ON arm could not be captured. NOT ISOLATED.",
     "WITHDRAWN: the G-series 'reconciles to the byte' claim, which subtracted a sum from a superset of itself and could only return the missing term. A tautology, not agreement.",
-    "CORRECTED: 'nine stations' to the registered SEVEN; '24 class tiles expected' to 25; the heap stopping rule from 'pre-registered' to an in-campaign judgement disclosed at the time."
+    "CORRECTED: 'nine stations' to the registered SEVEN; '24 class tiles expected' to 25; the heap stopping rule from 'pre-registered' to an in-campaign judgement disclosed at the time.",
+    "WITHDRAWN AGAIN, at a second site: ADR 0058 restated the G-series 'to the byte' subtraction three sections after withdrawing it. Both instances are now gone. The scope conclusion rests on G2's 3,245-tiles-where-25-expected, which is not a restatement of the harness's own delta."
   ],
   "gates": [
     {
@@ -174,10 +175,10 @@
     "FAIL (product)": 1
   },
   "boundRecords": {
-    "campaign-summary": "5b85cc0ca1e3ccc15dd5431fd31829aae7f4356e6e33466aba8c4e4f1a49ef52",
+    "campaign-summary": "982cab77128c9f823d5b672bf166e1c0a00ffc93e86c64136d9025405674c530",
     "chrome-cleanup": "628c0e8a8b338c2ccf59537ed67e574bbbcb94c5b11550c81c37546fae0c4bcf",
-    "f1-island-station": "6d0cf6c9735375f4f0d7c03d9f5389b8f7847274b328f300bce9db8da2ab8d7d",
-    "frames-analysis": "2de27491f9bc27dc58ac4f845db4e2930677950cb277f862390783b4974ec74b",
+    "f1-island-station": "67bb19e5acabc769f6d0a48ca17fe7de8b4a44c4675de36025515b3a04a92e9b",
+    "frames-analysis": "2ba419c122923e1952db83dc5c4129381ca8eeafbb6fd01e240bb6d330179f9d",
     "frames-and-gpu": "e4436dd262cfd45bc1e098e622126a0d231ec4b418c8d6ab608be856abb32cfc",
     "g1-far-and-gpu": "9f9ba000c2590f5eff14700e19512679c531dc9cfd8a77650b553868e6a85144",
     "heap": "6d84d38f7b863c627d9a910644f217cedf3c1b1c8f397ba3500fa993947092ed",
@@ -224,5 +225,6 @@
     "Criterion #30 is closed elsewhere, reported in its own units, added to nothing.",
     "The far-tier OFF arm reading may not be differenced against a different instrument's ON reading from a different session."
   ],
-  "preflightNote": "The closing pre-flight ABORTED once, correctly, because it ran while the correction commit was still uncommitted -- worktree-clean is one of its conditions. Re-run on the clean tree: PASS 13/13. Both the abort and the re-run are disclosed; the guard refusing its own operator's untidiness is the guard working."
+  "preflightNote": "The closing pre-flight ABORTED once, correctly, because it ran while the correction commit was still uncommitted -- worktree-clean is one of its conditions. Re-run on the clean tree: PASS 13/13. Both the abort and the re-run are disclosed; the guard refusing its own operator's untidiness is the guard working.",
+  "instrumentReusePreconditions": "scripts/station-arm-frames-cli.mjs carries three named preconditions before reuse -- no tests, bypasses guardedWrite, asymmetric composition predicate -- recorded in the implementation record. No number in this campaign depends on them; they are T008 preconditions, not defects found in a reading."
 }

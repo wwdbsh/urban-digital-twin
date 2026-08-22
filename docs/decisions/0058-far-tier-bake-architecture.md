@@ -846,10 +846,15 @@ vehicle-controlled. The production build is what a user receives.
 
 ## Amendment — T007, the three-tier acceptance campaign (Issue #107, 2026-08-22)
 
-**Status: the three-tier default is NOT accepted. Two gates FAIL, three are not
-captured, and the two FAILs belong to different changes.**
+**Status: the three-tier default is NOT accepted. ONE product gate FAILs, two
+instruments fail for scope, and SEVEN gates could not be captured.**
 
-Evidence: `data/three-tier-acceptance-20260821/`, nine records with sidecars.
+The single product FAIL is **not the far tier's**: it reproduces with the far
+tier wholly disarmed. Nothing in this campaign is attributed to the far tier —
+the one station that might have carried a cost could not be measured, twice.
+
+Evidence: `data/three-tier-acceptance-20260821/`, **sixteen** records with
+sidecars, all bound by digest from `campaign-summary.json`.
 
 ### What the far tier is answerable for: on this evidence, nothing at F1
 
@@ -923,12 +928,20 @@ against an independent computation from the shipped PNG headers.
 
 ### The acceptance instruments are far-tier-blind, and it shows
 
-The committed G1/G2/G3 gates FAIL for **scope, not regression**. G1 attributes
-every texture byte to a known count of wave class tiles; with the far tier armed
-it is short by exactly the far-tier residency — 263,367,077 measured minus
-263,017,553 far-tier = 349,524 = 4 × 87,381, the four-tile prediction to the
-byte. J1's boot-document filter is pinned to `-s1` ids the default no longer
-serves. Neither is evidence about the product.
+The committed G1/G2/G3 gates FAIL for **scope, not regression**. G1 predicts
+`texturesByteLength` from a known count of wave class tiles and attributes every
+texture byte to them; it cannot see a far-tier atlas at all, so with the far tier
+armed the measurement exceeds the prediction and the gate fails.
+
+The load-bearing figure is **G2's**, because it does not reduce to a restatement
+of the harness's own delta: a bar of 2,184,525 bytes against an independently
+measured 283,552,146 implies **3,245 class tiles where 25 were expected**. (The
+subtraction this section previously offered — measurement minus reported delta
+returning the four-tile prediction — is the tautology withdrawn above, and is not
+repeated.)
+
+J1's boot-document filter is pinned to `-s1` ids the default no longer serves.
+Neither is evidence about the product.
 
 ### Not measured
 

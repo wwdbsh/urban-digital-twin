@@ -1,4 +1,4 @@
-# The three-tier acceptance campaign: two failures, and they belong to different changes
+# The three-tier acceptance campaign: one product failure, and it is not the far tier's
 
 Task: T007 (Issue #107)
 Branch: `fcp/107-acceptance`
@@ -161,6 +161,35 @@ trigger` fails in the full suite. It is **not caused by this branch**:
 `git diff 8eca553..HEAD -- src/` is empty, and the failure is present at the base
 commit. It reproduces only under full-suite parallelism and passes 5/5 in
 isolation. Characterised here rather than left as an unexplained red line.
+
+## Preconditions on reusing the instruments this campaign wrote
+
+Two weaknesses in `scripts/station-arm-frames-cli.mjs` are named here rather than
+patched, because it was written mid-correction to answer one question and no code
+change is in scope now. **Anything reusing it must close these first.**
+
+- **It has no tests.** Every other instrument in this campaign carries a
+  validation suite — the composition classifier is checked against a committed
+  record on a real scene, the capture harness's write guard is proved to refuse
+  nineteen frozen roots. This one is validated only by its ON arm reproducing the
+  committed harness's percentiles at the same station, which is a cross-check and
+  not a test. It must not carry a verdict again until it has one.
+- **It bypasses `guardedWrite`.** It writes wherever `--out` points with a bare
+  `writeFileSync`, so it has none of the frozen-evidence protection every other
+  T007 writer has. Here it was only ever pointed at `/tmp`; a future caller
+  pointing it at `data/` would have nothing stopping it overwriting an acceptance
+  baseline.
+- **Its composition predicate is asymmetric.** The ON arm must show exactly 840
+  declared cells; the OFF arm passes on *absent, null, or zero*. The asymmetry is
+  deliberate — "off" is genuinely a family of states, because
+  `clearPublishedFarTierState` deletes the attributes rather than zeroing them —
+  but it means the OFF arm would also accept a far tier that was armed and had
+  merely failed to load, which is exactly the condition that refused all three ON
+  arms. The OFF arm here additionally showed `farTierArmed: false`, so the hole
+  was not exercised; a reuse must tighten the predicate rather than rely on that.
+
+These are T008 preconditions, not defects found in a reading: no number in this
+campaign depends on them.
 
 ## Not claimed
 
