@@ -960,3 +960,61 @@ reading. `false` restores the pre-HLOD composition and nothing else — the rais
 ceilings and swapped pin stay — which is a third configuration nobody has
 measured. And J2 reproduces with the far tier off, so the rollback would not buy
 the one user-visible fix on offer.
+
+---
+
+## Amendment — T008, the goal closes (Issue #108, 2026-08-22)
+
+**Status: the goal ships its acceptance record with 2 MET, 5
+MET-AS-ADJUDICATED, 4 NOT-MET, and a fourteen-item residual register. The
+completion decision is presented to the user, not taken here.**
+
+Record: `data/manhattan-hlod-far-tier-acceptance-20260822/reconciliation.json`.
+
+### D-19 is characterised, not closed
+
+The prior goal's criterion-4 NOT-MET verdict is amended **by statement**. The
+amended record —
+`data/exterior-completion-acceptance-20260817/reconciliation.json` — is **not
+edited**: its bytes and its sidecar are unchanged, and a test binds that. It is
+cited by path and task only, never by hash, because it embeds successor hashes in
+its own closures and a hash citation would be circular. That is the convention
+the record itself established for the earlier T008/Issue-90 amendment.
+
+**The verdict does not change.** What changes is the reason, and the old one was
+resting on a premise that has since become false:
+
+> the original stop: "all six promoted `-s1` serving releases declare
+> `shippedLodIds ['lod_0']` only. There is no rendered lod_0-to-lod_1 transition
+> anywhere in the served set."
+
+Two-LOD serving is now the default. **44,565 of 44,989 shipped assets declare an
+eligible `lod_1`**, and the transition exists in the served set. The gate is
+still not met, for a different and newly measured reason: the in-app
+instrument's error budget exceeds the 2% bar for every building in every
+realistic stratum — 5.98%–35.06% across the 424-parent census, 6.57%–20.65%
+across the 53 near-cap buildings, **zero under the bar in either**. Magnification
+is pinned by the 400 m ring, so moving closer to gain resolution destroys the
+transition being tested.
+
+**What T006 actually established** — and the amendment says this rather than
+implying more: an arithmetic honest stop, a dual-derived census of 424, and five
+shed-tone pairs that are INCONCLUSIVE-BY-INSTRUMENT. **Not a met 2% gate.**
+
+Half of the original stop survives untouched: the 424 measured-fallback parents
+have no `lod_1` at all by construction, so for them there is no transition to
+render and never will be under this grammar.
+
+Three successor paths are named: a forced-LOD and isolation hook; render-target
+resolution (which clears the bar for 97 of 424 at 8× and 382 at 16×, but selects
+a size-biased stratum, not the census); and an identity check that works from
+outside the renderer.
+
+### What this ADR should not be read as saying
+
+The far tier is built, measured and pinned. It does **not** have a rendered
+transition gate, a frame-time result at its most demanding station, or an
+identical journey suite — and the last of those three is not its fault: the one
+user-visible regression reproduces with the far tier disarmed.
+
+The acceptance campaign's **NOT ACCEPTED** verdict stands unchanged.

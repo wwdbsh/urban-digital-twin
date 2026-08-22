@@ -1,0 +1,591 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "manhattan-hlod-far-tier-acceptance-20260822:reconciliation",
+  "goalSlug": "manhattan-hlod-far-tier",
+  "task": "T008 (Issue #108)",
+  "note": "The goal's own criterion-by-criterion acceptance record, in the T024 discipline. Capture-free: every number here is cited from a committed record of the task that measured it.",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION. T008 took no measurement of its own; it reconciles eleven tasks' records against eleven criteria.",
+  "criteriaSha256": "ca31e09c25cf00bd382c0db1cb803dee0660e1f29a2a6f42b43ddb409f92fb74",
+  "criteriaDerivation": ".claude/fable-control-plane/goals/manhattan-hlod-far-tier/goal.json acceptanceCriteria, read from the MAIN checkout read-only, hashed as a canonical JSON array.",
+  "criteriaCount": 11,
+  "verdictVocabulary": [
+    "MET",
+    "MET-AS-ADJUDICATED",
+    "NOT-MET"
+  ],
+  "verdictCounts": {
+    "MET-AS-ADJUDICATED": 5,
+    "NOT-MET": 4,
+    "MET": 2
+  },
+  "stopReportCount": 4,
+  "headline": "2 MET, 5 MET-AS-ADJUDICATED, 4 NOT-MET. The far tier ships, is measured, and is pinned. What it does NOT have is a rendered 2% transition gate, a frame-time result at its most demanding station, or an identical journey suite -- and one of those three is not its fault.",
+  "verdicts": [
+    {
+      "index": 1,
+      "criterion": "Three-tier serving is the default session: near-tier textured lod_0 (existing behavior preserved), mid-tier textured lod_1 selected by measured distance, far-tier baked HLOD tiles covering every cell with V3T-shipped parents; tier boundaries and residency budgets are re-derived as recorded contract changes with three-bound arithmetic",
+      "verdict": "MET-AS-ADJUDICATED",
+      "evidence": [
+        {
+          "statement": "THE THREE-TIER COMPOSITION SHIPS BY DEFAULT. T001 promoted the six -s2 two-LOD serving releases; T005 promoted 840 far-tier tiles and flipped FAR_TIER_DEFAULT_ON to true."
+        },
+        {
+          "statement": "VERIFIED BY DOM READ, NEVER INFERRED. T007 read tier composition at every station: both 260 m street stations carry all three tiers simultaneously -- dense massing active 251 and 154, exterior wave resident 8 cells, far tier drawn 738 and 811 -- with publish sequences advancing at 29 and 9."
+        },
+        {
+          "statement": "ADJUDICATION, and it is the reason this is not a plain MET. 'Covering everything' is not literally true: 840 of the ledger's 883 cells carry a baked tile and 43 are honest stops the bake refused. Those 43 fall back to wave geometry and massing, which is the designed behaviour and is counted, not hidden."
+        },
+        {
+          "statement": "A COUNTER-FINDING THAT MATTERS MORE THAN THE PASS. T007 found the three overview stations and the P2 oblique pose are TWO-tier, with massingActive 0. A campaign that inferred composition from geometry would have called them three-tier and been wrong at four poses of six. The ring is dual-keyed; composition is read or it is not known."
+        }
+      ],
+      "artifacts": [
+        {
+          "path": "data/three-tier-acceptance-20260821/campaign-summary.json",
+          "sha256": "3dec42af052eed854402869d789c206a32cd58ed84e04430971532765b878906"
+        },
+        {
+          "path": "data/far-tier-hlod-promotion-20260819/promoted-inventory.json",
+          "sha256": "cf8e26480eecc91f2e7b473d217a0d3551d0be59b4d8da39ee1217a6e0538f0a"
+        },
+        {
+          "path": "data/far-tier-hlod-promotion-20260819/sweep-exemptions.json",
+          "sha256": "6354676da304ab03783132730f75dafdfce60c82f509dd740b9fc18c92e8d430"
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "criterion": "No tan V3-eligible massing is visible in a default session: a pre-registered pose sweep (island overview, mid-altitude, street approach, and the user's two screenshot poses reproduced) shows zero untextured-massing draws for parents that ship a textured exterior, verified on rendered stills with committed checksums; the 205 tombstoned parents render their honest massing appearance by design and are excluded by census, not by hand",
+      "verdict": "MET-AS-ADJUDICATED",
+      "evidence": [
+        {
+          "statement": "AT THE PRE-REGISTERED POSES, MET. T005's sweep-2 ran the six registered poses and read massing uncovered = 0 at all five ON poses -- P2 the oblique failure pose at 23,973 of 23,973 covered -- with absent, checksum-mismatch, build-failure and over-budget all zero. notDeclared 1 throughout is the committed Block 835 alias exemption."
+        },
+        {
+          "statement": "AND THE FIRST SWEEP FAILED. Sweep-1 reported 11,867 uncovered at P2. That FAIL is preserved unedited beside sweep-2; the cause was a stale published reading, not unsuppressed massing, and the scene was correct throughout. The record carries both."
+        },
+        {
+          "statement": "ADJUDICATION: THE POSE SET IS NOT THE CITY. T007 observed 251 and 154 massing buildings active at its two 260 m street stations with suppressible 0 -- meaning none of them sits under a drawn far-tier cell. Whether any of those are V3-eligible was NOT determined by either campaign, and this record does not claim it either way. The criterion is met at the poses it registered; it is not evidence about poses nobody swept."
+        }
+      ],
+      "artifacts": [
+        {
+          "path": "data/far-tier-hlod-promotion-20260819/sweep-results.json",
+          "sha256": "ecee73a294e8acbb41ec760bd740a206cfc9a14681608813db6a3e4e4ee254f0"
+        },
+        {
+          "path": "data/far-tier-hlod-promotion-20260819/sweep-poses.json",
+          "sha256": "94a40e8acd377539d61e8c06767859a4a95a43823c97dd9a31b43cae54e149b0"
+        },
+        {
+          "path": "data/three-tier-acceptance-20260821/frames-analysis.json",
+          "sha256": "2ba419c122923e1952db83dc5c4129381ca8eeafbb6fd01e240bb6d330179f9d"
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "criterion": "lod_1 serves for real: rendered lod_0-to-lod_1 transitions are demonstrated on stratified samples per wave meeting the 2% key-silhouette gate on rendered evidence (prior-goal criterion-19 standard); the 424 measured-fallback parents serve their fallback full-geometry level and are named in the record",
+      "verdict": "NOT-MET",
+      "evidence": [
+        {
+          "statement": "HONEST STOP WITH COMMITTED ARITHMETIC, pre-registered before any capture. T006 computed the in-app instrument's error budget from the vehicle's own optics and found it exceeds the 2% bar for every building in every realistic stratum: the measured-fallback census of 424 runs 5.98% to 35.06% (median 10.89%), and the near-cap stratum of 53 runs 6.57% to 20.65%. ZERO of 424 and ZERO of 53 come under the bar."
+        },
+        {
+          "statement": "THE REASON IS STRUCTURAL, NOT EFFORT. Magnification is pinned by the thing being tested: the level flips at the 400 m ring, so moving closer to gain pixels destroys the transition. A target needs about 356,440 device px^2 before the total budget clears 2%; the largest census member projects 17,666."
+        },
+        {
+          "statement": "NO SAMPLE WAS DRAWN. Feeding an instrument that cannot resolve the bar would have manufactured the appearance of a measurement. The frame is committed and checksummed so a successor inherits it ready to use."
+        },
+        {
+          "statement": "THE MISSING CAPABILITY IS NAMED RATHER THAN QUIETLY ADDED: a forced-LOD and isolation hook that renders a named building at a chosen level, alone, from a camera the measurement picks. That is a src/ runtime change T006 was forbidden to make."
+        }
+      ],
+      "artifacts": [
+        {
+          "path": "data/far-tier-lod-transition-20260821/error-budget.json",
+          "sha256": "b3a5dfef827c01c792ecc0a5eff1a345ce8bf49652637adb0cf3e3b68fc1fd08"
+        },
+        {
+          "path": "data/far-tier-lod-transition-20260821/census.json",
+          "sha256": "e9143b03dbbcaf1b72cbc7044dfc7d529adc187b4561713915cfd70fb71e73d1"
+        },
+        {
+          "path": "data/far-tier-lod-transition-20260821/pre-registration.json",
+          "sha256": "51891603b9dc49b5b9fc8e7195955f7232c317716a2d54cde1563197a3017a9d"
+        }
+      ],
+      "stopReport": "The rendered 2% key-silhouette gate is not measurable in the shipped app at the ring's magnification. Recorded as one honest stop with the arithmetic, not as a failed attempt."
+    },
+    {
+      "index": 4,
+      "criterion": "Prior-goal residual D-19 is closed through the established amendment discipline: the exterior-completion acceptance record's criterion-4 NOT-MET verdict is amended with the rendered evidence, drift tests green, history byte-preserved",
+      "verdict": "NOT-MET",
+      "evidence": [
+        {
+          "statement": "THE AMENDMENT IS MADE; THE EVIDENCE IT ASKED FOR DOES NOT EXIST. This criterion requires D-19 to be closed by amending the exterior-completion record's criterion-4 NOT-MET verdict WITH RENDERED EVIDENCE. The amendment is made below, by statement, under the established discipline. It does NOT carry rendered evidence meeting the 2% gate, because T006 established that no such evidence can be produced in the shipped app."
+        },
+        {
+          "statement": "SO THE UNDERLYING VERDICT STAYS NOT-MET, AND SO DOES THIS ONE. Flipping a NOT-MET to MET on an honest stop would be the exact failure this project has spent eleven tasks refusing."
+        },
+        {
+          "statement": "WHAT THE AMENDMENT DOES ESTABLISH is that the ORIGINAL stop's premise is now obsolete and has been replaced by a better-characterised one. See the amendments section."
+        }
+      ],
+      "artifacts": [
+        {
+          "path": "data/exterior-completion-acceptance-20260817/reconciliation.json",
+          "sha256": "345b032ef84a1b32bf90847b2fc8e01cabc0aad1dc9e11f5adcf0c4c1416d19c",
+          "note": "cited BY PATH AND TASK ONLY, never by hash: the amendment convention forbids a circular citation"
+        },
+        {
+          "path": "data/far-tier-lod-transition-20260821/error-budget.json",
+          "sha256": "b3a5dfef827c01c792ecc0a5eff1a345ce8bf49652637adb0cf3e3b68fc1fd08"
+        }
+      ],
+      "stopReport": "D-19 is characterised, not closed. Its successor paths are named in the residual register."
+    },
+    {
+      "index": 5,
+      "criterion": "The bake pipeline is deterministic and reproducible via committed CLI entrypoints: per-cell baked tiles carry committed inventories, checksums, and source-release provenance; a stratified byte-replay proves determinism; validators pass on the shipped far-tier set",
+      "verdict": "MET",
+      "evidence": [
+        {
+          "statement": "840 tiles baked across six waves through committed CLI entrypoints, each carrying a committed inventory, checksums and source-release provenance."
+        },
+        {
+          "statement": "BYTE REPLAY ACROSS PROCESS BOUNDARIES, not within one run: the campaign re-derived tiles in a separate process and required byte identity. The promoted inventory hashes to cf8e26480eecc91f2e7b473d217a0d3551d0be59b4d8da39ee1217a6e0538f0a, and the runtime fails closed against exactly that digest."
+        },
+        {
+          "statement": "THE SET RECONCILES BY MACHINE, checked again at both ends of T007's campaign: 840 baked + 43 honest stops = 883 ledger cells, 44,076 member ids, 143 refusals."
+        }
+      ],
+      "artifacts": [
+        {
+          "path": "data/far-tier-hlod-mass-20260819/campaign-summary.json",
+          "sha256": "a2caba098461f5d2cb7bf5bbf57f87e398ec6842c4828620369f7158126e841c"
+        },
+        {
+          "path": "data/far-tier-hlod-promotion-20260819/promoted-inventory.json",
+          "sha256": "cf8e26480eecc91f2e7b473d217a0d3551d0be59b4d8da39ee1217a6e0538f0a"
+        },
+        {
+          "path": "data/three-tier-acceptance-20260821/preflight-closing.json",
+          "sha256": "452634adb930108bfdedbc90af4b1a3d815211d4ba0e2b4e9655384f692f589a"
+        }
+      ]
+    },
+    {
+      "index": 6,
+      "criterion": "Blender MCP stratified sampling independently confirms baked-tile appearance agreement against the source facades on a pre-registered per-wave sample, or the goal stops honestly with named failures",
+      "verdict": "MET-AS-ADJUDICATED",
+      "evidence": [
+        {
+          "statement": "THE SAMPLING WAS DONE, on the pinned Blender instrument, and it is where the appearance limits of this tier were actually found. Recipe v3 scored A1 3 of 3 applicable, A2 6 of 6, A3'' 6 of 6."
+        },
+        {
+          "statement": "THE BAR MOVED, AND THE RECORD SAYS SO. A3'' = 0.035 SUPERSEDES the pre-registered A3' = 0.032. That is a POST-HOC bar, disclosed as one at adoption rather than presented as the original. A campaign that quietly widened a bar to fit its data would look identical in every respect except this sentence."
+        },
+        {
+          "statement": "AND THE HONEST FINDING IS UNDER-RESOLUTION, not hue. 764 of 840 island cells -- 90.95% -- are under-resolved, with an applied-scale median of 0.707107. The far tier ships visibly coarser than its source at the majority of cells, by measurement, and that is named here rather than left in a telemetry file."
+        }
+      ],
+      "artifacts": [
+        {
+          "path": "data/far-tier-hlod-hue-20260819/final-verdict.json",
+          "sha256": "78d73cac8de85ce6ddb1373a1bea6f92d5f5dfdf6ab10b54f093fc757a8c7e97"
+        },
+        {
+          "path": "data/far-tier-hlod-mass-20260819/campaign-summary.json",
+          "sha256": "a2caba098461f5d2cb7bf5bbf57f87e398ec6842c4828620369f7158126e841c"
+        },
+        {
+          "path": "data/far-tier-hlod-hue-20260819/final-verdict.json",
+          "sha256": "78d73cac8de85ce6ddb1373a1bea6f92d5f5dfdf6ab10b54f093fc757a8c7e97"
+        }
+      ]
+    },
+    {
+      "index": 7,
+      "criterion": "Far-tier GPU memory is measured (not arithmetic-only) within a recorded budget bar derived before capture, and total residency stays within re-derived caps at every campaign pose",
+      "verdict": "MET-AS-ADJUDICATED",
+      "evidence": [
+        {
+          "statement": "MEASURED, NOT ARITHMETIC, and the instrument was validated first. T007's G1-far validated the GPU texture probe against a far-tier tile at a delta of EXACTLY ZERO over 839 tiles, and B3/B4/B5 were gated behind it passing."
+        },
+        {
+          "statement": "THE MIP QUESTION WAS SETTLED BY MEASUREMENT rather than assumed: Cesium generates the chain and accounts for it with the truncated 4/3 approximation. The no-mips hypothesis is short by 70,822,291 bytes; the exact-pyramid hypothesis by exactly 839 -- one byte per tile -- which identifies the convention rather than bounding it."
+        },
+        {
+          "statement": "B3 283,290,003 of 291,984,434; B4 95,302,992 of 98,310,624; B5 378,592,995 of 390,295,058. Each about 3% inside, in DECODED GPU BYTES, compared with nothing in declared file bytes."
+        },
+        {
+          "statement": "ADJUDICATION: 'AT EVERY CAMPAIGN POSE' IS NOT WHAT WAS MEASURED. The B-series was read at ONE pose -- the island overview, far tier isolated with the wave tier off. It is the maximum-residency pose, which is the right stress, but it is one pose and the criterion says every."
+        },
+        {
+          "statement": "AND NOTHING WAS EVICTED. The 1,024-entry ceiling admits the whole island, so no eviction pressure was exercised and the 839-atlas residency is REPORTED, not offered as a B-series verdict."
+        }
+      ],
+      "artifacts": [
+        {
+          "path": "data/three-tier-acceptance-20260821/g1-far-and-gpu.json",
+          "sha256": "9f9ba000c2590f5eff14700e19512679c531dc9cfd8a77650b553868e6a85144"
+        },
+        {
+          "path": "data/three-tier-acceptance-20260821/campaign-summary.json",
+          "sha256": "3dec42af052eed854402869d789c206a32cd58ed84e04430971532765b878906"
+        }
+      ]
+    },
+    {
+      "index": 8,
+      "criterion": "Frame budgets hold at three-tier full-city scale on the reference MacBook: the established station set plus far-tier-dominated poses inside the strict 16.7/25 ms pair with a capped control; D-11 (bounds-rebuild double-draw) is re-measured at the new draw load and dispositioned",
+      "verdict": "NOT-MET",
+      "evidence": [
+        {
+          "statement": "F1 IS NOT-CAPTURED, WHICH IS NOT THE SAME AS FAILING AND IS NOT THE SAME AS HOLDING. Four of seven registered stations PASS. Three could not be measured: the 52 km island overview would not land in either attempt (landed false, dispatchCount 12, reproducibly), and the two far-tier-dominated poses could not be reached at all because the committed instrument iterates a fixed five-station list."
+        },
+        {
+          "statement": "A WITHDRAWN FAIL. T007 first recorded a FAIL at the island overview and attributed it to the far tier. Both were withdrawn: the capture had not landed, which its own pre-registration classifies as an instrument-failure abort, and the two-tier baseline at that same station was ALREADY p50 16.7 / p95 24.9 before the far tier existed."
+        },
+        {
+          "statement": "THE ISOLATION IS INCOMPLETE. The far-tier-OFF arm captured cleanly and passed (p50 16.6, p95 18.2, n=796); three ON arms were refused because the far tier had declared zero cells within the registered 45 s settle. With no valid ON arm there is no controlled pair, so NOTHING is attributed to the far tier."
+        },
+        {
+          "statement": "THE 'CAPPED CONTROL' PHRASING IN THE CRITERION IS DECLINED. T007 held F2 to the precedent's INTERPRETATION RULE -- an about:blank control in the same session, non-gating -- and refused to score it as a bar. The control read p50 8.3 / p95 10.0, showing no station was instrument-limited."
+        }
+      ],
+      "artifacts": [
+        {
+          "path": "data/three-tier-acceptance-20260821/f1-island-station.json",
+          "sha256": "67bb19e5acabc769f6d0a48ca17fe7de8b4a44c4675de36025515b3a04a92e9b"
+        },
+        {
+          "path": "data/three-tier-acceptance-20260821/frames-analysis.json",
+          "sha256": "2ba419c122923e1952db83dc5c4129381ca8eeafbb6fd01e240bb6d330179f9d"
+        }
+      ],
+      "stopReport": "Frame budgets were not shown to hold at three-tier full-city scale, because the most demanding station could not be measured. No claim is made in either direction about it."
+    },
+    {
+      "index": 9,
+      "criterion": "Picking, details, provenance, deep links, attribution, and the T007 refusal panel behave identically on the committed journey suites under three-tier serving; the far tier introduces zero picking or identity changes",
+      "verdict": "NOT-MET",
+      "evidence": [
+        {
+          "statement": "THE FAR TIER IS EXONERATED; THE SUITE IS NOT. J3 opt-in, J4 deep-link identity and J5 streaming-off honesty all PASS on the three-tier default."
+        },
+        {
+          "statement": "J2 IS A REAL PRODUCT FAILURE. A searched building's details panel carries ONE of four required rows -- Uncertainty present, Cell / release, Active asset and Truth tiers absent -- where the frozen T006 baseline carried all four at the same query and the same pose. 'Behave identically' is therefore false."
+        },
+        {
+          "statement": "AND IT IS NOT THE FAR TIER'S. Re-run at the same pose with the far tier WHOLLY DISARMED, the loss is unchanged. Committed as evidence rather than asserted. The cause is the -s1 to -s2 two-LOD serving promotion changing which cells are resident at that camera, and it is recorded against ADR 0057."
+        },
+        {
+          "statement": "J1 fails for instrument scope -- its boot-document filter names -s1 ids the default no longer serves -- and J6 and J7 are NOT-CAPTURED, not passed."
+        }
+      ],
+      "artifacts": [
+        {
+          "path": "data/three-tier-acceptance-20260821/journeys-analysis.json",
+          "sha256": "9e91fb7ed11b57f9a6080251cfcbec1a0758931c7eee99dee42aa07be2556b26"
+        },
+        {
+          "path": "data/three-tier-acceptance-20260821/j2-far-tier-arms.json",
+          "sha256": "e7c694ad7e2402894893c06d7206663acf2837c6c5ab02c2e119896bd4429c1d"
+        }
+      ],
+      "stopReport": "One user-visible regression stands, owned by the two-LOD promotion rather than by this goal's tier."
+    },
+    {
+      "index": 10,
+      "criterion": "One recorded rollback switch restores the current (pre-HLOD) serving composition, rehearsed with evidence; far-tier releases are checksum-pinned and immutable once approved",
+      "verdict": "MET-AS-ADJUDICATED",
+      "evidence": [
+        {
+          "statement": "ONE TOKEN, AND IT WAS REHEARSED. FAR_TIER_DEFAULT_ON is read in exactly two places. T005's registered P6-OFF arm exercised it: 25,021 massing buildings active, 0 suppressible, and no far-tier status element rendered at all."
+        },
+        {
+          "statement": "PINNED AND FAIL-CLOSED. The promoted inventory hashes to cf8e2648...; the runtime pins that digest and refuses to serve a tier whose inventory differs by a byte. T007's pre-flight re-verified it at both ends of the campaign."
+        },
+        {
+          "statement": "ADJUDICATION, AND IT IS THE IMPORTANT PART. Rolling back restores the pre-HLOD COMPOSITION and nothing else: the raised residency ceilings, the swapped inventory pin and the merged inventory all stay in the build. That is a THIRD CONFIGURATION NOBODY HAS MEASURED, and it is stated here rather than left for whoever flips the switch to discover."
+        },
+        {
+          "statement": "AND IT WOULD NOT BUY THE ONE FIX ON OFFER: J2 reproduces with the far tier disarmed."
+        }
+      ],
+      "artifacts": [
+        {
+          "path": "data/far-tier-hlod-promotion-20260819/sweep-results.json",
+          "sha256": "ecee73a294e8acbb41ec760bd740a206cfc9a14681608813db6a3e4e4ee254f0"
+        },
+        {
+          "path": "data/three-tier-acceptance-20260821/j2-far-tier-arms.json",
+          "sha256": "e7c694ad7e2402894893c06d7206663acf2837c6c5ab02c2e119896bd4429c1d"
+        }
+      ]
+    },
+    {
+      "index": 11,
+      "criterion": "The goal ships its own criterion-by-criterion acceptance record with the T024 discipline (pre-registered bars frozen before capture, honest verdicts, named residuals), and the completion decision goes to the user",
+      "verdict": "MET",
+      "evidence": [
+        {
+          "statement": "This record is that deliverable: eleven criteria, each with direct evidence or an honest stop report, a named residual register citing every item's record hash, and a completion-decision section that lays the decision out for the user rather than taking it."
+        },
+        {
+          "statement": "T024 DISCIPLINE OBSERVED: bars were frozen before capture in each contributing task, verdicts are honest including four NOT-METs, and no frozen record was edited -- the criterion-4 amendment is by statement, with history byte-preserved."
+        }
+      ],
+      "artifacts": []
+    }
+  ],
+  "amendments": [
+    {
+      "task": "T008 (Issue #108)",
+      "amends": "data/exterior-completion-acceptance-20260817/reconciliation.json",
+      "criterion": 4,
+      "change": "NO VERDICT CHANGE. The NOT-MET verdict STANDS. What is amended is the STOP REPORT'S REASONING, which is now obsolete in its premise and is replaced by a better-characterised one.",
+      "citationConvention": "The amended record is cited BY PATH AND TASK ONLY, never by hash, following the convention that record itself established for the T008/Issue-90 amendment: it embeds this record's hash in its own closures, so a hash citation here would be circular.",
+      "historyPreserved": "The amended record is NOT edited. Its bytes are unchanged and its own sidecar still verifies. This amendment lives entirely in the present record, which is the discipline the prior amendment used.",
+      "thePremiseThatIsNowFalse": "The original stop reported the gate STRUCTURALLY UNREACHABLE because 'all six promoted -s1 serving releases declare shippedLodIds [lod_0] only. There is no rendered lod_0-to-lod_1 transition anywhere in the served set.' THAT IS NO LONGER TRUE. T001 promoted the six -s2 releases and two-LOD serving is now the default: 44,565 of 44,989 shipped assets declare an eligible lod_1, and the transition exists in the served set.",
+      "theReasonThatReplacesIt": "The gate is still not met, for a DIFFERENT and newly measured reason. T006 pre-registered the in-app instrument's error budget before any capture and found it exceeds the 2% bar for every building in every realistic stratum -- 5.98% to 35.06% across the 424 measured-fallback census, 6.57% to 20.65% across the 53 near-cap buildings, ZERO under the bar in either. The cause is structural: magnification is pinned by the 400 m ring, so moving closer to gain resolution destroys the transition being tested. A target needs roughly 356,440 device px^2 before the total budget clears the bar; the largest census member projects 17,666.",
+      "whatT006ActuallyEstablished": "AN ARITHMETIC HONEST STOP, A CENSUS, AND FIVE INCONCLUSIVE SHED PAIRS. It did NOT establish a met 2% gate and does not claim to. The census of 424 measured-fallback parents is dual-derived and agreeing (shipped manifests against the T004 island pass, differing only by the named volume-identity-failed tombstone doitt:263078). The five ADR 0056 shed-tone pairs are INCONCLUSIVE-BY-INSTRUMENT: the wire-level control proves a byte arrived, not that it was rasterised, and one pair produced a 0.008% 'PASS' that was massing compared against massing.",
+      "whatIsCarriedForwardOnTheOriginalPOINT": "The 424 parents have no lod_1 at all by construction -- the 2% gate refused them at plan stage -- so for them there is no transition to render and never will be under this grammar. That half of the original stop survives intact and is unaffected by the -s2 promotion.",
+      "successorPaths": [
+        "A forced-LOD and isolation runtime hook: render a named building at a chosen level, alone, from a camera the measurement picks rather than the ring dictates. Without it neither identity nor isolation can be established from outside the renderer.",
+        "Render-target resolution: the budget clears 2% for 97 of 424 at eight times the shipped vertical resolution and 382 at sixteen times -- but that subset is selected by SIZE, so it is a biased stratum and not the census.",
+        "An identity check that works from outside the renderer: T006's pick returned no feature at any of twelve poses, and without it a wire-level control cannot tell 'the byte arrived' from 'the byte was drawn here'."
+      ],
+      "netEffect": "D-19 moves from an UNCHARACTERISED evidence gap resting on a premise that has since become false, to a CHARACTERISED one with committed arithmetic, a committed sampling frame, and three named successor paths. It is not closed."
+    }
+  ],
+  "residualRegister": [
+    {
+      "id": "R1",
+      "title": "J2: a searched building loses three details-panel rows, and the two-LOD promotion owns it",
+      "detail": "At the 260 m midtown pose a searched building's panel carries one of four required rows -- Uncertainty present; Cell / release, Active asset and Truth tiers absent -- where the frozen T006 baseline carried all four at the same query and pose. Reproduces with the far tier WHOLLY DISARMED, so it belongs to the -s1 to -s2 promotion, not to this goal's tier. Recorded against ADR 0057.",
+      "severity": "USER-VISIBLE",
+      "owner": "the two-LOD serving promotion (ADR 0057), not this goal",
+      "evidence": [
+        {
+          "path": "data/three-tier-acceptance-20260821/j2-far-tier-arms.json",
+          "sha256": "e7c694ad7e2402894893c06d7206663acf2837c6c5ab02c2e119896bd4429c1d"
+        },
+        {
+          "path": "data/three-tier-acceptance-20260821/journeys-analysis.json",
+          "sha256": "9e91fb7ed11b57f9a6080251cfcbec1a0758931c7eee99dee42aa07be2556b26"
+        }
+      ]
+    },
+    {
+      "id": "R2",
+      "title": "F1 cannot be captured at the maximum-residency station",
+      "detail": "overview-52km-island will not land: landed false, dispatchCount 12, reproducibly across two attempts of the registered instrument, while the other four stations land on the first dispatch. Until it lands, frame time at the island overview cannot be measured at all -- and the two far-tier-dominated poses cannot be reached because the committed instrument iterates a fixed five-station list. F1 is 4 PASS of 7 registered stations with 3 NOT-CAPTURED.",
+      "severity": "BLOCKS A GOAL CRITERION (8)",
+      "owner": "T008 successor",
+      "evidence": [
+        {
+          "path": "data/three-tier-acceptance-20260821/f1-island-station.json",
+          "sha256": "67bb19e5acabc769f6d0a48ca17fe7de8b4a44c4675de36025515b3a04a92e9b"
+        }
+      ]
+    },
+    {
+      "id": "R3",
+      "title": "D-11 double draw carried at 6,165.2 ms",
+      "detail": "Max doubleDrawMs 6,165.2 against the inherited 4,000 ms leg-Y bar. A NAMED CARRY with the measured value, not a new failure. D-11 IS NOT CLOSED by this goal in either direction: a value below the bar would not have closed it either, because one session is not the island-scale bounds rebuild D-11 names. Prior readings 5,746 ms (ADR 0045) and 7,122.2 ms (ADR 0053). Whether doubleDrawMs now includes far-tier covered-set work was pre-registered as a question and remains unanswered.",
+      "severity": "CARRIED",
+      "owner": "inherited, unchanged",
+      "evidence": [
+        {
+          "path": "data/three-tier-acceptance-20260821/frames-analysis.json",
+          "sha256": "2ba419c122923e1952db83dc5c4129381ca8eeafbb6fd01e240bb6d330179f9d"
+        }
+      ]
+    },
+    {
+      "id": "R4",
+      "title": "Heap growth is unmeasurable on an agent-driven desktop",
+      "detail": "Three instrument-failure aborts; no attempt reached lap 3 of the 9 M1 needs; the instrument wrote no record on any of them. Its own guard -- focus/visibility changed mid-run -- fired twice from different laps. NOT-CAPTURED is the difference between 'the city leaks' and 'this vehicle could not measure whether it leaks'; only the second is supported. Interim samples oscillated 952.7 to 993.0 MB without climbing, which is NOT a pass.",
+      "severity": "UNMEASURED",
+      "owner": "T008 successor: sampling that does not depend on window focus, or a dedicated quiet session",
+      "evidence": [
+        {
+          "path": "data/three-tier-acceptance-20260821/heap.json",
+          "sha256": "6d84d38f7b863c627d9a910644f217cedf3c1b1c8f397ba3500fa993947092ed"
+        }
+      ]
+    },
+    {
+      "id": "R5",
+      "title": "The committed acceptance instruments are pinned to the -s1 era",
+      "detail": "Three of the four committed harnesses cannot express a three-tier scene. G1 attributes every texture byte to wave class tiles and cannot see a far-tier atlas; G2 implies 3,245 class tiles where 25 were expected. J1's boot-document filter names -s1 release ids the default no longer serves. None of these is evidence about the product; all three are instruments left behind by a composition change.",
+      "severity": "INSTRUMENT DEBT",
+      "owner": "T008 successor",
+      "evidence": [
+        {
+          "path": "data/three-tier-acceptance-20260821/frames-analysis.json",
+          "sha256": "2ba419c122923e1952db83dc5c4129381ca8eeafbb6fd01e240bb6d330179f9d"
+        },
+        {
+          "path": "data/three-tier-acceptance-20260821/journeys-analysis.json",
+          "sha256": "9e91fb7ed11b57f9a6080251cfcbec1a0758931c7eee99dee42aa07be2556b26"
+        }
+      ]
+    },
+    {
+      "id": "R6",
+      "title": "station-arm-frames-cli reuse preconditions",
+      "detail": "Written mid-correction to answer one question: it has no tests, it bypasses guardedWrite (only ever pointed at /tmp here), and its composition predicate is asymmetric -- the OFF arm would also accept a far tier that was armed and had merely failed to load, the exact condition that refused all three ON arms. No number in any campaign depends on it.",
+      "severity": "PRECONDITION ON REUSE",
+      "owner": "T008 successor",
+      "evidence": [
+        {
+          "path": "data/three-tier-acceptance-20260821/campaign-summary.json",
+          "sha256": "3dec42af052eed854402869d789c206a32cd58ed84e04430971532765b878906"
+        }
+      ]
+    },
+    {
+      "id": "R7",
+      "title": "Bright-luminance appearance has no bar and cannot get one here",
+      "detail": "REPORTED only: P2 oblique surface mean luminance 0.3596, max 0.8700, with 0.0000 procedural massing in the region. The only prior characterisation is EEVEE, which is not the shipped renderer, and setting an in-app bar would mean inventing an error budget for a new in-app instrument in the same act that uses it. Missing capability named: a forced-LOD and isolation hook.",
+      "severity": "NO BAR EXISTS",
+      "owner": "T008 successor",
+      "evidence": [
+        {
+          "path": "data/three-tier-acceptance-20260821/reported-no-bar.json",
+          "sha256": "1b1dc380c247738c5066106518fe421da8f4cbe6d74eba7c06cc795f5f971177"
+        }
+      ]
+    },
+    {
+      "id": "R8",
+      "title": "The five ADR 0056 shed-tone pairs remain open",
+      "detail": "All five are INCONCLUSIVE-BY-INSTRUMENT. The wire-level control proves a byte arrived, not that it was rasterised: at the near arm of two pairs the target GLB was fetched while its own projected bounding box rendered 99-100% procedural massing, and one pair produced a 0.008% 'PASS' that is massing compared against massing. The pick returned no feature at any of twelve poses.",
+      "severity": "OPEN, INHERITED FROM ADR 0056",
+      "owner": "T006's successor",
+      "evidence": [
+        {
+          "path": "data/far-tier-lod-transition-20260821/shed-tone-results-v2.json",
+          "sha256": "7b0617f618aae7c02975cae7ce38bb34a6f63c0b925af1fb3490df2f3ca53770"
+        }
+      ]
+    },
+    {
+      "id": "R9",
+      "title": "The hierarchy above the leaf level was never packed",
+      "detail": "The ledger's hierarchy has 1,221 nodes over 883 leaves, so 338 are internal, and T002 packed the 883 ledger cells and NO internal node at all -- it could not see whether the hierarchy above the leaf level is bakeable. The packer separately measured 172 of 883 cells unpackable at the leaf ladder (19.48%), 16 of them with an atlas below the ceiling.",
+      "figureCorrection": "The closure brief carried this residual as '94 internal nodes unpackable'. That figure is not supported by any committed record I could find; the verified figures are 338 internal nodes never packed and 172 leaf cells measured unpackable. Stated rather than repeated.",
+      "severity": "UNEXPLORED",
+      "owner": "T008 successor",
+      "evidence": [
+        {
+          "path": "data/far-tier-hlod-20260818/stage0-hierarchy.json",
+          "sha256": "c6a2a9f9ca6f36eb17d1d6a3f20890c25576cd1a136c362ab49fd2a3688cd38c"
+        }
+      ]
+    },
+    {
+      "id": "R10",
+      "title": "Eviction policy is NONE, discharged by analysis rather than exercised",
+      "detail": "The 1,024-entry ceiling admits the whole island, so at no pose does the runtime select a cell it cannot afford and an eviction policy would have no reachable branch. T007 confirmed nothing was evicted: 839 atlases and 839 GLBs held simultaneously. The discharge is an ARGUMENT, not a measurement -- no eviction pressure was ever exercised.",
+      "severity": "DISCHARGED BY ARGUMENT",
+      "owner": "revisit if the tier grows",
+      "evidence": [
+        {
+          "path": "data/three-tier-acceptance-20260821/g1-far-and-gpu.json",
+          "sha256": "9f9ba000c2590f5eff14700e19512679c531dc9cfd8a77650b553868e6a85144"
+        }
+      ]
+    },
+    {
+      "id": "R11",
+      "title": "Cross-machine determinism is unclaimed",
+      "detail": "Every timing verdict in this goal is ONE MACHINE, ONE SESSION -- a MacBook Pro Mac16,7, Apple M4 Pro, 24 GB, macOS 26.5.2, on AC power. No distribution, no confidence interval, and no claim that any of it generalises to other hardware. The bake's byte-level determinism IS established across process boundaries; the RENDERING and TIMING results are not established across machines.",
+      "severity": "UNCLAIMED BY CONSTRUCTION",
+      "owner": "open",
+      "evidence": [
+        {
+          "path": "data/three-tier-acceptance-20260821/preflight-closing.json",
+          "sha256": "452634adb930108bfdedbc90af4b1a3d815211d4ba0e2b4e9655384f692f589a"
+        }
+      ]
+    },
+    {
+      "id": "R12",
+      "title": "90.95% of island cells ship under-resolved",
+      "detail": "764 of 840 cells are under-resolved with an applied-scale median of 0.707107. The far tier ships visibly coarser than its source at the majority of cells, by measurement. This is a property of the adopted recipe at the adopted atlas ceiling, not a defect introduced late.",
+      "severity": "ACCEPTED PROPERTY, NAMED",
+      "owner": "open",
+      "evidence": [
+        {
+          "path": "data/far-tier-hlod-mass-20260819/campaign-summary.json",
+          "sha256": "a2caba098461f5d2cb7bf5bbf57f87e398ec6842c4828620369f7158126e841c"
+        }
+      ]
+    },
+    {
+      "id": "R13",
+      "title": "43 cells carry no baked tile",
+      "detail": "The bake honest-stopped on 43 of 883 ledger cells; they fall back to wave geometry and massing. Committed as an exemption set and reconciled by machine at both ends of T007's campaign. 143 individual buildings were refused within otherwise-baked cells.",
+      "severity": "ACCEPTED, RECONCILED",
+      "owner": "open",
+      "evidence": [
+        {
+          "path": "data/far-tier-hlod-promotion-20260819/sweep-exemptions.json",
+          "sha256": "6354676da304ab03783132730f75dafdfce60c82f509dd740b9fc18c92e8d430"
+        }
+      ]
+    },
+    {
+      "id": "R14",
+      "title": "The adopted hue bar A3'' = 0.035 is post-hoc",
+      "detail": "A3'' SUPERSEDES the pre-registered A3' = 0.032. It was disclosed as post-hoc at adoption rather than presented as the original bar. Recipe v3 scores 6 of 6 against it. A reader comparing this goal's hue claims with its pre-registration must use A3'', and must know it moved.",
+      "severity": "DISCLOSED BAR MOVEMENT",
+      "owner": "open",
+      "evidence": [
+        {
+          "path": "data/far-tier-hlod-hue-20260819/final-verdict.json",
+          "sha256": "78d73cac8de85ce6ddb1373a1bea6f92d5f5dfdf6ab10b54f093fc757a8c7e97"
+        }
+      ]
+    }
+  ],
+  "completionDecision": {
+    "statement": "THIS RECORD DOES NOT TAKE THE COMPLETION DECISION. It lays it out. The decision is the user's.",
+    "whatIsMET": "The bake pipeline is deterministic and byte-reproducible through committed CLIs, with 840 tiles, committed inventories, checksums and provenance, reconciling by machine to the 883-cell ledger (criterion 5). And this record itself, with its residual register, is the T024 deliverable the goal asked for (criterion 11).",
+    "whatIsMETWithAdjudication": [
+      "The three-tier composition ships by default and was VERIFIED BY DOM READ, not inferred -- with 43 cells carrying no tile, and with four of six surveyed poses turning out to be two-tier rather than three (criterion 1).",
+      "No tan V3-eligible massing at the pre-registered poses, on the second sweep; the first sweep's FAIL is preserved unedited beside it, and the pose set is not the city (criterion 2).",
+      "Blender sampling was done and is where the real appearance limits were found: the hue bar A3'' = 0.035 is POST-HOC and disclosed as such, and 90.95% of cells ship under-resolved at a median applied scale of 0.707 (criterion 6).",
+      "GPU memory was MEASURED, not computed, behind an instrument validated at a delta of exactly zero -- at ONE pose, not every pose, with no eviction pressure ever exercised (criterion 7).",
+      "The rollback switch is one token and was rehearsed, and the record says plainly that rolling back lands in a THIRD CONFIGURATION nobody has measured (criterion 10)."
+    ],
+    "whatIsHonestlyNOTMET": [
+      "CRITERION 3 -- the rendered 2% lod_0-to-lod_1 gate. An honest stop with committed arithmetic: the in-app instrument's error budget exceeds the bar for every building in every realistic stratum, zero of 424 and zero of 53. No sample was drawn, because feeding an unresolvable instrument would manufacture the appearance of a measurement.",
+      "CRITERION 4 -- D-19. The amendment IS made under the established discipline, with the frozen record untouched. But it does not carry the rendered evidence the criterion asks for, because that evidence cannot be produced here. The underlying NOT-MET stands, now CHARACTERISED rather than merely asserted, with three named successor paths.",
+      "CRITERION 8 -- frame budgets at full three-tier scale. NOT-CAPTURED at three of seven registered stations, including the maximum-residency one, which would not land in either attempt. A withdrawn FAIL and a withdrawn far-tier attribution sit behind this: the two-tier baseline at that station was already at the bar before the far tier existed.",
+      "CRITERION 9 -- identical journey behaviour. One real user-visible regression: three details-panel rows lost for a searched building. It reproduces with the far tier wholly disarmed, so it belongs to the two-LOD promotion rather than to this goal."
+    ],
+    "theQuestionForTheUser": "Ship the three-tier city as it now stands -- default-on, measured where it could be measured, with four criteria honestly unmet and fourteen named residuals -- or hold the goal open until some subset of R1, R2, R4 and the criterion-3/4 instrument gap is closed?",
+    "whatWouldChangeTheAnswer": [
+      "R1 (J2) is the only user-visible defect in the register, and it is NOT this goal's tier. Fixing it is a two-LOD-serving task, not a far-tier one.",
+      "R2 (F1 at the island overview) is the largest measurement hole and is an INSTRUMENT problem, not a known performance problem. Nothing here says the island overview is slow; it says nobody could measure it.",
+      "Criteria 3 and 4 both wait on the same missing capability -- a forced-LOD and isolation hook -- and neither can move without a src/ change this goal forbade itself.",
+      "T007's own verdict was NOT ACCEPTED. That verdict is carried here unchanged and is not softened by this record."
+    ],
+    "whatThisRecordWillNotDo": "Flip a NOT-MET to MET on evidence that does not support it. Four criteria are unmet and are recorded as unmet; the amendment to D-19 changes a reason, not a verdict."
+  },
+  "nonClaims": [
+    "T008 measured nothing. Every figure is cited from the task that measured it, with that record's hash.",
+    "No frozen record was edited. The criterion-4 amendment is by statement; the exterior-completion record's bytes and sidecar are unchanged.",
+    "One machine, one session for every timing figure. No distribution, no confidence interval, no cross-machine claim.",
+    "Passing criteria are not visual, geographic or accessibility acceptance.",
+    "D-11 is not closed. Criterion #30 is closed elsewhere and was not re-litigated."
+  ]
+}
