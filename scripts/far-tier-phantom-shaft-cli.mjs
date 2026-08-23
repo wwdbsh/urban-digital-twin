@@ -25,6 +25,9 @@ import { existsSync, realpathSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { spawnSync } from "node:child_process";
+import { execPath } from "node:process";
+
 import { CAPTURE as SOURCE_CAPTURE, loadSnapshot, loadWaveLedger } from "./far-tier-bake-cli.mjs";
 import { emitTileBytes, inventoryEntry, tileAtlasName, tileGlbName } from "./far-tier-campaign-support.mjs";
 import { FALLBACK_AREA_SHARE_BAR, WAVE_IDS, bakeOneCell, loadWaveInventory, materializeOneCell, waveWiring } from "./far-tier-mass-bake-cli.mjs";
@@ -538,6 +541,18 @@ async function commandVerify() {
     headroomBytes: CEILINGS.gpu.value - totalGpu,
     verdict: totalGpu < CEILINGS.gpu.value ? "PASS" : "FAIL",
     stopRule: "At or above the ceiling: NO PROMOTION. The bar is not moved.",
+    /**
+     * HOW MUCH THIS TEST ACTUALLY PROVES. Read before quoting the verdict.
+     */
+    whatAPassMeansHere: {
+      warning: "A PASS here is a WEAK result, and calling it comfortable would be wrong.",
+      why: "The frozen ceiling was not an independent budget. It was DERIVED in T003 from a model of these same 883 ledger cells -- `maxCut` over the modelled tree -- and for this tree `maxCut` exceeds the plain all-883-leaves sum by only 3 bytes. So comparing the actual all-leaves total against it is very nearly a test of whether the bake matched its own resolution model, not a test of whether the tier fits a device.",
+      modelledLeafAtlasSum: 291_984_431,
+      modelledLeafAtlasHistogram: { 64: 22, 128: 36, 256: 825 },
+      modelledMinusMaxCutAtlas: 291_984_434 - 291_984_431,
+      whatWouldBeStronger: "A measured GPU residency reading from a real session, in the B3-B5 discipline, at the poses the sweep visits. That is NOT done here and is not claimed.",
+      alsoNotClaimed: "No far-tier tile is an internal-node tile today; the shipped set is leaves only. The maxCut bound's internal nodes describe a hierarchy this bake did not produce.",
+    },
   };
 
   // ---- P6: declared file bytes -------------------------------------------
@@ -582,6 +597,112 @@ async function commandVerify() {
 }
 
 // ---------------------------------------------------------------------------
+// replay — re-bake named cells in FRESH child processes and compare digests
+// ---------------------------------------------------------------------------
+
+/**
+ * Determinism is a claim about PROCESSES, not about a loop.
+ *
+ * `measure` bakes a whole wave inside one process, where a stale cache or a
+ * map's insertion order can make two cells agree for the wrong reason. This
+ * verb re-bakes named cells in fresh `node` children and compares their digests
+ * against the ones `measure` recorded, so a digest that only reproduces within
+ * a warm process is caught.
+ */
+async function commandReplayBatch(waveId, cellList) {
+  const wanted = new Set(cellList.split(",").filter(Boolean));
+  const wiring = waveWiring(waveId);
+  const snapshot = await loadSnapshot();
+  const { ledger, checksumSha256: ledgerChecksumSha256 } = await loadWaveLedger();
+  snapshot.ledgerChecksumSha256 = ledgerChecksumSha256;
+  const waveInventory = await loadWaveInventory(wiring);
+  const out = [];
+  for (const cell of ledger.cells) {
+    if (!wanted.has(cell.cellId)) continue;
+    const context = materializeOneCell(snapshot, cell, wiring, waveInventory);
+    const result = bakeOneCell(context, cell);
+    const emitted = emitTileBytes(context, cell, result.bake, {
+      recipeId: FAR_TIER_BAKE_RECIPE_V4.recipeId,
+      recipeSha256: farTierRecipeHashV4(),
+      capture: SOURCE_CAPTURE,
+    });
+    out.push({
+      cellId: cell.cellId,
+      glbSha256: emitted.glbSha256,
+      atlasSha256: emitted.atlasSha256,
+      fallbackAreaShare: result.bake.telemetry.fallbackAreaShare,
+      fallbackZoneCount: result.bake.telemetry.fallbackZoneCount,
+      unitySnapCount: result.bake.telemetry.unitySnapCount,
+    });
+  }
+  console.log(JSON.stringify(out));
+}
+
+/** Replay every tile that did not exist before this fix, twice, in children. */
+async function commandReplayNew(passes) {
+  const byWave = new Map();
+  for (const waveId of WAVE_IDS) {
+    const text = await readFile(join(evidenceRoot, `measure-${waveId}.json`), "utf8").catch(() => null);
+    if (text === null) continue;
+    const measured = JSON.parse(text);
+    const fresh = measured.cells.filter((cell) => cell.byteIdentity === "NEW-TILE");
+    if (fresh.length > 0) byWave.set(waveId, fresh);
+  }
+  const total = [...byWave.values()].reduce((sum, rows) => sum + rows.length, 0);
+  if (total === 0) fail("no NEW-TILE rows found; run `measure` for every wave first.");
+
+  const results = [];
+  for (let pass = 1; pass <= passes; pass += 1) {
+    for (const [waveId, rows] of byWave) {
+      const child = spawnSync(execPath, [
+        "--experimental-strip-types",
+        fileURLToPath(import.meta.url),
+        "replay-batch",
+        "--wave", waveId,
+        "--cells", rows.map((row) => row.cellId).join(","),
+      ], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024, cwd: repositoryRoot });
+      if (child.status !== 0) fail(`replay child for ${waveId} pass ${pass} exited ${child.status}: ${child.stderr}`);
+      const replayed = new Map(JSON.parse(child.stdout.trim().split("\n").at(-1)).map((row) => [row.cellId, row]));
+      for (const row of rows) {
+        const back = replayed.get(row.cellId);
+        results.push({
+          pass,
+          cellId: row.cellId,
+          match: back !== undefined
+            && back.glbSha256 === row.glbSha256
+            && back.atlasSha256 === row.atlasSha256
+            && back.fallbackAreaShare === row.fallbackAreaShare
+            && back.unitySnapCount === row.unitySnapCount,
+        });
+      }
+    }
+  }
+  const failures = results.filter((row) => !row.match);
+  const record = {
+    schemaVersion: "1.0",
+    recordId: `${EVIDENCE_ID}:replay-new-tiles`,
+    artifact: "far-tier-phantom-shaft-determinism-replay",
+    capturedAt: null,
+    capturedAtStatement: "NULL BY CONSTRUCTION.",
+    claim: "Every tile that did not exist before this fix re-bakes to the same glb and atlas digest, and the same fallback and unity-snap telemetry, in a FRESH child process.",
+    passes,
+    tilesPerPass: total,
+    comparisons: results.length,
+    mismatches: failures.length,
+    mismatchedCells: [...new Set(failures.map((row) => row.cellId))],
+    verdict: failures.length === 0 ? "PASS" : "FAIL",
+    notClaimedHere: [
+      "The 840 pre-existing tiles are not replayed here. Their byte identity is established against the SEALED per-wave inventories, which their own T004 child-process replay produced.",
+    ],
+  };
+  const text = serialize(record);
+  await writeFile(join(evidenceRoot, "replay-new-tiles.json"), text);
+  await writeFile(join(evidenceRoot, "replay-new-tiles.sha256"), `${sha256(text)}  replay-new-tiles.json\n`);
+  console.log(serialize({ ok: failures.length === 0, passes, tilesPerPass: total, comparisons: results.length, mismatches: failures.length, sha256: sha256(text) }));
+  if (failures.length > 0) fail(`${failures.length} determinism mismatch(es). STOP.`);
+}
+
+// ---------------------------------------------------------------------------
 
 function isDirectEntryPoint() {
   const entry = process.argv[1];
@@ -599,5 +720,7 @@ if (isDirectEntryPoint()) {
   if (command === "pre-register") await commandPreRegister();
   else if (command === "measure") await commandMeasure(flag("wave"));
   else if (command === "verify") await commandVerify();
-  else fail("usage: far-tier-phantom-shaft-cli.mjs <pre-register|measure|verify> [--wave wXX]");
+  else if (command === "replay-batch") await commandReplayBatch(flag("wave"), flag("cells"));
+  else if (command === "replay-new") await commandReplayNew(Number(flag("passes") ?? 2));
+  else fail("usage: far-tier-phantom-shaft-cli.mjs <pre-register|measure|verify|replay-new> [--wave wXX] [--passes N]");
 }
