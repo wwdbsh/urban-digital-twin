@@ -257,3 +257,9 @@ artifacts/far-tier-hlod-mass-20260819/
 # artifacts are the records under data/far-tier-hlod-promotion-20260819/.
 artifacts/far-tier-hlod-promotion-20260819/
 artifacts/far-tier-hlod-mass-20260819
+
+# Phantom-shaft-fix work root: the 883 re-baked tiles and atlases, roughly
+# 290 MB of local work product. The committed artifacts are the pre-registration,
+# the six per-wave measurements and the verification under
+# data/far-tier-hlod-phantom-shaft-20260823/, each with a checksum sidecar.
+artifacts/far-tier-hlod-phantom-shaft-20260823/

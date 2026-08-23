@@ -153,6 +153,97 @@ export const FAR_TIER_RUNTIME_BUDGETS_V2 = {
 } as const;
 
 /**
+ * The 883-tile ceiling, after the phantom shaft zone was fixed and the 43
+ * honest-stopped cells baked.
+ *
+ * V2 IS NOT DELETED. It is the record of what the tier was admitted under when
+ * 43 of the island's cells had no tile.
+ *
+ * THE UNIT IS STILL DECLARED FILE BYTES, and still never comparable with B3-B5
+ * or `maxResidentTotalGpuBytes`.
+ *
+ *   declared file bytes, all 883 promoted tiles = 266,051,784
+ *     (101,668,340 GLB + 164,383,444 atlas, summed from the promoted inventory)
+ *   ceiling = 288 MiB = 301,989,888, UNCHANGED
+ *   headroom = 35,938,104 bytes, 11.9 per cent, down from 16.8
+ *
+ * The ceiling does not move. The 43 restored tiles are absorbed by headroom v2
+ * already had, which is what that headroom was for.
+ *
+ * A CORRECTION TO V2'S GPU LANGUAGE, and it is not cosmetic. V2 justified
+ * admission with a total of 382,457,884 against the frozen bar and called it a
+ * "2.0 per cent margin". That total added the ATLAS figure in decoded GPU bytes
+ * to the GEOMETRY figure in GLB FILE bytes — a loose upper bound, and NOT the
+ * unit the bar's own geometry term is in. `maxResidentGeometryGpuBytes` was
+ * derived with `farTierGeometryGpuBytes`, which counts decoded vertices and
+ * indices, so the bar must be met term by term in that same unit.
+ *
+ * MET TERM BY TERM, measured from the shipped GLBs' own accessor counts:
+ *
+ *   atlas    291,722,287 against a modelled bound of 291,984,434   INSIDE
+ *   geometry  98,010,816 against a modelled bound of  98,310,624   INSIDE
+ *   total    389,733,103 against 390,295,058                       INSIDE
+ *
+ * THE MARGIN IS 0.14 PER CENT, NOT 2.0. Carrying v2's number forward would
+ * overstate the room by more than an order of magnitude. Under v2's own looser
+ * proxy the same 883 tiles come to 393,390,627, which is 3,095,569 bytes OVER
+ * the bar — so the proxy is not merely conservative here, it now inverts the
+ * verdict, and it must not be used again.
+ *
+ * WHAT THIS MEANS FOR GROWTH. The far tier is at the edge of its frozen GPU
+ * bar. It fits because every measured term came in under the T003 model that
+ * set the bar, not because there is room. Any further tile, any atlas ceiling
+ * above 256, and any tier that grows past this island needs that bar re-derived
+ * FIRST. This is the note a later reader should start from.
+ */
+export const FAR_TIER_RUNTIME_BUDGETS_V3 = {
+  maxCacheEntries: 1_024,
+  maxCachedBytes: 288 * 1024 * 1024,
+  unit: "DECLARED FILE BYTES — the staged file sizes an entry declares, summed by farTierEntryByteCost. NOT decoded GPU bytes and never comparable with B3-B5 or maxResidentTotalGpuBytes.",
+  derivation: {
+    promotedTiles: 883,
+    declaredFileBytesAllTiles: 266_051_784,
+    glbBytes: 101_668_340,
+    atlasBytes: 164_383_444,
+    ceilingBytes: 288 * 1024 * 1024,
+    headroomBytes: 288 * 1024 * 1024 - 266_051_784,
+    headroomShare: 0.119,
+    ceilingUnchanged: true,
+    entriesCeilingRationale: "1,024 against 883 promoted cells. The entry ceiling still cannot bind before the byte ceiling, but the gap is now 141 cells rather than 184.",
+  },
+  gpuJustification: {
+    method: "TERM BY TERM, in the bar's own unit. Atlas from the shipped atlas edges with the mip chain; geometry from the shipped GLBs' own POSITION and index accessor counts through the same arithmetic farTierGeometryGpuBytes uses. No file-byte proxy.",
+    islandAtlasGpuBytes: 291_722_287,
+    islandAtlasModelledBound: 291_984_434,
+    islandGeometryGpuBytes: 98_010_816,
+    islandGeometryModelledBound: 98_310_624,
+    islandResidentGpuBytes: 389_733_103,
+    frozenMaxResidentTotalGpuBytes: 390_295_058,
+    insideFrozenBar: true,
+    marginShare: 0.0014,
+    everyTermInsideItsOwnModelledBound: true,
+    statement: "Inside the frozen bar by 0.14 per cent, with each term independently under the modelled bound that set it. This is a margin, and a thin one. It is not comfort.",
+    v2ProxyCorrection: {
+      v2Total: 382_457_884,
+      v2MarginShare: 0.0201,
+      whatWasWrongWithIt: "It added decoded atlas bytes to GLB FILE bytes. The file carries JSON and padding the GPU never holds, so the sum was not in the bar's unit.",
+      sameProxyOn883: 393_390_627,
+      sameProxyVerdict: "OVER the bar by 3,095,569 bytes. The proxy is no longer merely conservative; it inverts the verdict, and is not used again.",
+    },
+  },
+  supersedes: {
+    constant: "FAR_TIER_RUNTIME_BUDGETS_V2",
+    promotedTiles: 840,
+    declaredFileBytesAllTiles: 258_644_848,
+    whySuperseded: "It sized the tier when 43 of the island's 883 cells had no tile, because the bake honest-stopped on them over a fallback-area bar it was failing for phantom zones. Those cells now bake.",
+    keptInPlace: "V2 is NOT deleted. It is the record of what the tier was admitted under before those 43 were restored.",
+    ceilingMoved: false,
+  },
+  additiveTo: "far-tier-hlod-gpu-budget-v1 B3-B5, and the closed criterion #30. Never merged with either.",
+  evictionPolicy: "NONE, AND NONE IS OWED — on the same analysis v2 recorded, which the 43 restored tiles do not disturb: the ceiling still admits every cell any pose can select, so an eviction policy would have no reachable branch.",
+} as const;
+
+/**
  * The digest of the COMMITTED payload inventory, pinned in shipped code.
  *
  * The staged copy under the serving root is gitignored operator work product,
@@ -167,17 +258,25 @@ export const FAR_TIER_RUNTIME_BUDGETS_V2 = {
  *
  * A test re-derives this from the committed file, so it cannot drift silently.
  */
-export const FAR_TIER_PAYLOAD_INVENTORY_SHA256 = "cf8e26480eecc91f2e7b473d217a0d3551d0be59b4d8da39ee1217a6e0538f0a" as const;
+export const FAR_TIER_PAYLOAD_INVENTORY_SHA256 = "8aa2a825c36c87bf86fe2d99acb0853c1a03950020e45d710f5a2afe160220ea" as const;
 
 /**
- * The pin this one replaced, kept so the swap is legible in the code as well as
- * in the activation record.
+ * EVERY pin this one replaced, oldest first, so the swaps are legible in the
+ * code as well as in the activation records.
  *
- * It declared the ONE-CELL T003 inventory. Promotion swaps the whole tier's
- * declaration in a single token, and a reader who finds only the new value has
- * no way to tell that it moved.
+ *   [0] the ONE-CELL T003 inventory
+ *   [1] the 840-TILE promotion — the island minus the 43 cells the bake
+ *       honest-stopped on before the phantom shaft zone was fixed
+ *
+ * A LIST, NOT A SINGLE SLOT. The tier has now been re-declared twice. A scalar
+ * `_PREDECESSOR` holds exactly one swap, so the second re-declaration silently
+ * overwrote the first and the T003 pin would have vanished from the code with
+ * nothing failing. Each entry is re-derived from its committed file by test.
  */
-export const FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSOR = "9c46f62a1ac9a662f768facd716f8d04ecf960afaf3ae0f536eb216bb3e6bd24" as const;
+export const FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSORS = [
+  "9c46f62a1ac9a662f768facd716f8d04ecf960afaf3ae0f536eb216bb3e6bd24",
+  "cf8e26480eecc91f2e7b473d217a0d3551d0be59b4d8da39ee1217a6e0538f0a",
+] as const;
 
 /** Where staged far-tier bytes are served from. Its own root, not a release audience. */
 export const FAR_TIER_SERVING_ROOT = "far-tier" as const;

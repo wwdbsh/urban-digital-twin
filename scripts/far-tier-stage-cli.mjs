@@ -21,7 +21,8 @@
  *    this script read a flat `artifacts/far-tier-hlod-20260818/` root. The wave
  *    is derived from the cell id, which is where it already lives.
  * 2. THE INVENTORY. It read the one-cell T003 record. It now reads the promoted
- *    840-cell one.
+ *    883-cell one -- the 840-cell record it read between those two is
+ *    superseded, not deleted.
  * 3. THE STAGED INVENTORY IS A BYTE COPY. The runtime pins ONE digest and fails
  *    closed on a mismatch, so the staged copy must be byte-identical to the
  *    committed record — not equivalent, IDENTICAL. Re-serializing it here would
@@ -39,10 +40,13 @@ import { mkdir, readFile, writeFile, access, rm } from "node:fs/promises";
 import { join } from "node:path";
 
 const REPO_ROOT = process.cwd();
-const PAYLOAD_ROOT = join(REPO_ROOT, "artifacts", "far-tier-hlod-mass-20260819", "payloads");
+// The phantom-shaft fix re-baked all 883 cells into its own payload root, so
+// that root -- not T004's 840-tile one -- is what the current promotion
+// declares. Staging from the old root would find 43 tiles missing.
+const PAYLOAD_ROOT = join(REPO_ROOT, "artifacts", "far-tier-hlod-phantom-shaft-20260823", "payloads");
 const SERVING_ROOT = join(REPO_ROOT, "public", "far-tier");
-const INVENTORY_PATH = join(REPO_ROOT, "data", "far-tier-hlod-promotion-20260819", "promoted-inventory.json");
-const INVENTORY_SIDECAR = join(REPO_ROOT, "data", "far-tier-hlod-promotion-20260819", "promoted-inventory.sha256");
+const INVENTORY_PATH = join(REPO_ROOT, "data", "far-tier-hlod-promotion-20260823", "promoted-inventory.json");
+const INVENTORY_SIDECAR = join(REPO_ROOT, "data", "far-tier-hlod-promotion-20260823", "promoted-inventory.sha256");
 
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const exists = async (path) => { try { await access(path); return true; } catch { return false; } };

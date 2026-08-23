@@ -1,0 +1,82 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-phantom-shaft-20260823:acceptance-amendment",
+  "artifact": "far-tier-goal-acceptance-amendment-by-statement",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION.",
+  "amends": {
+    "record": "data/manhattan-hlod-far-tier-acceptance-20260822/reconciliation.json",
+    "sha256": "4f4f733a863d9731b156f46d46fd06413b8b06773333b3f2a2ffa995596a79ec",
+    "residual": "R13",
+    "title": "43 cells carry no baked tile",
+    "historyPreserved": "THE SEALED RECORD IS NOT EDITED. Its bytes are unchanged, both sidecars still verify, and this amendment is cited by path and residual id rather than folded into it. That is the convention that record set for itself in its own `amendments` array."
+  },
+  "change": {
+    "verdictMovement": "NO CRITERION VERDICT CHANGES. R13 is a RESIDUAL, not a criterion, and the goal completion decision is untouched.",
+    "residualStatus": "R13 IS RETIRED.",
+    "whatItSaid": "\"The bake honest-stopped on 43 of 883 ledger cells; they fall back to wave geometry and massing. Committed as an exemption set and reconciled by machine at both ends of T007 campaign. 143 individual buildings were refused within otherwise-baked cells.\"",
+    "whatIsTrueNow": "All 883 ledger cells bake. The 43 were not stopped by anything about the cells: `farTierFacesForPlan` resolved a shaft zone for faces that emit none, and because fallback AREA is keyed by face, one phantom zone condemned a whole face. The 43 come in at a worst residual fallback share of 0.03137993 against the unchanged 0.05 bar, and 17 at exactly 0.0.",
+    "whatDidNotGetBetter": "THE PER-BUILDING REFUSALS ROSE, from 143 to 162. The 43 restored cells contain 19 more buildings the V3 grammar refuses. R13 second sentence is therefore superseded in a direction that is WORSE, not better."
+  },
+  "registerAdditionByStatement": {
+    "why": "THE RESIDUAL REGISTER IN THE SEALED RECORD CANNOT BE APPENDED TO. Its bytes are frozen and a drift test re-hashes them, so a new residual cannot be written into it. It is added HERE, by statement, and a reader of the sealed register must read this record alongside it or they will have an incomplete register.",
+    "ids": {
+      "lastInSealedRegister": "R16",
+      "addedHere": "R17"
+    },
+    "R17": {
+      "id": "R17",
+      "title": "The far tier is at the edge of its frozen GPU bar",
+      "detail": "At 883 tiles the measured resident total is 389,733,103 decoded GPU bytes against a frozen ceiling of 390,295,058 — a margin of 0.14 per cent. It fits because every measured term came in under the T003 model that set the bar, not because there is room: atlas 291,722,287 of a modelled 291,984,434 and geometry 98,010,816 of a modelled 98,310,624. FAR_TIER_RUNTIME_BUDGETS_V2 had claimed a 2.0 per cent margin, but that figure added decoded atlas bytes to GLB FILE bytes, which is not the unit the bar geometry term is in; under that same proxy the 883 set is 3,095,569 bytes OVER the bar.",
+      "obligation": "RE-DERIVE THE BAR BEFORE ANY FURTHER TILE, ANY ATLAS CEILING ABOVE 256, OR ANY CITY LARGER THAN THIS ISLAND. Do not spend this margin.",
+      "status": "OPEN.",
+      "record": "src/runtime/far-tier-serving.ts, FAR_TIER_RUNTIME_BUDGETS_V3.gpuJustification",
+      "whatWouldCloseIt": "A measured GPU residency reading from a real session in the B3-B5 discipline, at the poses the sweep visits. Not done here and not claimed."
+    }
+  },
+  "evidence": {
+    "preRegistration": "data/far-tier-hlod-phantom-shaft-20260823/pre-registration.json",
+    "verification": "data/far-tier-hlod-phantom-shaft-20260823/verification.json",
+    "verificationSha256": "188dc636db246ab9e21cacd6e25efa9bd9e909436cf821c62c2050c26a9887f6",
+    "verificationVerdicts": {
+      "P1": "PASS",
+      "P2": "PASS",
+      "P3": "PASS",
+      "P4": "DISCLOSED",
+      "P5": "PASS",
+      "P6": "PASS"
+    },
+    "resolution": {
+      "claim": "The under-resolved figure the README quotes, derived from the per-cell rows in this task's own measurements rather than carried over from the 840-cell era.",
+      "cells": 883,
+      "underResolved": 785,
+      "underResolvedShare": 0.889015,
+      "appliedScale": {
+        "min": 0.176777,
+        "median": 0.707107,
+        "max": 1
+      },
+      "medianRule": "MEDIAN OVER ALL 883 CELLS, recomputed. For an even count it is the mean of the two central values, so it is not simply \"the 840-era number with more cells behind it\".",
+      "priorEra": {
+        "cells": 840,
+        "underResolved": 764,
+        "underResolvedShare": 0.9095
+      },
+      "direction": "The SHARE fell and the COUNT rose. Restoring 43 tiles did not improve resolution anywhere; it added 43 more cells at the same recipe and the same atlas ceiling."
+    },
+    "determinismReplay": "data/far-tier-hlod-phantom-shaft-20260823/replay-new-tiles.json",
+    "promotedInventory": "data/far-tier-hlod-promotion-20260823/promoted-inventory.json",
+    "promotedInventorySha256": "8aa2a825c36c87bf86fe2d99acb0853c1a03950020e45d710f5a2afe160220ea",
+    "sweep": "data/far-tier-hlod-promotion-20260823/sweep-results.json"
+  },
+  "residualsThisDoesNotTouch": {
+    "R12": "90.95% of island cells ship under-resolved. UNCHANGED IN KIND AND WORSE IN COUNT: 785 of 883 are under-resolved against 764 of 840. The SHARE fell to 88.90% only because 43 cells were added at the same recipe and ceiling; resolution improved nowhere.",
+    "R14": "The adopted hue bar A3'' = 0.035 is post-hoc. Untouched.",
+    "others": "Every other residual stands as written. Retiring one is not progress on the rest."
+  },
+  "notClaimedHere": [
+    "The goal completion decision is NOT reopened and is still the user to take.",
+    "Nothing here converts a NOT-MET criterion to MET. Criteria 3, 4, 8 and 9 stand exactly as the sealed record leaves them.",
+    "883 tiles is a coverage fact. It is not an appearance, fidelity, or acceptance verdict."
+  ]
+}

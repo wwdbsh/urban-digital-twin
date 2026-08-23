@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-promotion-20260823:exemptions-superseded",
+  "artifact": "far-tier-sweep-exemption-supersession",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION.",
+  "amends": {
+    "record": "data/far-tier-hlod-promotion-20260819/sweep-exemptions.json",
+    "sha256": "6354676da304ab03783132730f75dafdfce60c82f509dd740b9fc18c92e8d430",
+    "historyPreserved": "THAT RECORD IS NOT EDITED. Its bytes are unchanged and it still verifies against its own sidecar. It is the true record of what the far tier was NOT expected to cover when 43 cells had no tile."
+  },
+  "change": {
+    "honestStopCellsThere": 43,
+    "honestStopCellsNow": 0,
+    "statement": "THE 43-CELL HONEST-STOP EXEMPTION IS RETIRED. Every one of those cells now bakes, so none of them needs to be excused from coverage. The exemption is not narrowed or reinterpreted; the condition it existed for is gone.",
+    "whatSurvives": "THE BLOCK 835 ALIAS EXEMPTION SURVIVES UNCHANGED. Sweep-3 still reads notDeclared = 1 at every ON pose, and that one cell is still the committed alias. Retiring the honest-stop exemption does not touch it.",
+    "excludedMembersThere": null,
+    "excludedMembersNow": 162,
+    "excludedMembersNote": "The per-BUILDING refusals are NOT retired and did not fall. They ROSE from 143 to 162, because the 43 restored cells contain 19 further buildings the V3 grammar refuses. Those buildings keep their massing and their refusal explanation exactly as T007 requires. A reader who sees the cell exemption retired must not read that as every building now being covered."
+  },
+  "bar": {
+    "statement": "NO BAR MOVED AND NO EXEMPTION WAS WIDENED TO ABSORB A STOP. FALLBACK_AREA_SHARE_BAR is still 0.05 and allowFacadeOnlyFallback is still an explicit opt-in. The 43 came under the bar on measurement, at a worst residual of 0.03137993."
+  },
+  "notClaimedHere": [
+    "Coverage is not correctness. A cell that now has a tile is not thereby a good tile.",
+    "This record does not claim the 19 newly-named refused buildings are acceptable; it claims they are visible as refusals rather than hidden by a retired exemption."
+  ]
+}

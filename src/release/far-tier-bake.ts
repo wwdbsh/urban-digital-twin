@@ -942,13 +942,28 @@ export function farTierFacesForBuilding(
       return { textureClass: palette.textureClass, factor };
     };
 
-    const shaft = resolveZone(shaftId, "shaft");
+    /**
+     * RESOLVE THE SHAFT ONLY WHEN THE FACE EMITS ONE.
+     *
+     * `split === 1` means the base reaches the top of the face, so the face
+     * carries no shaft zone and the aggregation produced no `<index>:shaft` key
+     * for it BY CONSTRUCTION. Resolving it anyway recorded a facade-only
+     * fallback against a zone the tile never contains, and `bakeFarTierCell`
+     * keys its fallback AREA by face, not by zone, so a single phantom entry
+     * condemned that face's entire wall area.
+     *
+     * The ternary — rather than moving the call inside the `split < 1` block —
+     * keeps the original shaft-before-base resolution ORDER, so the
+     * `facadeOnlyFallbackReport` and `unitySnapReport` sequences of every face
+     * that still resolves both zones are unchanged, entry for entry.
+     */
+    const shaft = split < 1 ? resolveZone(shaftId, "shaft") : null;
     const zones: FaceZone[] = [];
     if (split > 0) {
       const base = resolveZone(baseId, "base");
       zones.push({ materialId: baseId, textureClass: base.textureClass, factor: base.factor, fromFraction: 0, toFraction: split });
     }
-    if (split < 1) zones.push({ materialId: shaftId, textureClass: shaft.textureClass, factor: shaft.factor, fromFraction: split, toFraction: 1 });
+    if (shaft !== null) zones.push({ materialId: shaftId, textureClass: shaft.textureClass, factor: shaft.factor, fromFraction: split, toFraction: 1 });
 
     faces.push({
       buildingId: plan.buildingId,

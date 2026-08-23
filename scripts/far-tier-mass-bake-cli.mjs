@@ -150,7 +150,7 @@ export function waveWiring(waveId) {
 export const WAVE_IDS = EXTERIOR_SERVING_WAVES.map((wave) => wave.waveId);
 
 /** Read and checksum-verify one wave's committed `-c2` payload inventory, once. */
-async function loadWaveInventory(wiring) {
+export async function loadWaveInventory(wiring) {
   const root = join(repositoryRoot, "data", wiring.c2ReleaseId);
   const text = await readFile(join(root, "payload-inventory.json"), "utf8").catch(() => null);
   if (text === null) fail(TOOL, `wave ${wiring.waveId} declares release ${wiring.c2ReleaseId} but no payload-inventory.json is committed for it.`);
@@ -168,7 +168,7 @@ async function loadWaveInventory(wiring) {
 // One cell, sourced fail-closed and baked
 // ---------------------------------------------------------------------------
 
-function materializeOneCell(snapshot, cell, wiring, waveInventory) {
+export function materializeOneCell(snapshot, cell, wiring, waveInventory) {
   const sources = collectMidtownCoreSources(snapshot.shards, new Set(cell.buildingIds));
   const materialization = materializeMidtownCoreV3Cells({
     cells: [cell],
@@ -217,7 +217,7 @@ function materializeOneCell(snapshot, cell, wiring, waveInventory) {
  * constant, so it is meaningful for all 883 cells rather than for the one the
  * prototype froze.
  */
-function bakeOneCell(context, cell) {
+export function bakeOneCell(context, cell) {
   assertFarTierAdoptedRecipe(FAR_TIER_BAKE_RECIPE_V4);
   const input = cellInputFor(context, cell);
 

@@ -428,7 +428,7 @@ carries an append-only correction to `0032`'s citywide UV share).
 | --- | --- | --- |
 | near | textured `lod_0` exterior geometry | the six **`-s2`** two-LOD serving releases |
 | mid | textured `lod_1` | the same releases — **declared eligible**, selected past the ring; *not* rendered-verified, see below |
-| far | baked HLOD tiles, one per ownership cell | 840 tiles, `FAR_TIER_DEFAULT_ON = true` |
+| far | baked HLOD tiles, one per ownership cell | **883 tiles — every ledger cell**, `FAR_TIER_DEFAULT_ON = true` |
 | fallback | procedural tan massing | wherever no tier above it draws |
 
 The wave table above this section names the `-v3`/`-p1` releases that were the
@@ -437,14 +437,30 @@ default until the two-LOD promotion. **They are no longer what ships**; the six
 
 ### The honest limits, stated where a reader will find them
 
-- **43 of 883 ledger cells carry no baked tile.** The bake honest-stopped on
-  them; they fall back to wave geometry and massing. 143 individual buildings
-  were refused inside otherwise-baked cells. Both sets are committed as an
-  exemption set and reconciled by machine.
-- **90.95% of island cells ship under-resolved** — 764 of 840, at a median
+- **Every one of the 883 ledger cells now carries a baked tile.** 43 of them
+  used to honest-stop. That was a defect, not a property of those cells: the
+  bake resolved a wall's *shaft* zone even on faces whose base reaches the top
+  and which therefore emit no shaft zone at all, and because fallback **area** is
+  keyed by face, one such phantom zone condemned the whole face. The 43 come in
+  at a worst residual fallback share of **0.031** against an unchanged **0.05**
+  bar, 17 of them at exactly zero, and all 840 previously-baked tiles reproduce
+  **byte for byte**.
+- **162 individual buildings are still refused inside baked cells**, up from 143.
+  The 43 restored cells contain 19 more buildings the grammar refuses. Each keeps
+  its massing and an explicit refusal explanation; more coverage did not mean
+  fewer refusals.
+- **88.90% of island cells ship under-resolved** — 785 of 883, at a median
   applied scale of **0.707**. The far tier is visibly coarser than its source at
   most cells. That is a property of the adopted recipe at the adopted atlas
   ceiling, measured rather than estimated.
+- **The far tier is at the edge of its frozen GPU ceiling.** Holding all 883
+  tiles resident costs **389,733,103** decoded GPU bytes against a frozen
+  **390,295,058** — a margin of **0.14%**, not the 2.0% an earlier note claimed.
+  That earlier figure added decoded texture bytes to GLB *file* bytes, which is
+  not the ceiling's unit; under that same proxy this set would be over. It fits
+  because every measured term came in under the model that set the bar, not
+  because there is room. Any further growth needs the bar re-derived first.
+  Tracked as residual **R17**.
 - **The adopted hue bar `A3'' = 0.035` is post-hoc.** It supersedes a
   pre-registered `A3' = 0.032`. Recipe v3 scores 6 of 6 against it, and anyone
   comparing these numbers with the original pre-registration needs to know the

@@ -1,0 +1,487 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-phantom-shaft-20260823:verification",
+  "artifact": "far-tier-phantom-shaft-verification",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION.",
+  "preRegistrationSha256": "e7902ded14816c675f7183406a590a822aa62ab5df7e652ca9088acf94220ed1",
+  "barUnchanged": 0.05,
+  "recipeSha256": "fd950a77f1c57cb2b7238b588aa11cd020ace1f15c1448438dfd0f235e10412c",
+  "totals": {
+    "ledgerCells": 883,
+    "baked": 883,
+    "stops": 0
+  },
+  "verdicts": {
+    "P1": "PASS",
+    "P2": "PASS",
+    "P3": "PASS",
+    "P4": "DISCLOSED",
+    "P5": "PASS",
+    "P6": "PASS"
+  },
+  "resolution": {
+    "claim": "The under-resolved figure the README quotes, derived from the per-cell rows in this task's own measurements rather than carried over from the 840-cell era.",
+    "cells": 883,
+    "underResolved": 785,
+    "underResolvedShare": 0.889015,
+    "appliedScale": {
+      "min": 0.176777,
+      "median": 0.707107,
+      "max": 1
+    },
+    "medianRule": "MEDIAN OVER ALL 883 CELLS, recomputed. For an even count it is the mean of the two central values, so it is not simply \"the 840-era number with more cells behind it\".",
+    "priorEra": {
+      "cells": 840,
+      "underResolved": 764,
+      "underResolvedShare": 0.9095
+    },
+    "direction": "The SHARE fell and the COUNT rose. Restoring 43 tiles did not improve resolution anywhere; it added 43 more cells at the same recipe and the same atlas ceiling."
+  },
+  "P1": {
+    "provenance": "SUPPLIED BY THE ARCHITECT in the task brief, before this session ran any bake. NOT verified against any measurement at the time of writing.",
+    "anchors": [
+      {
+        "claim": "All 43 come in UNDER the unchanged 0.05 bar.",
+        "measured": "43 of 43 under bar, 0 still stopped",
+        "verdict": "PASS"
+      },
+      {
+        "claim": "The worst residual share is w04-000572 at 0.03138.",
+        "measured": "w04-000572 at 0.03137993",
+        "verdict": "PASS"
+      },
+      {
+        "claim": "EXACTLY 17 of the 43 land at a residual share of exactly 0.0.",
+        "measured": "17 at exactly 0.0",
+        "verdict": "PASS"
+      }
+    ],
+    "barUnchanged": 0.05,
+    "table": [
+      {
+        "cellId": "manhattan-exterior-cell-w04-000572-16-19303-17917",
+        "shortId": "w04-000572",
+        "priorShare": 0.64783163,
+        "residualShare": 0.03137993,
+        "residualZoneCount": 3,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w04-000466-16-19302-17920",
+        "shortId": "w04-000466",
+        "priorShare": 0.65156823,
+        "residualShare": 0.02447603,
+        "residualZoneCount": 2,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w02-000152-15-9647-8976",
+        "shortId": "w02-000152",
+        "priorShare": 0.07538409,
+        "residualShare": 0.02315076,
+        "residualZoneCount": 33,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w05-000788-18-77227-71625",
+        "shortId": "w05-000788",
+        "priorShare": 0.10096791,
+        "residualShare": 0.01802358,
+        "residualZoneCount": 12,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w02-000153-15-9646-8977",
+        "shortId": "w02-000153",
+        "priorShare": 0.16103361,
+        "residualShare": 0.01706134,
+        "residualZoneCount": 6,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w05-000792-18-77227-71626",
+        "shortId": "w05-000792",
+        "priorShare": 0.05259563,
+        "residualShare": 0.01635098,
+        "residualZoneCount": 9,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w05-000754-17-38611-35823",
+        "shortId": "w05-000754",
+        "priorShare": 0.05580779,
+        "residualShare": 0.01435147,
+        "residualZoneCount": 27,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w05-000878-16-19312-17884",
+        "shortId": "w05-000878",
+        "priorShare": 0.08093339,
+        "residualShare": 0.01412148,
+        "residualZoneCount": 4,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w04-000692-15-9655-8956",
+        "shortId": "w04-000692",
+        "priorShare": 0.12096957,
+        "residualShare": 0.01213461,
+        "residualZoneCount": 5,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w04-000674-17-38614-35829",
+        "shortId": "w04-000674",
+        "priorShare": 0.08021083,
+        "residualShare": 0.01021405,
+        "residualZoneCount": 7,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w04-000655-17-38612-35824",
+        "shortId": "w04-000655",
+        "priorShare": 0.05975759,
+        "residualShare": 0.00981599,
+        "residualZoneCount": 8,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w05-000786-17-38612-35812",
+        "shortId": "w05-000786",
+        "priorShare": 0.06000691,
+        "residualShare": 0.00621451,
+        "residualZoneCount": 8,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w04-000620-15-9655-8958",
+        "shortId": "w04-000620",
+        "priorShare": 0.18775093,
+        "residualShare": 0.00555243,
+        "residualZoneCount": 41,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w05-000881-16-19313-17885",
+        "shortId": "w05-000881",
+        "priorShare": 0.07971083,
+        "residualShare": 0.00486122,
+        "residualZoneCount": 20,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w04-000684-17-38615-35831",
+        "shortId": "w04-000684",
+        "priorShare": 0.0876574,
+        "residualShare": 0.00376201,
+        "residualZoneCount": 6,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w05-000868-15-9654-8944",
+        "shortId": "w05-000868",
+        "priorShare": 0.05354087,
+        "residualShare": 0.0029717,
+        "residualZoneCount": 12,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w03-000371-17-38590-35870",
+        "shortId": "w03-000371",
+        "priorShare": 0.05361371,
+        "residualShare": 0.00268203,
+        "residualZoneCount": 6,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000074-17-38594-35852",
+        "shortId": "w01-000074",
+        "priorShare": 0.10662308,
+        "residualShare": 0.00263924,
+        "residualZoneCount": 4,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w05-000872-16-19311-17890",
+        "shortId": "w05-000872",
+        "priorShare": 0.10484701,
+        "residualShare": 0.0023731,
+        "residualZoneCount": 10,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w04-000621-15-9654-8959",
+        "shortId": "w04-000621",
+        "priorShare": 0.27053616,
+        "residualShare": 0.00228716,
+        "residualZoneCount": 1,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w05-000870-16-19311-17889",
+        "shortId": "w05-000870",
+        "priorShare": 0.08077047,
+        "residualShare": 0.00083599,
+        "residualZoneCount": 3,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w04-000622-15-9655-8959",
+        "shortId": "w04-000622",
+        "priorShare": 0.3455897,
+        "residualShare": 0.00078868,
+        "residualZoneCount": 2,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w05-000882-15-9656-8943",
+        "shortId": "w05-000882",
+        "priorShare": 0.10783963,
+        "residualShare": 0.0007724,
+        "residualZoneCount": 3,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w05-000876-14-4828-4472",
+        "shortId": "w05-000876",
+        "priorShare": 0.06900917,
+        "residualShare": 0.00066796,
+        "residualZoneCount": 1,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w04-000700-15-9655-8957",
+        "shortId": "w04-000700",
+        "priorShare": 0.18067353,
+        "residualShare": 0.00052511,
+        "residualZoneCount": 2,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w02-000150-14-4822-4488",
+        "shortId": "w02-000150",
+        "priorShare": 0.15631086,
+        "residualShare": 0.00040461,
+        "residualZoneCount": 1,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w01-000062-14-4823-4481",
+        "shortId": "w01-000062",
+        "priorShare": 0.43870472,
+        "residualShare": 0,
+        "residualZoneCount": 0,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w03-000369-16-19294-17934",
+        "shortId": "w03-000369",
+        "priorShare": 0.44057861,
+        "residualShare": 0,
+        "residualZoneCount": 0,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w03-000373-16-19294-17935",
+        "shortId": "w03-000373",
+        "priorShare": 0.06244135,
+        "residualShare": 0,
+        "residualZoneCount": 0,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w04-000475-16-19302-17921",
+        "shortId": "w04-000475",
+        "priorShare": 1,
+        "residualShare": 0,
+        "residualZoneCount": 0,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w04-000491-16-19301-17923",
+        "shortId": "w04-000491",
+        "priorShare": 0.29580458,
+        "residualShare": 0,
+        "residualZoneCount": 0,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w04-000540-15-9649-8958",
+        "shortId": "w04-000540",
+        "priorShare": 1,
+        "residualShare": 0,
+        "residualZoneCount": 0,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w04-000542-17-38598-35838",
+        "shortId": "w04-000542",
+        "priorShare": 1,
+        "residualShare": 0,
+        "residualZoneCount": 0,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w04-000544-16-19298-17919",
+        "shortId": "w04-000544",
+        "priorShare": 1,
+        "residualShare": 0,
+        "residualZoneCount": 0,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w04-000592-16-19304-17916",
+        "shortId": "w04-000592",
+        "priorShare": 1,
+        "residualShare": 0,
+        "residualZoneCount": 0,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w04-000640-16-19300-17914",
+        "shortId": "w04-000640",
+        "priorShare": 1,
+        "residualShare": 0,
+        "residualZoneCount": 0,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w04-000686-16-19309-17912",
+        "shortId": "w04-000686",
+        "priorShare": 0.09191002,
+        "residualShare": 0,
+        "residualZoneCount": 0,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w05-000765-17-38614-35808",
+        "shortId": "w05-000765",
+        "priorShare": 0.05800631,
+        "residualShare": 0,
+        "residualZoneCount": 0,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w05-000816-15-9652-8950",
+        "shortId": "w05-000816",
+        "priorShare": 0.09678457,
+        "residualShare": 0,
+        "residualZoneCount": 0,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w05-000848-16-19309-17896",
+        "shortId": "w05-000848",
+        "priorShare": 0.05941562,
+        "residualShare": 0,
+        "residualZoneCount": 0,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w05-000850-16-19309-17897",
+        "shortId": "w05-000850",
+        "priorShare": 1,
+        "residualShare": 0,
+        "residualZoneCount": 0,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w05-000858-15-9655-8946",
+        "shortId": "w05-000858",
+        "priorShare": 0.19031146,
+        "residualShare": 0,
+        "residualZoneCount": 0,
+        "underBar": true
+      },
+      {
+        "cellId": "manhattan-exterior-cell-w05-000875-16-19311-17891",
+        "shortId": "w05-000875",
+        "priorShare": 0.15562081,
+        "residualShare": 0,
+        "residualZoneCount": 0,
+        "underBar": true
+      }
+    ]
+  },
+  "P2": {
+    "claim": "packing-infeasible, zone-aggregate-out-of-range, no-bakeable-face and zone-aggregate-missing all stay 0.",
+    "honestStopsByClass": {},
+    "totalStops": 0,
+    "verdict": "PASS"
+  },
+  "P3": {
+    "claim": "All 840 already-baked tiles reproduce BYTE-IDENTICALLY under the fix.",
+    "previouslyBakedCount": 840,
+    "identical": 840,
+    "mismatched": 0,
+    "mismatchedCells": [],
+    "verdict": "PASS"
+  },
+  "P4": {
+    "claim": "The TELEMETRY of already-baked cells changes; their BYTES do not. Disclosed in advance.",
+    "frozenCellsWithAnyFallbackZone": 730,
+    "nowWithAnyFallbackZone": 627,
+    "cellsWhoseTelemetryMoved": 574,
+    "frozenTotalUnitySnaps": 2072,
+    "nowTotalUnitySnaps": 2072,
+    "frozenRecordsEdited": false,
+    "note": "The frozen telemetry-w0N.json records are NOT edited. They truthfully record what the defective code did and are amended by statement."
+  },
+  "P5": {
+    "claim": "Every camera pose selects a SUBSET of the shipped leaves, so 'all 883 resident at once' bounds every pose. That total must stay below the frozen ceiling.",
+    "unit": "DECODED GPU BYTES",
+    "tiles": 883,
+    "atlasGpuBytes": 291722287,
+    "geometryGpuBytes": 98010816,
+    "totalGpuBytes": 389733103,
+    "vertexCount": 3885876,
+    "actualAtlasPixelHistogram": {
+      "64": 22,
+      "128": 37,
+      "256": 824
+    },
+    "ceiling": {
+      "name": "FAR_TIER_BUDGET_CONTRACT.maxResidentTotalGpuBytes",
+      "value": 390295058,
+      "unit": "DECODED GPU BYTES",
+      "atlasPart": 291984434,
+      "geometryPart": 98310624
+    },
+    "headroomBytes": 561955,
+    "verdict": "PASS",
+    "stopRule": "At or above the ceiling: NO PROMOTION. The bar is not moved.",
+    "whatAPassMeansHere": {
+      "warning": "A PASS here is a WEAK result, and calling it comfortable would be wrong.",
+      "why": "The frozen ceiling was not an independent budget. It was DERIVED in T003 from a model of these same 883 ledger cells -- `maxCut` over the modelled tree -- and for this tree `maxCut` exceeds the plain all-883-leaves sum by only 3 bytes. So comparing the actual all-leaves total against it is very nearly a test of whether the bake matched its own resolution model, not a test of whether the tier fits a device.",
+      "modelledLeafAtlasSum": 291984431,
+      "modelledLeafAtlasHistogram": {
+        "64": 22,
+        "128": 36,
+        "256": 825
+      },
+      "modelledMinusMaxCutAtlas": 3,
+      "whatWouldBeStronger": "A measured GPU residency reading from a real session, in the B3-B5 discipline, at the poses the sweep visits. That is NOT done here and is not claimed.",
+      "alsoNotClaimed": "No far-tier tile is an internal-node tile today; the shipped set is leaves only. The maxCut bound's internal nodes describe a hierarchy this bake did not produce."
+    }
+  },
+  "P6": {
+    "claim": "The declared FILE bytes of all 883 tiles must fit the runtime cache ceiling.",
+    "unit": "DECLARED FILE BYTES",
+    "declaredFileBytes": 266051784,
+    "ceiling": {
+      "name": "FAR_TIER_RUNTIME_BUDGETS_V2.maxCachedBytes",
+      "value": 301989888,
+      "unit": "DECLARED FILE BYTES",
+      "currentFor840": 258644848
+    },
+    "headroomBytes": 35938104,
+    "verdict": "PASS",
+    "unitWarning": "DECLARED FILE BYTES. Never comparable with P5, which is decoded GPU bytes."
+  },
+  "notClaimedHere": [
+    "No visual or acceptance claim is made here. Nothing in this record reopens the goal acceptance record.",
+    "P1's second and third anchors are the only genuinely pre-registered numeric predictions; the other forty rows are measured, not predicted."
+  ]
+}

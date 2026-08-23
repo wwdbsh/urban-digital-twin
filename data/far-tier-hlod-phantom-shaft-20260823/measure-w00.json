@@ -1,0 +1,109 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-phantom-shaft-20260823:measure-w00",
+  "artifact": "far-tier-phantom-shaft-wave-measurement",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION.",
+  "waveId": "w00",
+  "recipeId": "far-tier-hlod-bake-v4",
+  "recipeSha256": "fd950a77f1c57cb2b7238b588aa11cd020ace1f15c1448438dfd0f235e10412c",
+  "barUnchanged": 0.05,
+  "parentLedgerChecksumSha256": "62e093d2ca50b54b49fd8bbad9d0b11f6301b2b197623deb343f9ea915e59016",
+  "frozenInventorySha256": "d1913d5ee056a5979a4bb3cc883da48b5266531ca50c9d7bcc45ef0bff2871d5",
+  "ledgerCellCount": 1,
+  "bakedCellCount": 1,
+  "honestStopCount": 0,
+  "honestStops": [],
+  "byteIdentity": {
+    "previouslyBaked": 1,
+    "identical": 1,
+    "mismatched": 0,
+    "newTiles": 0,
+    "mismatchedCells": []
+  },
+  "elapsedSeconds": 1.8,
+  "cells": [
+    {
+      "cellId": "manhattan-exterior-cell-w00-000000-block-00835",
+      "wasFrozen": true,
+      "byteIdentity": "IDENTICAL",
+      "glbSha256": "ecc0a1bf1b52feedbcf64cdf5d62327b59426ee2e15ab5e70e1a1a65dc6e363f",
+      "glbByteSize": 23012,
+      "atlasSha256": "3989fa3a3bfda48831d9569e42664a6943dde39562cf09e5bfe029807036f9d7",
+      "atlasByteSize": 196947,
+      "fallbackZoneCount": 1,
+      "fallbackAreaShare": 0.0003505928321120246,
+      "unitySnapCount": 0,
+      "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
+      "wallAreaSquareMeters": 208568.65853670376,
+      "entry": {
+        "cellId": "manhattan-exterior-cell-w00-000000-block-00835",
+        "glbSha256": "ecc0a1bf1b52feedbcf64cdf5d62327b59426ee2e15ab5e70e1a1a65dc6e363f",
+        "glbByteSize": 23012,
+        "atlasSha256": "3989fa3a3bfda48831d9569e42664a6943dde39562cf09e5bfe029807036f9d7",
+        "atlasByteSize": 196947,
+        "members": [
+          {
+            "buildingId": "doitt:102705",
+            "included": true
+          },
+          {
+            "buildingId": "doitt:131170",
+            "included": true
+          },
+          {
+            "buildingId": "doitt:147902",
+            "included": true
+          },
+          {
+            "buildingId": "doitt:262867",
+            "included": true
+          },
+          {
+            "buildingId": "doitt:39969",
+            "included": true
+          },
+          {
+            "buildingId": "doitt:460555",
+            "included": true
+          },
+          {
+            "buildingId": "doitt:498980",
+            "included": true
+          },
+          {
+            "buildingId": "doitt:502491",
+            "included": true
+          },
+          {
+            "buildingId": "doitt:584049",
+            "included": true
+          },
+          {
+            "buildingId": "doitt:778052",
+            "included": true
+          },
+          {
+            "buildingId": "doitt:812702",
+            "included": true
+          },
+          {
+            "buildingId": "doitt:835659",
+            "included": true
+          },
+          {
+            "buildingId": "doitt:925937",
+            "included": true
+          },
+          {
+            "buildingId": "doitt:982383",
+            "included": true
+          }
+        ]
+      }
+    }
+  ]
+}

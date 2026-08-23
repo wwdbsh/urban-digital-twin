@@ -1,0 +1,107 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-phantom-shaft-20260823:inventory-w00",
+  "artifact": "far-tier-phantom-shaft-wave-inventory",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION.",
+  "waveId": "w00",
+  "recipeId": "far-tier-hlod-bake-v4",
+  "recipeSha256": "fd950a77f1c57cb2b7238b588aa11cd020ace1f15c1448438dfd0f235e10412c",
+  "adoptedRecipe": "far-tier-hlod-bake-v4",
+  "payloadLayout": {
+    "root": "artifacts/far-tier-hlod-mass-20260819/payloads/w00/",
+    "naming": "FLAT: ${cellId}.far_0.glb and ${cellId}.atlas.png, the names the runtime resolves.",
+    "retention": "LOCAL WORK PRODUCT under an approved operator gate, gitignored. This record and its sidecar are the committed artifact.",
+    "separateFromServing": "This root is NOT the T003 serving root. public/far-tier/ and data/far-tier-hlod-runtime-20260818/ are untouched by this campaign; nothing here is served."
+  },
+  "supersedes": {
+    "record": "data/far-tier-hlod-mass-20260819/inventory-w00.json",
+    "sha256": "d1913d5ee056a5979a4bb3cc883da48b5266531ca50c9d7bcc45ef0bff2871d5",
+    "statement": "SUPERSEDED BY STATEMENT, NOT EDITED. The T004 inventory is unchanged on disk and still verifies against its own sidecar. It declares the tiles that wave could bake before the phantom shaft zone was fixed.",
+    "entriesThere": 1,
+    "entriesHere": 1,
+    "added": []
+  },
+  "orderingRule": "Ledger order within the wave. VERIFIED, not assumed: every tile the superseded inventory declared keeps its exact relative position here, with the restored tiles interleaved at their own ledger positions.",
+  "byteReplay": {
+    "claim": "Every entry below has child-process replay evidence. NOT ALL OF IT WAS PRODUCED IN THIS SESSION, and the two sources are named rather than blended.",
+    "preExistingTiles": {
+      "count": 1,
+      "evidence": "T004's own batched child-process replay, which sealed the superseded inventory. This session reproduced those exact digests and byte sizes and changed none of them."
+    },
+    "restoredTiles": {
+      "count": 0,
+      "evidence": "data/far-tier-hlod-phantom-shaft-20260823/replay-new-tiles.json — two passes in fresh child processes, comparing glb digest, atlas digest, fallback share and unity-snap count.",
+      "replayRecordSha256": "828abba54a3181404c571a474009a894eb767609ff0c4f8e6be6f2913a93990f"
+    },
+    "notClaimed": "This session did NOT re-replay the 840 in fresh children. Doing so would compare this session against itself; the stronger evidence is that they reproduce the digests a DIFFERENT session sealed."
+  },
+  "inventoryId": "far-tier-hlod-phantom-shaft-20260823:w00",
+  "entries": [
+    {
+      "cellId": "manhattan-exterior-cell-w00-000000-block-00835",
+      "glbSha256": "ecc0a1bf1b52feedbcf64cdf5d62327b59426ee2e15ab5e70e1a1a65dc6e363f",
+      "glbByteSize": 23012,
+      "atlasSha256": "3989fa3a3bfda48831d9569e42664a6943dde39562cf09e5bfe029807036f9d7",
+      "atlasByteSize": 196947,
+      "members": [
+        {
+          "buildingId": "doitt:102705",
+          "included": true
+        },
+        {
+          "buildingId": "doitt:131170",
+          "included": true
+        },
+        {
+          "buildingId": "doitt:147902",
+          "included": true
+        },
+        {
+          "buildingId": "doitt:262867",
+          "included": true
+        },
+        {
+          "buildingId": "doitt:39969",
+          "included": true
+        },
+        {
+          "buildingId": "doitt:460555",
+          "included": true
+        },
+        {
+          "buildingId": "doitt:498980",
+          "included": true
+        },
+        {
+          "buildingId": "doitt:502491",
+          "included": true
+        },
+        {
+          "buildingId": "doitt:584049",
+          "included": true
+        },
+        {
+          "buildingId": "doitt:778052",
+          "included": true
+        },
+        {
+          "buildingId": "doitt:812702",
+          "included": true
+        },
+        {
+          "buildingId": "doitt:835659",
+          "included": true
+        },
+        {
+          "buildingId": "doitt:925937",
+          "included": true
+        },
+        {
+          "buildingId": "doitt:982383",
+          "included": true
+        }
+      ]
+    }
+  ]
+}

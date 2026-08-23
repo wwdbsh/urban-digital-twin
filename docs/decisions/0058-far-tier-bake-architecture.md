@@ -594,6 +594,12 @@ a bar. `assertFarTierAdoptedRecipe` now names v4 and carries what it superseded.
 
 ### Campaign results
 
+> **SUPERSEDED IN PART — see [Amendment — the phantom shaft zone](#amendment--the-phantom-shaft-zone-post-goal-no-issue-2026-08-23) (2026-08-23).**
+> The 43 honest stops were a defect, not a property of those cells. Every one of
+> the 883 ledger cells now bakes; the tile count, the coverage arithmetic, the
+> under-resolved figures, the pin and the budget below are all superseded there.
+> The numbers in this section are left exactly as they were measured.
+
 | | |
 | --- | --- |
 | Ledger cells | 883 |
@@ -675,6 +681,12 @@ Evidence: `data/far-tier-hlod-promotion-20260819/` — `promoted-inventory.json`
 `.sha256`.
 
 ### What was built
+
+> **SUPERSEDED IN PART — see [Amendment — the phantom shaft zone](#amendment--the-phantom-shaft-zone-post-goal-no-issue-2026-08-23) (2026-08-23).**
+> The 43 honest stops were a defect, not a property of those cells. Every one of
+> the 883 ledger cells now bakes; the tile count, the coverage arithmetic, the
+> under-resolved figures, the pin and the budget below are all superseded there.
+> The numbers in this section are left exactly as they were measured.
 
 - **The promoted inventory**: six sealed wave inventories merged into one —
   840 entries, 43 honest stops, 883 against the ledger, 44,076 members with the
@@ -1040,3 +1052,168 @@ ceilings and the swapped inventory pin were never controlled for. The promotion
 is indicated; the attribution is not closed.
 
 The acceptance campaign's **NOT ACCEPTED** verdict stands unchanged.
+
+## Amendment — the phantom shaft zone (post-goal, no Issue, 2026-08-23)
+
+### The 43 honest stops were a defect in the metric, not a property of the cells
+
+`farTierFacesForPlan` resolved every wall face's **shaft** zone before it knew
+whether the face emits one. When `split === 1` the base zone reaches the top of
+the face, the face carries no shaft zone, and `farTierZoneAggregates` created no
+`<index>:shaft` key for that edge **by construction** — the base/shaft boundary
+*is* the top, so every in-scope surface lands in `base`. The unconditional call
+therefore missed, filed a facade-only fallback against a zone the tile does not
+contain, and returned a palette factor that was immediately discarded.
+
+That would have been untidy but harmless if the area metric were keyed by zone.
+It is keyed by **face**: `bakeFarTierCell` reduces the zone key to its edge index
+(`far-tier-campaign.ts:205`), so a single phantom entry attributed the **entire
+face's** wall area to the fallback total. Forty-three cells crossed the 5% bar on
+area they never lost, and seven of them reported a share of exactly `1.000000` —
+every face condemned.
+
+**The corroboration is an asymmetry, not a story.** Every facade-only fallback
+zone in the whole frozen campaign is a `shaft` zone: 4,161 of 4,161 across the 43
+stops and 21,063 of 21,063 across the 730 baked cells that carried any. Not one
+is a `base` zone — because the base resolution was **already** guarded by
+`split > 0`.
+
+The fix resolves the shaft only when the face emits one. It is written as a
+ternary rather than a move into the `split < 1` block, so the original
+shaft-before-base ordering of `facadeOnlyFallbackReport` and `unitySnapReport`
+survives and the *only* behavioural difference anywhere is the absent phantom
+calls.
+
+### What was pre-registered, and what deliberately was not
+
+The architect's three anchors were pinned before any cell was baked, and all
+three held to the digit: 43 of 43 under the unchanged bar; worst residual
+`w04-000572` at **0.03137993** against a predicted 0.03138; **exactly 17** at
+exactly 0.0.
+
+The remaining forty rows were **not** pre-registered, and that was a deliberate
+departure from the task brief. Rows recomputed by the measuring party with the
+measuring party's own code agree by construction and prove nothing. Only
+predictions fixed by someone else can falsify anything, so only those three carry
+evidentiary weight, and the record says so.
+
+### The 840 did not move, and the frozen records were not edited
+
+All 840 previously-baked tiles reproduce **byte-identically** — same GLB digest,
+same atlas digest, same sizes — against the per-wave inventories T004's own
+child-process replay sealed. Nothing the fix touches reaches a shipped byte:
+`emitTileBytes` writes no fallback telemetry into GLB metadata.
+
+The **telemetry** did move, and it was disclosed in advance rather than
+discovered: cells carrying any fallback zone fall from 730 to 627, and 574 cells'
+rows change. Those frozen records are **not** edited — they truthfully record
+what the defective code did. `totalUnitySnaps` is unchanged at 2,072, which
+settles by measurement whether a discarded shaft resolution could ever have
+snapped a factor to unity: it never did.
+
+### The GPU bar is met term by term, and the margin is 0.14%, not 2.0%
+
+`FAR_TIER_RUNTIME_BUDGETS_V2` justified admission with a total of 382,457,884
+and called it a 2.0% margin. **That sum was not in the bar's unit.** It added
+decoded atlas bytes to GLB *file* bytes, while `maxResidentGeometryGpuBytes` was
+derived with `farTierGeometryGpuBytes`, which counts decoded vertices and
+indices. Measured properly, from the shipped GLBs' own accessor counts:
+
+| term | measured | modelled bound | |
+| --- | --- | --- | --- |
+| atlas | 291,722,287 | 291,984,434 | inside |
+| geometry | 98,010,816 | 98,310,624 | inside |
+| **total** | **389,733,103** | **390,295,058** | **inside by 0.14%** |
+
+Under v2's own proxy the same 883 tiles come to **393,390,627** — over the bar by
+3,095,569 bytes. The proxy no longer merely errs safe, it **inverts the verdict**,
+so it is retired and a test pins that it would now fail.
+
+**A pass here is a weak result and is recorded as one.** The ceiling was not an
+independent budget: T003 derived it from a model of these same 883 cells, and for
+this tree `maxCut` exceeds the plain all-leaves sum by three bytes. So this is
+close to a test of whether the bake matched its own resolution model. It did,
+almost exactly — actual atlas edges came out `{64:22, 128:37, 256:824}` against a
+modelled `{64:22, 128:36, 256:825}`, one cell apart. A real GPU residency reading
+in the B3–B5 discipline would be stronger and is **not** claimed.
+
+### Sweep-3, and a pose whose premise inverted
+
+All six **registered** poses pass, reused unchanged so the comparison is
+pose-for-pose: 882 drawn of 883 declared, zero uncovered massing, zero absent,
+checksum-mismatch, build-failure or over-budget.
+
+**P3 was registered as "over an honest-stop cell — the far tier must show massing
+here, not a tile."** That premise no longer holds, and the pose is reported
+against the inverted expectation rather than quietly rescored. Sweep-2 read 3
+massing buildings active with only **1** suppressible and **1** covered; the other
+two belonged to the stopped cell and had no tile to hide under. Sweep-3 reads
+**3, 3, 3**. That is a draw-composition reading, not a fetch: those buildings
+could only move to far-tier alpha under a tile that is actually drawn.
+
+Coverage is up at every pose, but **no precise delta is claimed except at P3**.
+The `active` and `covered` counts stream in over the 32-second settle and do not
+land on the same set twice: two passes of the same pose on the same build read
+P5 covered as 31,413 and 30,087, a spread of 1,326. An earlier revision quoted
+"2,349 more buildings covered at P5" as a fact; that is one draw from a
+distribution and is **withdrawn**. What is stable across both passes is the
+invariant the verdict rests on — `uncovered = 0`, `drawn = 882`, every failure
+column 0 — and P3, whose three buildings do not stream.
+
+**One attempt per pose, and no re-runs.** Each pose was visited once, settled for
+32 seconds — sweep-2's own rule — and read once. No pose was revisited, no
+reading was discarded, and no verdict was taken from a second look. That matters
+as much as the port guard below: a sweep that may be re-run until it passes has
+no failure mode, and the readings here would be worth nothing if a first pass had
+been quietly dropped.
+
+**Two vehicle facts are on the record.** The six `<!doctype` notices appear again
+— the `-s2` exterior packages are still absent from disk, so this sweep, like both
+before it, does **not** clear the three-tier composition with exterior waves
+present. And port 4173 was already held by a preview server from a *different*
+checkout serving the superseded 840-tile inventory; sweeping the registered URLs
+unchanged would have scored the wrong build. It was caught by checking the served
+inventory digest before visiting a pose, and every pose ran on 4174 with only the
+port substituted.
+
+**The `882 of 883` gap is not a shortfall, and an earlier revision of this
+amendment was wrong to carry it forward as "unexplained".** `declared` counts
+OUTCOMES, not drawn-eligible tiles, so `882 drawn + 1 not-declared = 883` closes
+exactly. The one `not-declared` outcome is
+`manhattan-exterior-cell-w00-000000-block-00835`: that state is produced only by
+`FarTierAnchorError`, which is thrown only for a cell id carrying no
+`-<z>-<x>-<y>` tile coordinate, and exactly one of the 883 declared ids lacks one
+— the Block 835 alias, which the committed T005 exemption record names for the
+same reason. Sweep-2's `839 of 840` has the identical structure and was equally
+not a shortfall.
+
+What remains true is narrower and was already known: Block 835's tile is baked,
+declared and staged, and can never be **placed**, because its alias carries no
+tile coordinate.
+
+### The restored cells refuse buildings at 5.2x the island's rate
+
+19 of the 1,118 member buildings in the 43 restored cells are refused by the V3
+grammar — **1.70%**, against **0.32%** across the 840 that were already baked.
+That is not what fixing a metric bug would predict, and it is worth saying out
+loud rather than leaving inside a totals line: whatever makes a cell's faces run
+base-to-top often enough to trip a face-keyed area metric also correlates with
+geometry the grammar will not build. **This is a signal about those 43 cells, not
+a conclusion** — it was not investigated here, and one plausible reading is
+simply that unusual massing is unusual in more than one way at once.
+
+### What this amendment does not do
+
+It retires residual **R13** and adds **R17** — the far tier sits 0.14% inside its
+frozen GPU bar, and that margin must not be spent; re-derive the bar before any
+further tile, any atlas ceiling above 256, or any larger city. The sealed
+register cannot be appended to, so R17 is added by statement in
+`data/far-tier-hlod-phantom-shaft-20260823/acceptance-amendment.json`, and a
+reader of the sealed register must read that record alongside it.
+
+Beyond those two, no criterion verdict moves, the
+goal's completion decision remains the user's to take, and criteria 3, 4, 8 and 9
+stand exactly as the sealed acceptance record leaves them. Coverage is not
+correctness: 883 tiles is a coverage fact, not an appearance verdict. And the
+refusals went the **wrong** way — 143 individual buildings refused became 162,
+because the restored cells contain 19 more the grammar will not build.
