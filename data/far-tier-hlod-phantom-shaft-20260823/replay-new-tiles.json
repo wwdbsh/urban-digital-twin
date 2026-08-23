@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-phantom-shaft-20260823:replay-new-tiles",
+  "artifact": "far-tier-phantom-shaft-determinism-replay",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION.",
+  "claim": "Every tile that did not exist before this fix re-bakes to the same glb and atlas digest, and the same fallback and unity-snap telemetry, in a FRESH child process.",
+  "passes": 2,
+  "tilesPerPass": 43,
+  "comparisons": 86,
+  "mismatches": 0,
+  "mismatchedCells": [],
+  "verdict": "PASS",
+  "notClaimedHere": [
+    "The 840 pre-existing tiles are not replayed here. Their byte identity is established against the SEALED per-wave inventories, which their own T004 child-process replay produced."
+  ]
+}
