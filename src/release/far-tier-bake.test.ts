@@ -12,6 +12,7 @@ import {
   FAR_TIER_BAKE_RECIPE,
   FAR_TIER_BAKE_RECIPE_V2,
   farTierEffectiveParameters,
+  farTierFacesForBuilding,
   farTierGeometry,
   farTierRecipeHashV2,
   bakeFarTierAtlas,
@@ -24,6 +25,7 @@ import {
   tileIntegrator,
 } from "./far-tier-bake.ts";
 import type { FarTierFace } from "./far-tier-bake.ts";
+import type { V3Plan } from "../domain/deterministic-facade-generator-v3.ts";
 import { PROCEDURAL_TEXTURE_CLASSES, PROCEDURAL_TEXTURE_TILE_PIXELS, encodeRgbPng, proceduralTextureTile, rasterizeProceduralTexture } from "./procedural-texture.ts";
 
 function chunks(png: Uint8Array): Array<{ type: string; data: Uint8Array }> {
@@ -502,5 +504,116 @@ describe("an unapplied shading term is refused, not ignored", () => {
 
   it("keeps v2's shading null, because Stage B halted before wiring one", () => {
     expect(FAR_TIER_BAKE_RECIPE_V2.shading).toBeNull();
+  });
+});
+
+/**
+ * THE PHANTOM SHAFT ZONE.
+ *
+ * `farTierFacesForBuilding` used to resolve every face's shaft zone before it
+ * knew whether the face emits one. When `split === 1` the base reaches the top,
+ * the face carries no shaft zone, and `farTierZoneAggregates` created no
+ * `<index>:shaft` key for it BY CONSTRUCTION — so the resolution missed and
+ * filed a facade-only fallback against a zone that does not exist. Because
+ * `bakeFarTierCell` keys fallback AREA by FACE and not by zone, one phantom
+ * entry condemned that face's whole wall area, and 43 cells of the T004 mass
+ * bake were honest-stopped over the 5 per cent bar for area they never lost.
+ *
+ * These tests hold the two halves apart: the phantom must go, and the GENUINE
+ * fallback — a face that really does emit a shaft zone whose aggregate really
+ * is missing — must survive untouched.
+ */
+const PHANTOM_SIDE_MM = 40_000;
+const PHANTOM_TOP_MM = 20_000;
+
+function zonedPlan(baseVMaxMm: number, shaftRole: string): V3Plan {
+  const ring: Array<[number, number]> = [[0, 0], [PHANTOM_SIDE_MM, 0], [PHANTOM_SIDE_MM, PHANTOM_SIDE_MM], [0, PHANTOM_SIDE_MM]];
+  return {
+    buildingId: "doitt:zoned",
+    styleClass: "masonry-warm",
+    v: 3,
+    planHashSha256: "0".repeat(64),
+    inventory: {},
+    massing: { tiers: [] },
+    prisms: [],
+    placements: [],
+    tiers: [{ index: 0, ring, baseZMm: 0, topZMm: PHANTOM_TOP_MM, areaMm2: PHANTOM_SIDE_MM ** 2, perimeterMm: 4 * PHANTOM_SIDE_MM }],
+    surfaces: ring.map((_, edgeIndex) => ({
+      id: `facade:${edgeIndex}`,
+      kind: "facade",
+      materialId: "material:facade:shaft",
+      baseMaterialId: "material:facade:base",
+      baseVMaxMm,
+      tierIndex: 0,
+      edgeIndex,
+      startVertexIndex: edgeIndex,
+      endVertexIndex: (edgeIndex + 1) % ring.length,
+      startMm: ring[edgeIndex],
+      endMm: ring[(edgeIndex + 1) % ring.length],
+      uLengthMm: PHANTOM_SIDE_MM,
+      vLengthMm: PHANTOM_TOP_MM,
+      baseZMm: 0,
+      uStartMm: 0,
+      uEndMm: PHANTOM_SIDE_MM,
+      bayCount: 4,
+    })),
+    materials: [
+      { id: "material:facade:shaft", role: shaftRole, baseColorSrgb: [156, 74, 52, 255], metallicPermille: 0, roughnessPermille: 780 },
+      { id: "material:facade:base", role: "facade", baseColorSrgb: [122, 58, 44, 255], metallicPermille: 0, roughnessPermille: 780 },
+      { id: "material:roof", role: "roof", baseColorSrgb: [28, 27, 25, 255], metallicPermille: 0, roughnessPermille: 900 },
+    ],
+  } as unknown as V3Plan;
+}
+
+function aggregateOnce(baseVMaxMm: number, shaftRole = "facade") {
+  const facadeOnlyFallbackReport: Array<{ buildingId: string; zoneKey: string; materialId: string }> = [];
+  const unitySnapReport: Array<{ buildingId: string; zoneKey: string; overshoot: number }> = [];
+  const faces = farTierFacesForBuilding(zonedPlan(baseVMaxMm, shaftRole), [0, 0], {
+    zoneColourMode: "area-correct-aggregate",
+    allowFacadeOnlyFallback: true,
+    facadeOnlyFallbackReport,
+    unitySnapReport,
+  });
+  return { faces, facadeOnlyFallbackReport, unitySnapReport, walls: faces.filter((face) => face.kind === "wall") };
+}
+
+describe("the phantom shaft zone", () => {
+  it("is not reported for a face whose base reaches the top, because that face has no shaft zone", () => {
+    const run = aggregateOnce(PHANTOM_TOP_MM);
+    // The premise: split === 1, so every wall really does emit its base zone ONLY.
+    expect(run.walls).toHaveLength(4);
+    for (const wall of run.walls) {
+      expect(wall.zones.map((zone) => zone.materialId)).toEqual(["material:facade:base"]);
+    }
+    // Before the fix this reported four `N:shaft` entries against zones the
+    // faces do not carry, and each one condemned a whole face's wall area.
+    expect(run.facadeOnlyFallbackReport).toEqual([]);
+  });
+
+  it("still reports a GENUINE missing aggregate on a face that does emit a shaft zone", () => {
+    // `metal` is outside AGGREGATED_ROLES, so the shaft band contributes no
+    // aggregated area and the `N:shaft` key is genuinely absent — while the
+    // face emits the shaft zone regardless.
+    for (const baseVMaxMm of [6_000, 0]) {
+      const run = aggregateOnce(baseVMaxMm, "metal");
+      expect(run.walls.some((wall) => wall.zones.some((zone) => zone.materialId === "material:facade:shaft"))).toBe(true);
+      expect(run.facadeOnlyFallbackReport.map((entry) => entry.zoneKey)).toEqual(["0:shaft", "1:shaft", "2:shaft", "3:shaft"]);
+    }
+  });
+
+  it("never files a fallback or a unity snap against a zone the face does not emit", () => {
+    for (const shaftRole of ["facade", "metal"]) {
+      for (const baseVMaxMm of [PHANTOM_TOP_MM, 12_000, 6_000, 0]) {
+        const run = aggregateOnce(baseVMaxMm, shaftRole);
+        const emitted = new Set(
+          run.walls.flatMap((wall) => wall.zones.map((zone) => `${wall.faceIndex}:${zone.materialId}`)),
+        );
+        for (const entry of [...run.facadeOnlyFallbackReport, ...run.unitySnapReport]) {
+          const faceIndex = entry.zoneKey.split(":")[0];
+          const materialId = "materialId" in entry ? entry.materialId : "material:facade:shaft";
+          expect(emitted.has(`${faceIndex}:${materialId}`)).toBe(true);
+        }
+      }
+    }
   });
 });

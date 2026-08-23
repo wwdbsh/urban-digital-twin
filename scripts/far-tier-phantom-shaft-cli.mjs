@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* global console, process */
+/* global console, process, TextDecoder */
 /**
  * The phantom-shaft-zone fix, and the record that judges it.
  *
@@ -24,6 +24,12 @@ import { createHash } from "node:crypto";
 import { existsSync, realpathSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { CAPTURE as SOURCE_CAPTURE, loadSnapshot, loadWaveLedger } from "./far-tier-bake-cli.mjs";
+import { emitTileBytes, inventoryEntry, tileAtlasName, tileGlbName } from "./far-tier-campaign-support.mjs";
+import { FALLBACK_AREA_SHARE_BAR, WAVE_IDS, bakeOneCell, loadWaveInventory, materializeOneCell, waveWiring } from "./far-tier-mass-bake-cli.mjs";
+import { FAR_TIER_BAKE_RECIPE_V4, farTierRecipeHashV4 } from "../src/release/far-tier-bake.ts";
+import { FarTierCellStop } from "../src/release/far-tier-campaign.ts";
 
 const TOOL = "far-tier-phantom-shaft-cli";
 const EVIDENCE_ID = "far-tier-hlod-phantom-shaft-20260823";
@@ -238,6 +244,343 @@ async function commandPreRegister() {
   console.log(serialize({ ok: true, wrote: `data/${EVIDENCE_ID}/pre-registration.json`, cells: stopped.length, sha256: sha256(text) }));
 }
 
+
+// ---------------------------------------------------------------------------
+// measure — bake every cell of a wave under the fix, into THIS record's root
+// ---------------------------------------------------------------------------
+
+/**
+ * WHY THIS DOES NOT CALL `far-tier-mass-bake-cli.mjs run-wave`.
+ *
+ * That verb writes `telemetry-w0N.json` into the FROZEN T004 evidence root. The
+ * frozen campaign records what the DEFECTIVE code did and is true as written;
+ * overwriting it would destroy the evidence this fix is judged against. So the
+ * production bake path is IMPORTED — `materializeOneCell`, `bakeOneCell` and
+ * `emitTileBytes`, the same three functions the campaign used, with the same
+ * `FALLBACK_AREA_SHARE_BAR` — and only the OUTPUT ROOT differs.
+ */
+async function commandMeasure(waveId) {
+  if (!WAVE_IDS.includes(waveId)) fail(`unknown wave ${waveId}; the ledger carries ${WAVE_IDS.join(", ")}.`);
+  if (!existsSync(join(evidenceRoot, "pre-registration.json"))) {
+    fail("no pre-registration.json in this evidence root. The prediction is written before the measurement, never after it.");
+  }
+  const wiring = waveWiring(waveId);
+  const snapshot = await loadSnapshot();
+  const { ledger, checksumSha256: ledgerChecksumSha256 } = await loadWaveLedger();
+  snapshot.ledgerChecksumSha256 = ledgerChecksumSha256;
+  const waveInventory = await loadWaveInventory(wiring);
+
+  // The FROZEN per-wave inventory of the 840 already-baked tiles, pinned.
+  const frozenPath = join(repositoryRoot, "data", "far-tier-hlod-mass-20260819", `inventory-${waveId}.json`);
+  const frozenText = await readFile(frozenPath, "utf8");
+  const frozenDigest = sha256(frozenText);
+  if (frozenDigest !== BOUND_TO.waveInventories[waveId]) {
+    fail(`inventory-${waveId}.json is ${frozenDigest}, not the pinned ${BOUND_TO.waveInventories[waveId]}.`);
+  }
+  const frozen = new Map(JSON.parse(frozenText).entries.map((entry) => [entry.cellId, entry]));
+
+  const cells = ledger.cells.filter((cell) => /-(w\d{2})-/u.exec(cell.cellId)?.[1] === waveId);
+  if (cells.length !== wiring.declaredCellCount) {
+    fail(`wave ${waveId} has ${cells.length} ledger cells but the shipped registry declares ${wiring.declaredCellCount}.`);
+  }
+
+  const payloadWaveRoot = join(repositoryRoot, "artifacts", EVIDENCE_ID, "payloads", waveId);
+  await mkdir(payloadWaveRoot, { recursive: true });
+
+  const rows = [];
+  const stops = [];
+  const started = Date.now();
+  for (const cell of cells) {
+    const context = materializeOneCell(snapshot, cell, wiring, waveInventory);
+    let result;
+    try {
+      result = bakeOneCell(context, cell);
+    } catch (error) {
+      if (error instanceof FarTierCellStop) {
+        stops.push({ cellId: cell.cellId, code: error.code, message: error.message, detail: error.detail });
+        continue;
+      }
+      throw error;
+    }
+    const emitted = emitTileBytes(context, cell, result.bake, {
+      recipeId: FAR_TIER_BAKE_RECIPE_V4.recipeId,
+      recipeSha256: farTierRecipeHashV4(),
+      capture: SOURCE_CAPTURE,
+    });
+    await writeFile(join(payloadWaveRoot, tileGlbName(cell.cellId)), emitted.glbBytes);
+    await writeFile(join(payloadWaveRoot, tileAtlasName(cell.cellId)), emitted.atlasBytes);
+
+    const prior = frozen.get(cell.cellId) ?? null;
+    rows.push({
+      cellId: cell.cellId,
+      wasFrozen: prior !== null,
+      byteIdentity: prior === null
+        ? "NEW-TILE"
+        : (prior.glbSha256 === emitted.glbSha256
+          && prior.atlasSha256 === emitted.atlasSha256
+          && prior.glbByteSize === emitted.glbByteSize
+          && prior.atlasByteSize === emitted.atlasByteSize ? "IDENTICAL" : "MISMATCH"),
+      glbSha256: emitted.glbSha256,
+      glbByteSize: emitted.glbByteSize,
+      atlasSha256: emitted.atlasSha256,
+      atlasByteSize: emitted.atlasByteSize,
+      fallbackZoneCount: result.bake.telemetry.fallbackZoneCount,
+      fallbackAreaShare: result.bake.telemetry.fallbackAreaShare,
+      unitySnapCount: result.bake.telemetry.unitySnapCount,
+      atlasPixels: result.bake.telemetry.atlasPixels,
+      wallAreaSquareMeters: result.bake.telemetry.wallAreaSquareMeters,
+      entry: inventoryEntry(cell, result.bake, emitted),
+    });
+  }
+
+  const mismatches = rows.filter((row) => row.byteIdentity === "MISMATCH");
+  const record = {
+    schemaVersion: "1.0",
+    recordId: `${EVIDENCE_ID}:measure-${waveId}`,
+    artifact: "far-tier-phantom-shaft-wave-measurement",
+    capturedAt: null,
+    capturedAtStatement: "NULL BY CONSTRUCTION.",
+    waveId,
+    recipeId: FAR_TIER_BAKE_RECIPE_V4.recipeId,
+    recipeSha256: farTierRecipeHashV4(),
+    barUnchanged: FALLBACK_AREA_SHARE_BAR,
+    parentLedgerChecksumSha256: ledgerChecksumSha256,
+    frozenInventorySha256: frozenDigest,
+    ledgerCellCount: cells.length,
+    bakedCellCount: rows.length,
+    honestStopCount: stops.length,
+    honestStops: stops,
+    byteIdentity: {
+      previouslyBaked: rows.filter((row) => row.wasFrozen).length,
+      identical: rows.filter((row) => row.byteIdentity === "IDENTICAL").length,
+      mismatched: mismatches.length,
+      newTiles: rows.filter((row) => row.byteIdentity === "NEW-TILE").length,
+      mismatchedCells: mismatches.map((row) => row.cellId),
+    },
+    elapsedSeconds: round((Date.now() - started) / 1_000, 1),
+    cells: rows,
+  };
+  await mkdir(evidenceRoot, { recursive: true });
+  const text = serialize(record);
+  await writeFile(join(evidenceRoot, `measure-${waveId}.json`), text);
+  await writeFile(join(evidenceRoot, `measure-${waveId}.sha256`), `${sha256(text)}  measure-${waveId}.json\n`);
+  console.log(serialize({
+    ok: mismatches.length === 0,
+    waveId,
+    cells: cells.length,
+    baked: rows.length,
+    stops: stops.length,
+    byteIdentity: record.byteIdentity,
+    elapsedSeconds: record.elapsedSeconds,
+    sha256: sha256(text),
+  }));
+  if (mismatches.length > 0) fail(`${mismatches.length} previously-baked tile(s) in ${waveId} did NOT reproduce byte-identically. STOP.`);
+}
+
+const round = (value, digits) => Number(value.toFixed(digits));
+
+// ---------------------------------------------------------------------------
+// verify — roll the six wave measurements up and judge them against P1-P6
+// ---------------------------------------------------------------------------
+
+/** Decoded GPU bytes of one tile's geometry, read from the GLB the bake wrote. */
+function geometryGpuBytesOfGlb(bytes) {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  if (view.getUint32(0, true) !== 0x46546c67) throw new Error("not a GLB");
+  const jsonLength = view.getUint32(12, true);
+  const json = JSON.parse(new TextDecoder().decode(bytes.subarray(20, 20 + jsonLength)));
+  let vertexCount = 0;
+  let indexCount = 0;
+  for (const mesh of json.meshes ?? []) {
+    for (const primitive of mesh.primitives ?? []) {
+      vertexCount += json.accessors[primitive.attributes.POSITION].count;
+      indexCount += json.accessors[primitive.indices].count;
+    }
+  }
+  // Exactly `farTierGeometryGpuBytes`: POSITION+TEXCOORD_0 float32 on unshared
+  // vertices (12+8) plus uint32 indices. No NORMAL is emitted, so none counted.
+  return { vertexCount, indexCount, bytes: vertexCount * 20 + indexCount * 4 };
+}
+
+const GPU_TEXEL_BYTES = 4;
+const MIP_CHAIN_MULTIPLIER = 4 / 3;
+const atlasGpuBytesOf = (atlasPixels) => Math.round(atlasPixels * atlasPixels * GPU_TEXEL_BYTES * MIP_CHAIN_MULTIPLIER);
+
+/** The two frozen ceilings, quoted with their units so they cannot be mixed. */
+const CEILINGS = {
+  gpu: { name: "FAR_TIER_BUDGET_CONTRACT.maxResidentTotalGpuBytes", value: 390_295_058, unit: "DECODED GPU BYTES", atlasPart: 291_984_434, geometryPart: 98_310_624 },
+  file: { name: "FAR_TIER_RUNTIME_BUDGETS_V2.maxCachedBytes", value: 288 * 1024 * 1024, unit: "DECLARED FILE BYTES", currentFor840: 258_644_848 },
+};
+
+async function commandVerify() {
+  const preText = await readFile(join(evidenceRoot, "pre-registration.json"), "utf8");
+  const pre = JSON.parse(preText);
+  const waves = [];
+  for (const waveId of WAVE_IDS) {
+    const text = await readFile(join(evidenceRoot, `measure-${waveId}.json`), "utf8").catch(() => null);
+    if (text === null) fail(`measure-${waveId}.json is absent; every wave must be measured before the roll-up.`);
+    waves.push(JSON.parse(text));
+  }
+
+  const allCells = waves.flatMap((wave) => wave.cells);
+  const stops = waves.flatMap((wave) => wave.honestStops);
+  const stoppedBefore = new Map(pre.stoppedCells.cells.map((cell) => [cell.cellId, cell]));
+
+  // ---- P3: the 840 must be byte-identical -------------------------------
+  const previouslyBaked = allCells.filter((cell) => cell.wasFrozen);
+  const mismatched = previouslyBaked.filter((cell) => cell.byteIdentity !== "IDENTICAL");
+  const p3 = {
+    claim: "All 840 already-baked tiles reproduce BYTE-IDENTICALLY under the fix.",
+    previouslyBakedCount: previouslyBaked.length,
+    identical: previouslyBaked.length - mismatched.length,
+    mismatched: mismatched.length,
+    mismatchedCells: mismatched.map((cell) => cell.cellId),
+    verdict: previouslyBaked.length === 840 && mismatched.length === 0 ? "PASS" : "FAIL",
+  };
+
+  // ---- P1: the architect's three anchors ---------------------------------
+  const formerlyStopped = allCells
+    .filter((cell) => stoppedBefore.has(cell.cellId))
+    .map((cell) => ({
+      cellId: cell.cellId,
+      shortId: stoppedBefore.get(cell.cellId).shortId,
+      priorShare: stoppedBefore.get(cell.cellId).priorShare,
+      residualShare: cell.fallbackAreaShare,
+      residualZoneCount: cell.fallbackZoneCount,
+      underBar: cell.fallbackAreaShare <= FALLBACK_AREA_SHARE_BAR,
+    }))
+    .sort((left, right) => right.residualShare - left.residualShare || left.shortId.localeCompare(right.shortId));
+
+  const stillStopped = stops.filter((stop) => stoppedBefore.has(stop.cellId));
+  const worst = formerlyStopped[0] ?? null;
+  const atExactlyZero = formerlyStopped.filter((row) => row.residualShare === 0);
+  const p1 = {
+    provenance: pre.predictions.P1.provenance,
+    anchors: [
+      {
+        claim: "All 43 come in UNDER the unchanged 0.05 bar.",
+        measured: `${formerlyStopped.filter((row) => row.underBar).length} of ${formerlyStopped.length} under bar, ${stillStopped.length} still stopped`,
+        verdict: formerlyStopped.length === 43 && formerlyStopped.every((row) => row.underBar) ? "PASS" : "FAIL",
+      },
+      {
+        claim: "The worst residual share is w04-000572 at 0.03138.",
+        measured: worst ? `${worst.shortId} at ${round(worst.residualShare, 8)}` : "no cell baked",
+        verdict: worst && worst.shortId === "w04-000572" && round(worst.residualShare, 5) === 0.03138 ? "PASS" : "FAIL",
+      },
+      {
+        claim: "EXACTLY 17 of the 43 land at a residual share of exactly 0.0.",
+        measured: `${atExactlyZero.length} at exactly 0.0`,
+        verdict: atExactlyZero.length === 17 ? "PASS" : "FAIL",
+      },
+    ],
+    barUnchanged: FALLBACK_AREA_SHARE_BAR,
+    table: formerlyStopped.map((row) => ({ ...row, priorShare: round(row.priorShare, 8), residualShare: round(row.residualShare, 8) })),
+  };
+
+  // ---- P2: the stop classes ----------------------------------------------
+  const byClass = {};
+  for (const stop of stops) byClass[stop.code] = (byClass[stop.code] ?? 0) + 1;
+  const p2 = {
+    claim: "packing-infeasible, zone-aggregate-out-of-range, no-bakeable-face and zone-aggregate-missing all stay 0.",
+    honestStopsByClass: byClass,
+    totalStops: stops.length,
+    verdict: stops.length === 0 ? "PASS" : "FAIL",
+  };
+
+  // ---- P4: the disclosed telemetry correction ----------------------------
+  const frozenFallback = [];
+  for (const waveId of WAVE_IDS) {
+    const frozen = JSON.parse(await readFile(join(repositoryRoot, "data", "far-tier-hlod-mass-20260819", `telemetry-${waveId}.json`), "utf8"));
+    for (const cell of frozen.cells) frozenFallback.push({ cellId: cell.cellId, fallbackZoneCount: cell.fallbackZoneCount, fallbackAreaShare: cell.fallbackAreaShare, unitySnapCount: cell.unitySnapCount });
+  }
+  const frozenById = new Map(frozenFallback.map((row) => [row.cellId, row]));
+  const changed = previouslyBaked.filter((cell) => {
+    const before = frozenById.get(cell.cellId);
+    return before && (before.fallbackZoneCount !== cell.fallbackZoneCount || before.unitySnapCount !== cell.unitySnapCount);
+  });
+  const p4 = {
+    claim: "The TELEMETRY of already-baked cells changes; their BYTES do not. Disclosed in advance.",
+    frozenCellsWithAnyFallbackZone: frozenFallback.filter((row) => row.fallbackZoneCount > 0).length,
+    nowWithAnyFallbackZone: previouslyBaked.filter((cell) => cell.fallbackZoneCount > 0).length,
+    cellsWhoseTelemetryMoved: changed.length,
+    frozenTotalUnitySnaps: frozenFallback.reduce((sum, row) => sum + row.unitySnapCount, 0),
+    nowTotalUnitySnaps: previouslyBaked.reduce((sum, cell) => sum + cell.unitySnapCount, 0),
+    frozenRecordsEdited: false,
+    note: "The frozen telemetry-w0N.json records are NOT edited. They truthfully record what the defective code did and are amended by statement.",
+  };
+
+  // ---- P5: decoded GPU bytes, all 883 leaves resident ---------------------
+  let atlasGpu = 0;
+  let geometryGpu = 0;
+  let vertexCount = 0;
+  const atlasHistogram = {};
+  for (const wave of waves) {
+    for (const cell of wave.cells) {
+      atlasGpu += atlasGpuBytesOf(cell.atlasPixels);
+      atlasHistogram[cell.atlasPixels] = (atlasHistogram[cell.atlasPixels] ?? 0) + 1;
+      const glb = await readFile(join(repositoryRoot, "artifacts", EVIDENCE_ID, "payloads", wave.waveId, tileGlbName(cell.cellId)));
+      const geometry = geometryGpuBytesOfGlb(new Uint8Array(glb));
+      geometryGpu += geometry.bytes;
+      vertexCount += geometry.vertexCount;
+    }
+  }
+  const totalGpu = atlasGpu + geometryGpu;
+  const p5 = {
+    claim: "Every camera pose selects a SUBSET of the shipped leaves, so 'all 883 resident at once' bounds every pose. That total must stay below the frozen ceiling.",
+    unit: CEILINGS.gpu.unit,
+    tiles: allCells.length,
+    atlasGpuBytes: atlasGpu,
+    geometryGpuBytes: geometryGpu,
+    totalGpuBytes: totalGpu,
+    vertexCount,
+    actualAtlasPixelHistogram: atlasHistogram,
+    ceiling: CEILINGS.gpu,
+    headroomBytes: CEILINGS.gpu.value - totalGpu,
+    verdict: totalGpu < CEILINGS.gpu.value ? "PASS" : "FAIL",
+    stopRule: "At or above the ceiling: NO PROMOTION. The bar is not moved.",
+  };
+
+  // ---- P6: declared file bytes -------------------------------------------
+  const fileBytes = allCells.reduce((sum, cell) => sum + cell.glbByteSize + cell.atlasByteSize, 0);
+  const p6 = {
+    claim: "The declared FILE bytes of all 883 tiles must fit the runtime cache ceiling.",
+    unit: CEILINGS.file.unit,
+    declaredFileBytes: fileBytes,
+    ceiling: CEILINGS.file,
+    headroomBytes: CEILINGS.file.value - fileBytes,
+    verdict: fileBytes <= CEILINGS.file.value ? "PASS" : "FAIL",
+    unitWarning: "DECLARED FILE BYTES. Never comparable with P5, which is decoded GPU bytes.",
+  };
+
+  const verdicts = { P1: p1.anchors.every((anchor) => anchor.verdict === "PASS") ? "PASS" : "FAIL", P2: p2.verdict, P3: p3.verdict, P4: "DISCLOSED", P5: p5.verdict, P6: p6.verdict };
+  const record = {
+    schemaVersion: "1.0",
+    recordId: `${EVIDENCE_ID}:verification`,
+    artifact: "far-tier-phantom-shaft-verification",
+    capturedAt: null,
+    capturedAtStatement: "NULL BY CONSTRUCTION.",
+    preRegistrationSha256: sha256(preText),
+    barUnchanged: FALLBACK_AREA_SHARE_BAR,
+    recipeSha256: farTierRecipeHashV4(),
+    totals: { ledgerCells: waves.reduce((sum, wave) => sum + wave.ledgerCellCount, 0), baked: allCells.length, stops: stops.length },
+    verdicts,
+    P1: p1,
+    P2: p2,
+    P3: p3,
+    P4: p4,
+    P5: p5,
+    P6: p6,
+    notClaimedHere: [
+      "No visual or acceptance claim is made here. Nothing in this record reopens the goal acceptance record.",
+      "P1's second and third anchors are the only genuinely pre-registered numeric predictions; the other forty rows are measured, not predicted.",
+    ],
+  };
+  const text = serialize(record);
+  await writeFile(join(evidenceRoot, "verification.json"), text);
+  await writeFile(join(evidenceRoot, "verification.sha256"), `${sha256(text)}  verification.json\n`);
+  console.log(serialize({ ok: Object.values(verdicts).every((verdict) => verdict === "PASS" || verdict === "DISCLOSED"), verdicts, totals: record.totals, P1: p1.anchors, P5: { totalGpuBytes: p5.totalGpuBytes, ceiling: CEILINGS.gpu.value, headroomBytes: p5.headroomBytes, verdict: p5.verdict }, P6: { declaredFileBytes: p6.declaredFileBytes, ceiling: CEILINGS.file.value, headroomBytes: p6.headroomBytes, verdict: p6.verdict }, sha256: sha256(text) }));
+}
+
 // ---------------------------------------------------------------------------
 
 function isDirectEntryPoint() {
@@ -252,6 +595,9 @@ function isDirectEntryPoint() {
 
 if (isDirectEntryPoint()) {
   const command = process.argv[2];
+  const flag = (name) => { const index = process.argv.indexOf(`--${name}`); return index >= 0 ? process.argv[index + 1] : null; };
   if (command === "pre-register") await commandPreRegister();
-  else fail("usage: far-tier-phantom-shaft-cli.mjs pre-register");
+  else if (command === "measure") await commandMeasure(flag("wave"));
+  else if (command === "verify") await commandVerify();
+  else fail("usage: far-tier-phantom-shaft-cli.mjs <pre-register|measure|verify> [--wave wXX]");
 }
