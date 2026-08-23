@@ -258,23 +258,20 @@ export const FAR_TIER_RUNTIME_BUDGETS_V3 = {
  *
  * A test re-derives this from the committed file, so it cannot drift silently.
  */
-export const FAR_TIER_PAYLOAD_INVENTORY_SHA256 = "92c19acbb40a1a5e2c79f091e00431dc2e45a84f060b606154da2c1f3784a0cd" as const;
+export const FAR_TIER_PAYLOAD_INVENTORY_SHA256 = "8aa2a825c36c87bf86fe2d99acb0853c1a03950020e45d710f5a2afe160220ea" as const;
 
 /**
- * The pin this one replaced, kept so the swap is legible in the code as well as
- * in the activation record.
+ * EVERY pin this one replaced, oldest first, so the swaps are legible in the
+ * code as well as in the activation records.
  *
- * It declared the 840-TILE promotion — the island minus the 43 cells the bake
- * honest-stopped on. Restoring those 43 swaps the whole tier's declaration in a
- * single token, and a reader who finds only the new value has no way to tell
- * that it moved.
- */
-export const FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSOR = "cf8e26480eecc91f2e7b473d217a0d3551d0be59b4d8da39ee1217a6e0538f0a" as const;
-
-/**
- * The pin BEFORE that one: the ONE-CELL T003 inventory. Kept because the tier
- * has now been re-declared twice, and a single `_PREDECESSOR` slot would quietly
- * drop the first swap the next time one happens.
+ *   [0] the ONE-CELL T003 inventory
+ *   [1] the 840-TILE promotion — the island minus the 43 cells the bake
+ *       honest-stopped on before the phantom shaft zone was fixed
+ *
+ * A LIST, NOT A SINGLE SLOT. The tier has now been re-declared twice. A scalar
+ * `_PREDECESSOR` holds exactly one swap, so the second re-declaration silently
+ * overwrote the first and the T003 pin would have vanished from the code with
+ * nothing failing. Each entry is re-derived from its committed file by test.
  */
 export const FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSORS = [
   "9c46f62a1ac9a662f768facd716f8d04ecf960afaf3ae0f536eb216bb3e6bd24",

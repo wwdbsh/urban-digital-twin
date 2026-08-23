@@ -10,6 +10,14 @@
  * for an island nobody sealed.
  *
  * Usage: node --experimental-strip-types scripts/far-tier-promote-cli.mjs merge
+ *
+ * NOTE (2026-08-23). `mergeFarTierWaveInventories` now takes the derived-from
+ * PATH alongside its digest, and emits `inventoryRecord` per wave, because an
+ * earlier version hardcoded T004's campaign-summary path while the caller
+ * supplied a different record's digest. This verb passes its own paths, so it
+ * is correct — but its output shape now carries that extra field, and it would
+ * therefore NOT reproduce the superseded 840-tile record byte for byte. That
+ * record stands as committed; it is not regenerated.
  */
 
 import { readFile, mkdir, writeFile } from "node:fs/promises";
@@ -52,7 +60,7 @@ async function commandMerge() {
     if (inventory.json.recipeSha256 !== summary.json.recipe.recipeSha256) {
       fail(`wave ${waveId} was baked under recipe ${inventory.json.recipeSha256}, not the campaign's ${summary.json.recipe.recipeSha256}; a promotion must not mix recipes.`);
     }
-    waves.push({ waveId, entries: inventory.json.entries, recordSha256: inventory.sha256 });
+    waves.push({ waveId, entries: inventory.json.entries, recordPath: `data/${CAMPAIGN_ID}/inventory-${waveId}.json`, recordSha256: inventory.sha256 });
     for (const stop of telemetry.json.honestStops) honestStopCellIds.push(stop.cellId);
   }
 
@@ -65,7 +73,8 @@ async function commandMerge() {
       ledgerChecksumSha256: summary.json.parentLedgerChecksumSha256,
       recipeId: summary.json.recipe.recipeId,
       recipeSha256: summary.json.recipe.recipeSha256,
-      campaignSummarySha256: summary.sha256,
+      inventoryId: PROMOTION_ID,
+      derivedFromRecord: { path: `data/${CAMPAIGN_ID}/campaign-summary.json`, sha256: summary.sha256 },
     });
   } catch (error) {
     fail(error.message);

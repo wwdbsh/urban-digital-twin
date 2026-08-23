@@ -2,43 +2,49 @@
  "schemaVersion": "1.0",
  "inventoryId": "far-tier-hlod-promotion-20260823",
  "derivedFrom": {
-  "record": "data/far-tier-hlod-mass-20260819/campaign-summary.json",
-  "recordSha256": "17d2961d145d0a29353c51b5afb8edfb05aa7acc5d1511c1b4ae5f9a00a1b232",
+  "record": "data/far-tier-hlod-phantom-shaft-20260823/verification.json",
+  "recordSha256": "188dc636db246ab9e21cacd6e25efa9bd9e909436cf821c62c2050c26a9887f6",
   "waves": [
    {
     "waveId": "w00",
     "entries": 1,
-    "inventorySha256": "92f7d64565a9adeee627c54abdc90eb781b4528adae7799679b1655b9d1334c4"
+    "inventoryRecord": "data/far-tier-hlod-phantom-shaft-20260823/inventory-w00.json",
+    "inventorySha256": "d942e62e67daab18380d46ecfe09bc97e01a34207d7bc1787b0350025107477d"
    },
    {
     "waveId": "w01",
     "entries": 149,
-    "inventorySha256": "4df2bb3f6f89e618b04528fc7d2bd0b0e8c75cc92cba77f583f6ee55c7311521"
+    "inventoryRecord": "data/far-tier-hlod-phantom-shaft-20260823/inventory-w01.json",
+    "inventorySha256": "a46b66126a1c387de1e62f66741526b003e8edea6bcdff1437e5b679a0ee4a07"
    },
    {
     "waveId": "w02",
     "entries": 126,
-    "inventorySha256": "f6582717bd6b45067d03085fa4a1c73aa3f757bab4f99046767152559205e4e1"
+    "inventoryRecord": "data/far-tier-hlod-phantom-shaft-20260823/inventory-w02.json",
+    "inventorySha256": "c32332766e0e3b52474aaa6fc8c1a991870ae2b409b66e320102bfaf57365c7a"
    },
    {
     "waveId": "w03",
     "entries": 176,
-    "inventorySha256": "134a32c0167d865a9be44ca8508601e11afe373d0445cd200e1ff6882b88a60d"
+    "inventoryRecord": "data/far-tier-hlod-phantom-shaft-20260823/inventory-w03.json",
+    "inventorySha256": "8b1b804e8851455b24226f2d289c980935f68b8c51ab686a76f70c0e03a969cd"
    },
    {
     "waveId": "w04",
     "entries": 249,
-    "inventorySha256": "02dff35af5c00f08b4147b0e5aaa51ee7a04cf35183f00e45eaef22381748d42"
+    "inventoryRecord": "data/far-tier-hlod-phantom-shaft-20260823/inventory-w04.json",
+    "inventorySha256": "fc57276f3782fae1dc4de9ce3e19afcd9fb438918ba2d7e6a6bc7446b3ad7d3a"
    },
    {
     "waveId": "w05",
     "entries": 182,
-    "inventorySha256": "aa41290a48ba85832427b8ba52b5e2dd61ea54297d294c8cc435812339780be8"
+    "inventoryRecord": "data/far-tier-hlod-phantom-shaft-20260823/inventory-w05.json",
+    "inventorySha256": "22d2f4c708124836f3c820154e828ef76a8c14e38545661389755c97b4a610fa"
    }
   ],
   "recipeId": "far-tier-hlod-bake-v4",
   "recipeSha256": "fd950a77f1c57cb2b7238b588aa11cd020ace1f15c1448438dfd0f235e10412c",
-  "statement": "DERIVED FROM COMMITTED TEXT, NOT FROM A DIRECTORY LISTING. Every entry is copied from a sealed per-wave inventory whose own replay verified it; nothing here was read off the staged bytes."
+  "statement": "DERIVED FROM COMMITTED TEXT, NOT FROM A DIRECTORY LISTING. Every entry is copied from a sealed per-wave inventory whose own replay verified it; nothing here was read off the staged bytes. Every path above is paired with the digest of that same path's bytes."
  },
  "coverage": {
   "ledgerCellCount": 883,

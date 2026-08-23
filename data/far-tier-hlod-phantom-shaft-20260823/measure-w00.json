@@ -21,7 +21,7 @@
     "newTiles": 0,
     "mismatchedCells": []
   },
-  "elapsedSeconds": 1.9,
+  "elapsedSeconds": 1.8,
   "cells": [
     {
       "cellId": "manhattan-exterior-cell-w00-000000-block-00835",
@@ -35,6 +35,9 @@
       "fallbackAreaShare": 0.0003505928321120246,
       "unitySnapCount": 0,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 208568.65853670376,
       "entry": {
         "cellId": "manhattan-exterior-cell-w00-000000-block-00835",

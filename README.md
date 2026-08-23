@@ -460,6 +460,7 @@ default until the two-LOD promotion. **They are no longer what ships**; the six
   not the ceiling's unit; under that same proxy this set would be over. It fits
   because every measured term came in under the model that set the bar, not
   because there is room. Any further growth needs the bar re-derived first.
+  Tracked as residual **R17**.
 - **The adopted hue bar `A3'' = 0.035` is post-hoc.** It supersedes a
   pre-registered `A3' = 0.032`. Recipe v3 scores 6 of 6 against it, and anyone
   comparing these numbers with the original pre-registration needs to know the

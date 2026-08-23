@@ -22,7 +22,6 @@ import {
 import {
   FAR_TIER_FAILURE_DETAIL_LIMIT,
   FAR_TIER_PAYLOAD_INVENTORY_SHA256,
-  FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSOR,
   FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSORS,
   FAR_TIER_RUNTIME_BUDGETS,
   FAR_TIER_RUNTIME_BUDGETS_V2,
@@ -44,16 +43,13 @@ describe("the promoted inventory is what the runtime pins", () => {
   });
 
   it("moved the pin, and says what it moved from", () => {
-    expect(FAR_TIER_PAYLOAD_INVENTORY_SHA256).not.toBe(FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSOR);
-    // The predecessor is the digest of the 840-tile promotion this one replaced,
-    // so the constant is a fact about history rather than a comment about it.
-    expect(sha256HexSync(readText("data/far-tier-hlod-promotion-20260819/promoted-inventory.json")))
-      .toBe(FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSOR);
-    // The tier has been re-declared twice. Both earlier pins are still
-    // re-derivable, so neither swap can be quietly dropped.
+    // The tier has been re-declared twice, and BOTH earlier pins are still
+    // re-derivable from their committed files, so neither swap can be dropped.
+    expect(FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSORS).not.toContain(FAR_TIER_PAYLOAD_INVENTORY_SHA256);
     expect(sha256HexSync(readText("data/far-tier-hlod-runtime-20260818/payload-inventory.json")))
       .toBe(FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSORS[0]);
-    expect(FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSORS[1]).toBe(FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSOR);
+    expect(sha256HexSync(readText("data/far-tier-hlod-promotion-20260819/promoted-inventory.json")))
+      .toBe(FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSORS[1]);
   });
 
   it("carries 883 unique cells and closes 883 + 0 against the ledger", () => {
@@ -108,15 +104,22 @@ describe("the merge refuses rather than papering over", () => {
     ledgerChecksumSha256: "c".repeat(64),
     recipeId: "far-tier-hlod-bake-v4",
     recipeSha256: "d".repeat(64),
-    campaignSummarySha256: "e".repeat(64),
+    inventoryId: "far-tier-hlod-promotion-test",
+    derivedFromRecord: { path: "data/test/derived-from.json", sha256: "e".repeat(64) },
   };
+  const wave = (waveId: string, cellIds: string[]) => ({
+    waveId,
+    entries: cellIds.map(entry),
+    recordPath: `data/test/inventory-${waveId}.json`,
+    recordSha256: "f".repeat(64),
+  });
 
   it("refuses a cell declared by two waves", () => {
     expect(() => mergeFarTierWaveInventories({
       ...base,
       waves: [
-        { waveId: "w01", entries: [entry("cell:a")], recordSha256: "f".repeat(64) },
-        { waveId: "w02", entries: [entry("cell:a")], recordSha256: "f".repeat(64) },
+        wave("w01", ["cell:a"]),
+        wave("w02", ["cell:a"]),
       ],
     })).toThrow(FarTierMergeError);
   });
@@ -125,7 +128,7 @@ describe("the merge refuses rather than papering over", () => {
     expect(() => mergeFarTierWaveInventories({
       ...base,
       honestStopCellIds: ["cell:a"],
-      waves: [{ waveId: "w01", entries: [entry("cell:a"), entry("cell:b")], recordSha256: "f".repeat(64) }],
+      waves: [wave("w01", ["cell:a", "cell:b"])],
     })).toThrow(/both baked and recorded as honest stops/u);
   });
 
@@ -133,16 +136,33 @@ describe("the merge refuses rather than papering over", () => {
     expect(() => mergeFarTierWaveInventories({
       ...base,
       ledgerCellCount: 99,
-      waves: [{ waveId: "w01", entries: [entry("cell:a"), entry("cell:b")], recordSha256: "f".repeat(64) }],
+      waves: [wave("w01", ["cell:a", "cell:b"])],
     })).toThrow(/coverage it does not have/u);
   });
 
   it("accepts the well-formed case, so the refusals above are not vacuous", () => {
     const merged = mergeFarTierWaveInventories({
       ...base,
-      waves: [{ waveId: "w01", entries: [entry("cell:a"), entry("cell:b")], recordSha256: "f".repeat(64) }],
+      waves: [wave("w01", ["cell:a", "cell:b"])],
     });
     expect(merged.entries).toHaveLength(2);
+    expect(merged.inventoryId).toBe("far-tier-hlod-promotion-test");
+  });
+
+  it("PAIRS every declared path with the digest of that same path's bytes", () => {
+    // The defect this shape exists to prevent: an earlier version hardcoded
+    // T004's campaign-summary path while the caller passed a different record's
+    // digest, so a pinned artifact named one record and hashed another. Both
+    // fields were individually well-formed, so nothing could catch it.
+    const merged = mergeFarTierWaveInventories({ ...base, waves: [wave("w01", ["cell:a", "cell:b"])] });
+    const derivedFrom = merged.derivedFrom as {
+      record: string; recordSha256: string;
+      waves: Array<{ inventoryRecord: string; inventorySha256: string }>;
+    };
+    expect(derivedFrom.record).toBe("data/test/derived-from.json");
+    expect(derivedFrom.recordSha256).toBe("e".repeat(64));
+    expect(derivedFrom.waves[0]!.inventoryRecord).toBe("data/test/inventory-w01.json");
+    expect(derivedFrom.waves[0]!.inventorySha256).toBe("f".repeat(64));
   });
 });
 

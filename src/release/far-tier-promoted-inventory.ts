@@ -50,6 +50,8 @@ export function farTierInventoryDigest(inventory: FarTierPromotedInventory): str
 export interface FarTierWaveInventoryInput {
   readonly waveId: string;
   readonly entries: readonly FarTierInventoryEntry[];
+  /** The committed path of THIS wave's inventory, and the digest of those bytes. */
+  readonly recordPath: string;
   readonly recordSha256: string;
 }
 
@@ -60,7 +62,20 @@ export interface FarTierMergeInput {
   readonly ledgerChecksumSha256: string;
   readonly recipeId: string;
   readonly recipeSha256: string;
-  readonly campaignSummarySha256: string;
+  /** The id this promotion is published under. */
+  readonly inventoryId: string;
+  /**
+   * The record this promotion derives from: its committed PATH and the digest
+   * of THAT path's bytes.
+   *
+   * PATH AND DIGEST TRAVEL TOGETHER, and that is the whole point of the shape.
+   * An earlier version hardcoded the path to T004's campaign summary while the
+   * caller passed whatever digest it liked, so a later promotion published a
+   * provenance block naming one record and hashing another. Nothing could catch
+   * it: both fields were individually well-formed. Pairing them in one object
+   * makes the mismatch impossible to express.
+   */
+  readonly derivedFromRecord: { readonly path: string; readonly sha256: string };
 }
 
 export class FarTierMergeError extends Error {
@@ -105,14 +120,19 @@ export function mergeFarTierWaveInventories(input: FarTierMergeInput): FarTierPr
   // the bytes are pinned, so the order is part of the artifact.
   return {
     schemaVersion: "1.0",
-    inventoryId: "far-tier-hlod-promotion-20260819",
+    inventoryId: input.inventoryId,
     derivedFrom: {
-      record: "data/far-tier-hlod-mass-20260819/campaign-summary.json",
-      recordSha256: input.campaignSummarySha256,
-      waves: input.waves.map((wave) => ({ waveId: wave.waveId, entries: wave.entries.length, inventorySha256: wave.recordSha256 })),
+      record: input.derivedFromRecord.path,
+      recordSha256: input.derivedFromRecord.sha256,
+      waves: input.waves.map((wave) => ({
+        waveId: wave.waveId,
+        entries: wave.entries.length,
+        inventoryRecord: wave.recordPath,
+        inventorySha256: wave.recordSha256,
+      })),
       recipeId: input.recipeId,
       recipeSha256: input.recipeSha256,
-      statement: "DERIVED FROM COMMITTED TEXT, NOT FROM A DIRECTORY LISTING. Every entry is copied from a sealed per-wave inventory whose own replay verified it; nothing here was read off the staged bytes.",
+      statement: "DERIVED FROM COMMITTED TEXT, NOT FROM A DIRECTORY LISTING. Every entry is copied from a sealed per-wave inventory whose own replay verified it; nothing here was read off the staged bytes. Every path above is paired with the digest of that same path's bytes.",
     },
     coverage: {
       ledgerCellCount: input.ledgerCellCount,

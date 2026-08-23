@@ -21,7 +21,7 @@
     "newTiles": 17,
     "mismatchedCells": []
   },
-  "elapsedSeconds": 250.8,
+  "elapsedSeconds": 251.9,
   "cells": [
     {
       "cellId": "manhattan-exterior-cell-w05-000701-15-9651-8954",
@@ -35,6 +35,9 @@
       "fallbackAreaShare": 0.0000495589405555168,
       "unitySnapCount": 5,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.25,
+      "achievedTexelRatio": 0.25,
       "wallAreaSquareMeters": 463829.08313516155,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000701-15-9651-8954",
@@ -402,6 +405,9 @@
       "fallbackAreaShare": 0.0015864626613073375,
       "unitySnapCount": 7,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 126661.17345628786,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000702-16-19302-17910",
@@ -593,6 +599,9 @@
       "fallbackAreaShare": 0.0004134191390938617,
       "unitySnapCount": 5,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.3535533905932738,
+      "achievedTexelRatio": 0.3535533905932738,
       "wallAreaSquareMeters": 233348.79768388622,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000703-16-19303-17910",
@@ -880,6 +889,9 @@
       "fallbackAreaShare": 0.00044594530585508936,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 207781.85254351326,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000704-16-19302-17911",
@@ -1155,6 +1167,9 @@
       "fallbackAreaShare": 0.000636539299471685,
       "unitySnapCount": 1,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.3535533905932738,
+      "achievedTexelRatio": 0.3535533905932738,
       "wallAreaSquareMeters": 329342.1267571128,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000705-16-19303-17911",
@@ -1554,6 +1569,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 71278.41698642587,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000706-17-38610-35816",
@@ -1721,6 +1739,9 @@
       "fallbackAreaShare": 0.0010387387622041876,
       "unitySnapCount": 0,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 39045.79643093674,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000707-17-38611-35816",
@@ -1788,6 +1809,9 @@
       "fallbackAreaShare": 0.001191286281773058,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 62085.707437584046,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000708-17-38612-35816",
@@ -2079,6 +2103,9 @@
       "fallbackAreaShare": 0.003956461872523116,
       "unitySnapCount": 5,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 84843.1659307142,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000709-17-38613-35816",
@@ -2450,6 +2477,9 @@
       "fallbackAreaShare": 0.004408824063595454,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 51627.95702971071,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000710-17-38614-35816",
@@ -2641,6 +2671,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 0,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 34475.56622013595,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000711-17-38615-35816",
@@ -2684,6 +2717,9 @@
       "fallbackAreaShare": 0.000925750122350659,
       "unitySnapCount": 3,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 218824.8658949267,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000712-16-19304-17908",
@@ -2967,6 +3003,9 @@
       "fallbackAreaShare": 0.0026298871337973335,
       "unitySnapCount": 4,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 76792.10439816338,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000713-17-38610-35817",
@@ -3222,6 +3261,9 @@
       "fallbackAreaShare": 0.001328916771178193,
       "unitySnapCount": 3,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 64358.68558912762,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000714-17-38611-35817",
@@ -3353,6 +3395,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 0,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 35685.41018342969,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000715-17-38612-35817",
@@ -3412,6 +3457,9 @@
       "fallbackAreaShare": 0.001717815112395461,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 70392.94631983573,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000716-17-38613-35817",
@@ -3827,6 +3875,9 @@
       "fallbackAreaShare": 0.005122466389499812,
       "unitySnapCount": 1,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 55390.95285445155,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000717-17-38614-35817",
@@ -4126,6 +4177,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 41741.70526810104,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000718-17-38615-35817",
@@ -4181,6 +4235,9 @@
       "fallbackAreaShare": 0.0019619532078256263,
       "unitySnapCount": 1,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 47666.68146271711,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000719-17-38610-35818",
@@ -4300,6 +4357,9 @@
       "fallbackAreaShare": 0.007142545592389945,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 52642.84830310921,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000720-17-38611-35818",
@@ -4483,6 +4543,9 @@
       "fallbackAreaShare": 0.0018510944481675703,
       "unitySnapCount": 3,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 39118.11039682112,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000721-17-38612-35818",
@@ -4574,6 +4637,9 @@
       "fallbackAreaShare": 0.005139637584912716,
       "unitySnapCount": 6,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 82613.74503018084,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000722-17-38613-35818",
@@ -4989,6 +5055,9 @@
       "fallbackAreaShare": 0.0006501413873787067,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 78382.03124409886,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000723-17-38614-35818",
@@ -5308,6 +5377,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 5,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 60347.49169744298,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000724-17-38615-35818",
@@ -5559,6 +5631,9 @@
       "fallbackAreaShare": 0.00047883300052703156,
       "unitySnapCount": 7,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 207898.88825837226,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000725-16-19304-17909",
@@ -5882,6 +5957,9 @@
       "fallbackAreaShare": 0.0004662731999725856,
       "unitySnapCount": 0,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 65905.32624110408,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000726-17-38610-35819",
@@ -6117,6 +6195,9 @@
       "fallbackAreaShare": 0.003252674256916976,
       "unitySnapCount": 0,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 72922.01327849139,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000727-17-38611-35819",
@@ -6236,6 +6317,9 @@
       "fallbackAreaShare": 0.0021420752136506517,
       "unitySnapCount": 3,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 60000.75856222114,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000728-17-38612-35819",
@@ -6423,6 +6507,9 @@
       "fallbackAreaShare": 0.0015187301034036013,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 77989.82354587,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000729-17-38613-35819",
@@ -6730,6 +6817,9 @@
       "fallbackAreaShare": 0.004193119183844746,
       "unitySnapCount": 4,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 83090.51317290541,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000730-17-38614-35819",
@@ -7105,6 +7195,9 @@
       "fallbackAreaShare": 0.008178924920974488,
       "unitySnapCount": 1,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 45317.657530561424,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000731-17-38615-35819",
@@ -7344,6 +7437,9 @@
       "fallbackAreaShare": 0.0014633020400547537,
       "unitySnapCount": 3,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 79074.25858733119,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000732-17-38610-35820",
@@ -7619,6 +7715,9 @@
       "fallbackAreaShare": 0.0027726048892673825,
       "unitySnapCount": 4,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 86714.33133551037,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000733-17-38611-35820",
@@ -7998,6 +8097,9 @@
       "fallbackAreaShare": 0.0009701760200881159,
       "unitySnapCount": 1,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 93501.45880567092,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000734-17-38612-35820",
@@ -8181,6 +8283,9 @@
       "fallbackAreaShare": 0.0065334359010048425,
       "unitySnapCount": 3,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 63347.37433900922,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000735-17-38613-35820",
@@ -8424,6 +8529,9 @@
       "fallbackAreaShare": 0.0006891993990219212,
       "unitySnapCount": 1,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 90042.4285013138,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000736-17-38614-35820",
@@ -8851,6 +8959,9 @@
       "fallbackAreaShare": 0.0031345652216458043,
       "unitySnapCount": 1,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 84692.58310561722,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000737-17-38615-35820",
@@ -9186,6 +9297,9 @@
       "fallbackAreaShare": 0.0026558066850045237,
       "unitySnapCount": 10,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.3535533905932738,
+      "achievedTexelRatio": 0.3535533905932738,
       "wallAreaSquareMeters": 237914.7840003058,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000738-16-19304-17910",
@@ -9681,6 +9795,9 @@
       "fallbackAreaShare": 0.005435623817274206,
       "unitySnapCount": 5,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 62630.200576727184,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000739-17-38610-35821",
@@ -9904,6 +10021,9 @@
       "fallbackAreaShare": 0.002975422457801893,
       "unitySnapCount": 8,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 72649.90105467697,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000740-17-38611-35821",
@@ -10191,6 +10311,9 @@
       "fallbackAreaShare": 0.006878906146303875,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 87029.78883000102,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000741-17-38612-35821",
@@ -10590,6 +10713,9 @@
       "fallbackAreaShare": 0.0012691692544472795,
       "unitySnapCount": 0,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 72118.29420641408,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000742-17-38613-35821",
@@ -10861,6 +10987,9 @@
       "fallbackAreaShare": 0.0024118094054923524,
       "unitySnapCount": 1,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 73782.36660470518,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000743-17-38614-35821",
@@ -11104,6 +11233,9 @@
       "fallbackAreaShare": 0.001811505637159994,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 59481.855716617065,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000744-17-38615-35821",
@@ -11391,6 +11523,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 3,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 39803.24481458323,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000745-17-38608-35822",
@@ -11514,6 +11649,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 63884.06480989644,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000746-17-38609-35822",
@@ -11733,6 +11871,9 @@
       "fallbackAreaShare": 0.0005887289046523967,
       "unitySnapCount": 10,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 86964.27497849206,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000747-17-38610-35822",
@@ -11948,6 +12089,9 @@
       "fallbackAreaShare": 0.00794692454423967,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 85415.62299195725,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000748-17-38611-35822",
@@ -12359,6 +12503,9 @@
       "fallbackAreaShare": 0.007094260722884583,
       "unitySnapCount": 0,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 81281.053514446,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000749-17-38612-35822",
@@ -12718,6 +12865,9 @@
       "fallbackAreaShare": 0.003180806550221185,
       "unitySnapCount": 3,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 40174.42011488871,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000750-17-38613-35822",
@@ -12905,6 +13055,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 1,
       "atlasPixels": 128,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 27315.43651295366,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000751-17-38608-35823",
@@ -12996,6 +13149,9 @@
       "fallbackAreaShare": 0.0004702847758078156,
       "unitySnapCount": 3,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 96575.4375704614,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000752-17-38609-35823",
@@ -13279,6 +13435,9 @@
       "fallbackAreaShare": 0.0019491284597561546,
       "unitySnapCount": 5,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 63756.27110121124,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000753-17-38610-35823",
@@ -13454,6 +13613,9 @@
       "fallbackAreaShare": 0.014351468540638266,
       "unitySnapCount": 0,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 91027.4835149718,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000754-17-38611-35823",
@@ -13917,6 +14079,9 @@
       "fallbackAreaShare": 0.0037403324423463382,
       "unitySnapCount": 0,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 87857.33242167471,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000755-17-38612-35823",
@@ -14364,6 +14529,9 @@
       "fallbackAreaShare": 0.004024788035503052,
       "unitySnapCount": 0,
       "atlasPixels": 128,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 19521.938562736417,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000756-17-38613-35823",
@@ -14483,6 +14651,9 @@
       "fallbackAreaShare": 0.00569611881137721,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 132480.5159633173,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000757-16-19307-17911",
@@ -14874,6 +15045,9 @@
       "fallbackAreaShare": 0.0000852662973385158,
       "unitySnapCount": 3,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 189843.7349346763,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000758-15-9654-8954",
@@ -15121,6 +15295,9 @@
       "fallbackAreaShare": 0.002637558056345565,
       "unitySnapCount": 5,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.3535533905932738,
+      "achievedTexelRatio": 0.3535533905932738,
       "wallAreaSquareMeters": 181254.2177834029,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000759-15-9654-8955",
@@ -15464,6 +15641,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 4,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 72310.13344586111,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000760-14-4825-4476",
@@ -15587,6 +15767,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 89455.92967413116,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000761-17-38610-35808",
@@ -15738,6 +15921,9 @@
       "fallbackAreaShare": 0.001293482939728447,
       "unitySnapCount": 3,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 90391.7955715213,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000762-17-38611-35808",
@@ -16045,6 +16231,9 @@
       "fallbackAreaShare": 0.004362165053711853,
       "unitySnapCount": 6,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 76818.06944345709,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000763-17-38612-35808",
@@ -16408,6 +16597,9 @@
       "fallbackAreaShare": 0.005040874490855866,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 85462.03471901937,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000764-17-38613-35808",
@@ -16735,6 +16927,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 41322.2568164044,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000765-17-38614-35808",
@@ -16870,6 +17065,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 84190.33648434756,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000766-17-38615-35808",
@@ -17073,6 +17271,9 @@
       "fallbackAreaShare": 0.0012677107278887246,
       "unitySnapCount": 6,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 40805.88008094797,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000767-16-19304-17904",
@@ -17200,6 +17401,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 4,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 81248.98232819527,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000768-17-38610-35809",
@@ -17375,6 +17579,9 @@
       "fallbackAreaShare": 0.008784961095065798,
       "unitySnapCount": 6,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 71485.75851454539,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000769-17-38611-35809",
@@ -17650,6 +17857,9 @@
       "fallbackAreaShare": 0.013866558112338207,
       "unitySnapCount": 7,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 97885.31946297147,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000770-17-38612-35809",
@@ -18105,6 +18315,9 @@
       "fallbackAreaShare": 0.0016241095022393628,
       "unitySnapCount": 3,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 73613.0974377485,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000771-17-38613-35809",
@@ -18412,6 +18625,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 1,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 43048.30424194014,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000772-17-38614-35809",
@@ -18515,6 +18731,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 4,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 80481.25560557812,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000773-17-38615-35809",
@@ -18714,6 +18933,9 @@
       "fallbackAreaShare": 0.015536567711583257,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 53121.51837207298,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000774-17-38612-35810",
@@ -18909,6 +19131,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 3,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 63265.18612660367,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000775-17-38613-35810",
@@ -19120,6 +19345,9 @@
       "fallbackAreaShare": 0.0016313022577706913,
       "unitySnapCount": 0,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 48601.25630686717,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000776-17-38614-35810",
@@ -19267,6 +19495,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 0,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 58857.43817348848,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000777-17-38615-35810",
@@ -19430,6 +19661,9 @@
       "fallbackAreaShare": 0.00039789250404263267,
       "unitySnapCount": 4,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 227434.72964768767,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000778-16-19304-17905",
@@ -19769,6 +20003,9 @@
       "fallbackAreaShare": 0.003274467995735616,
       "unitySnapCount": 5,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 186944.45144119996,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000779-16-19305-17905",
@@ -20180,6 +20417,9 @@
       "fallbackAreaShare": 0.005663422646854975,
       "unitySnapCount": 0,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 33043.94493562065,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000780-17-38612-35811",
@@ -20231,6 +20471,9 @@
       "fallbackAreaShare": 0.0018497248993507855,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 61090.73324768507,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000781-17-38613-35811",
@@ -20470,6 +20713,9 @@
       "fallbackAreaShare": 0.0013732505801765538,
       "unitySnapCount": 0,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 37229.703949151226,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000782-17-38614-35811",
@@ -20549,6 +20795,9 @@
       "fallbackAreaShare": 0.0005260950526871594,
       "unitySnapCount": 3,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 79212.1586569881,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000783-17-38615-35811",
@@ -20736,6 +20985,9 @@
       "fallbackAreaShare": 0.009784640973253657,
       "unitySnapCount": 0,
       "atlasPixels": 128,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 21117.617610166126,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000784-18-77226-71624",
@@ -20863,6 +21115,9 @@
       "fallbackAreaShare": 0.01429928779793593,
       "unitySnapCount": 4,
       "atlasPixels": 128,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 20712.807276066025,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000785-18-77227-71624",
@@ -20962,6 +21217,9 @@
       "fallbackAreaShare": 0.006214505686021046,
       "unitySnapCount": 1,
       "atlasPixels": 128,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 22687.626161799424,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000786-17-38612-35812",
@@ -21077,6 +21335,9 @@
       "fallbackAreaShare": 0.025274133156615027,
       "unitySnapCount": 0,
       "atlasPixels": 128,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 17239.686625525912,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000787-18-77226-71625",
@@ -21200,6 +21461,9 @@
       "fallbackAreaShare": 0.01802357587317481,
       "unitySnapCount": 0,
       "atlasPixels": 128,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 23060.29163227597,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000788-18-77227-71625",
@@ -21443,6 +21707,9 @@
       "fallbackAreaShare": 0.0022686625177608714,
       "unitySnapCount": 3,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 82703.36192982637,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000789-17-38614-35812",
@@ -21754,6 +22021,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 1,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 90438.08614658589,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000790-17-38615-35812",
@@ -21957,6 +22227,9 @@
       "fallbackAreaShare": 0.0005830790978905752,
       "unitySnapCount": 0,
       "atlasPixels": 128,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 16412.94696494708,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000791-18-77226-71626",
@@ -22160,6 +22433,9 @@
       "fallbackAreaShare": 0.016350976490718424,
       "unitySnapCount": 1,
       "atlasPixels": 128,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 24005.917065926915,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000792-18-77227-71626",
@@ -22363,6 +22639,9 @@
       "fallbackAreaShare": 0.0014463116031933289,
       "unitySnapCount": 7,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 171523.0394394073,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000793-16-19304-17906",
@@ -22566,6 +22845,9 @@
       "fallbackAreaShare": 0.0007928120626143449,
       "unitySnapCount": 9,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 174038.75718267466,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000794-16-19305-17906",
@@ -22893,6 +23175,9 @@
       "fallbackAreaShare": 0.003259337672746891,
       "unitySnapCount": 0,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 30558.55290460811,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000795-17-38612-35813",
@@ -23064,6 +23349,9 @@
       "fallbackAreaShare": 0.003323426455426396,
       "unitySnapCount": 0,
       "atlasPixels": 128,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 14845.90308723466,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000796-18-77226-71627",
@@ -23183,6 +23471,9 @@
       "fallbackAreaShare": 0.010796384138098069,
       "unitySnapCount": 0,
       "atlasPixels": 128,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 27238.063771208817,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000797-18-77227-71627",
@@ -23362,6 +23653,9 @@
       "fallbackAreaShare": 0.002310833821974419,
       "unitySnapCount": 4,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 81202.44488065853,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000798-17-38614-35813",
@@ -23789,6 +24083,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 3,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 70287.23761361973,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000799-17-38615-35813",
@@ -23904,6 +24201,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 1,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 46580.07673373245,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000800-17-38612-35814",
@@ -24011,6 +24311,9 @@
       "fallbackAreaShare": 0.006683170075897659,
       "unitySnapCount": 4,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 95411.33310511,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000801-17-38613-35814",
@@ -24494,6 +24797,9 @@
       "fallbackAreaShare": 0.00009497544813560942,
       "unitySnapCount": 4,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 75340.56510408712,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000802-17-38614-35814",
@@ -24713,6 +25019,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 3,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 57855.30401708214,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000803-17-38615-35814",
@@ -24884,6 +25193,9 @@
       "fallbackAreaShare": 0.002053973121214545,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.3535533905932738,
+      "achievedTexelRatio": 0.3535533905932738,
       "wallAreaSquareMeters": 214525.4595259267,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000804-16-19304-17907",
@@ -25179,6 +25491,9 @@
       "fallbackAreaShare": 0.0006539824594873848,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 149769.95505130396,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000805-16-19305-17907",
@@ -25386,6 +25701,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 5,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 71108.44968701017,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000806-17-38612-35815",
@@ -25657,6 +25975,9 @@
       "fallbackAreaShare": 0.0040604378954507,
       "unitySnapCount": 4,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 57492.09411953042,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000807-17-38613-35815",
@@ -25932,6 +26253,9 @@
       "fallbackAreaShare": 0.003791900418013643,
       "unitySnapCount": 1,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 79296.72856853595,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000808-17-38614-35815",
@@ -26235,6 +26559,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 42563.55840623491,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000809-17-38615-35815",
@@ -26350,6 +26677,9 @@
       "fallbackAreaShare": 0.000652504330422527,
       "unitySnapCount": 9,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.3535533905932738,
+      "achievedTexelRatio": 0.3535533905932738,
       "wallAreaSquareMeters": 362108.7782269372,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000810-14-4827-4476",
@@ -26817,6 +27147,9 @@
       "fallbackAreaShare": 0.002653763160829948,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 85985.97572621593,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000811-17-38614-35800",
@@ -27104,6 +27437,9 @@
       "fallbackAreaShare": 0.003490727504601967,
       "unitySnapCount": 0,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 47060.89529334043,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000812-17-38615-35800",
@@ -27331,6 +27667,9 @@
       "fallbackAreaShare": 0.00046967606669465027,
       "unitySnapCount": 6,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.3535533905932738,
+      "achievedTexelRatio": 0.3535533905932738,
       "wallAreaSquareMeters": 257053.20850809614,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000813-16-19306-17900",
@@ -27634,6 +27973,9 @@
       "fallbackAreaShare": 0.0007987056383609416,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 91874.98894013777,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000814-17-38614-35801",
@@ -27893,6 +28235,9 @@
       "fallbackAreaShare": 0.0041941117315011985,
       "unitySnapCount": 0,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 53940.268341489056,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000815-17-38615-35801",
@@ -28092,6 +28437,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 2,
       "atlasPixels": 128,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 22816.70236481321,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000816-15-9652-8950",
@@ -28155,6 +28503,9 @@
       "fallbackAreaShare": 0.0019899439828117804,
       "unitySnapCount": 9,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 151360.78964815897,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000817-16-19306-17901",
@@ -28482,6 +28833,9 @@
       "fallbackAreaShare": 0.001708519108583543,
       "unitySnapCount": 5,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 158094.6056478815,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000818-16-19307-17901",
@@ -28825,6 +29179,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 3,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 84509.60452643533,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000819-17-38612-35804",
@@ -29008,6 +29365,9 @@
       "fallbackAreaShare": 0.007616415724914592,
       "unitySnapCount": 1,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 68417.85542605583,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000820-17-38613-35804",
@@ -29271,6 +29631,9 @@
       "fallbackAreaShare": 0.0038979181739504814,
       "unitySnapCount": 4,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 74169.6663736669,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000821-17-38614-35804",
@@ -29546,6 +29909,9 @@
       "fallbackAreaShare": 0.0007296535262350656,
       "unitySnapCount": 0,
       "atlasPixels": 128,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 17595.410520607686,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000822-17-38615-35804",
@@ -29593,6 +29959,9 @@
       "fallbackAreaShare": 0.00033181020306009124,
       "unitySnapCount": 1,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 76153.72119872678,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000823-16-19305-17902",
@@ -29776,6 +30145,9 @@
       "fallbackAreaShare": 0.018246892748837215,
       "unitySnapCount": 5,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 88130.9250712299,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000824-17-38612-35805",
@@ -30171,6 +30543,9 @@
       "fallbackAreaShare": 0.0022012204224041536,
       "unitySnapCount": 1,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 72709.0378436702,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000825-17-38613-35805",
@@ -30406,6 +30781,9 @@
       "fallbackAreaShare": 0.0028978705180291537,
       "unitySnapCount": 6,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 73643.31060486066,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000826-17-38614-35805",
@@ -30649,6 +31027,9 @@
       "fallbackAreaShare": 0.002363971984637296,
       "unitySnapCount": 3,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 43287.866801630276,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000827-17-38615-35805",
@@ -30768,6 +31149,9 @@
       "fallbackAreaShare": 0.00585871002699873,
       "unitySnapCount": 3,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 87960.09481514322,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000828-17-38612-35806",
@@ -31091,6 +31475,9 @@
       "fallbackAreaShare": 0.00390725275045393,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 69544.00732334306,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000829-17-38613-35806",
@@ -31366,6 +31753,9 @@
       "fallbackAreaShare": 0.00029660813575033466,
       "unitySnapCount": 0,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 46676.63657174005,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000830-16-19304-17903",
@@ -31425,6 +31815,9 @@
       "fallbackAreaShare": 0.0018274063156093422,
       "unitySnapCount": 7,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 158091.5923254666,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000831-16-19305-17903",
@@ -31844,6 +32237,9 @@
       "fallbackAreaShare": 0.001522813488604236,
       "unitySnapCount": 1,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 69174.25932344444,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000832-17-38612-35807",
@@ -32051,6 +32447,9 @@
       "fallbackAreaShare": 0.008399117171968938,
       "unitySnapCount": 1,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 84473.7997401822,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000833-17-38613-35807",
@@ -32482,6 +32881,9 @@
       "fallbackAreaShare": 0.0006466641310454051,
       "unitySnapCount": 13,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.3535533905932738,
+      "achievedTexelRatio": 0.3535533905932738,
       "wallAreaSquareMeters": 227926.7526839893,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000834-16-19307-17903",
@@ -32981,6 +33383,9 @@
       "fallbackAreaShare": 0.001542246192035096,
       "unitySnapCount": 4,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.3535533905932738,
+      "achievedTexelRatio": 0.3535533905932738,
       "wallAreaSquareMeters": 235924.32563242552,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000835-14-4827-4475",
@@ -33268,6 +33673,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 0,
       "atlasPixels": 64,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 614.2466287007943,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000836-16-19306-17896",
@@ -33295,6 +33703,9 @@
       "fallbackAreaShare": 0.0002423161860226122,
       "unitySnapCount": 13,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.3535533905932738,
+      "achievedTexelRatio": 0.3535533905932738,
       "wallAreaSquareMeters": 208083.41006345736,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000837-16-19307-17896",
@@ -33546,6 +33957,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 0,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 38555.08894785298,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000838-16-19306-17897",
@@ -33585,6 +33999,9 @@
       "fallbackAreaShare": 0.0009603666174206719,
       "unitySnapCount": 6,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.3535533905932738,
+      "achievedTexelRatio": 0.3535533905932738,
       "wallAreaSquareMeters": 274442.90420330246,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000839-16-19307-17897",
@@ -33940,6 +34357,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 0,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 63775.348443838586,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000840-16-19306-17898",
@@ -33991,6 +34411,9 @@
       "fallbackAreaShare": 0.0000710936792674476,
       "unitySnapCount": 3,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.3535533905932738,
+      "achievedTexelRatio": 0.3535533905932738,
       "wallAreaSquareMeters": 243532.88822945693,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000841-16-19307-17898",
@@ -34202,6 +34625,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 1,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 78495.49305733372,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000842-17-38614-35798",
@@ -34309,6 +34735,9 @@
       "fallbackAreaShare": 0.0006920753392454406,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 53861.745396993705,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000843-17-38615-35798",
@@ -34440,6 +34869,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 6,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 208116.11533629143,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000844-16-19306-17899",
@@ -34679,6 +35111,9 @@
       "fallbackAreaShare": 0.0023289006659420455,
       "unitySnapCount": 3,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 74899.35995709409,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000845-17-38614-35799",
@@ -34906,6 +35341,9 @@
       "fallbackAreaShare": 0.003783505921521438,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 58717.91986140271,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000846-17-38615-35799",
@@ -35089,6 +35527,9 @@
       "fallbackAreaShare": 0.0002353147635758456,
       "unitySnapCount": 1,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.3535533905932738,
+      "achievedTexelRatio": 0.3535533905932738,
       "wallAreaSquareMeters": 240901.18326597975,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000847-16-19308-17896",
@@ -35572,6 +36013,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 2,
       "atlasPixels": 64,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 5018.75579931418,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000848-16-19309-17896",
@@ -35615,6 +36059,9 @@
       "fallbackAreaShare": 0.0023047916912740892,
       "unitySnapCount": 8,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 185496.24078765747,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000849-16-19308-17897",
@@ -36098,6 +36545,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 0,
       "atlasPixels": 64,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 283.9946035215336,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000850-16-19309-17897",
@@ -36125,6 +36575,9 @@
       "fallbackAreaShare": 0.0019782715414713996,
       "unitySnapCount": 4,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 154024.83745967757,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000851-15-9654-8949",
@@ -36572,6 +37025,9 @@
       "fallbackAreaShare": 0.006901984517973937,
       "unitySnapCount": 3,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 95787.50785219885,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000852-15-9653-8946",
@@ -36723,6 +37179,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 12,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.3535533905932738,
+      "achievedTexelRatio": 0.3535533905932738,
       "wallAreaSquareMeters": 320667.3513899657,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000853-15-9653-8947",
@@ -37126,6 +37585,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 11,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 171721.44823856247,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000854-16-19308-17892",
@@ -37337,6 +37799,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 17,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.3535533905932738,
+      "achievedTexelRatio": 0.3535533905932738,
       "wallAreaSquareMeters": 236923.6770523054,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000855-16-19309-17892",
@@ -37744,6 +38209,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 29,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 199418.55625335698,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000856-16-19308-17893",
@@ -38079,6 +38547,9 @@
       "fallbackAreaShare": 0.0012402948062441123,
       "unitySnapCount": 9,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.3535533905932738,
+      "achievedTexelRatio": 0.3535533905932738,
       "wallAreaSquareMeters": 261991.83604148412,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000857-16-19309-17893",
@@ -38554,6 +39025,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 0,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 21828.54759364915,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000858-15-9655-8946",
@@ -38661,6 +39135,9 @@
       "fallbackAreaShare": 0.0008809711217189337,
       "unitySnapCount": 5,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 57751.00014885437,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000859-17-38618-35788",
@@ -38824,6 +39301,9 @@
       "fallbackAreaShare": 0.00013754492722819285,
       "unitySnapCount": 5,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 62442.47619232369,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000860-17-38619-35788",
@@ -38955,6 +39435,9 @@
       "fallbackAreaShare": 0.0011148698126313508,
       "unitySnapCount": 11,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.3535533905932738,
+      "achievedTexelRatio": 0.3535533905932738,
       "wallAreaSquareMeters": 233898.45717182645,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000861-16-19308-17894",
@@ -39382,6 +39865,9 @@
       "fallbackAreaShare": 0.011340261084030226,
       "unitySnapCount": 5,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 73131.3154909715,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000862-17-38618-35789",
@@ -39665,6 +40151,9 @@
       "fallbackAreaShare": 0.0018926086627415013,
       "unitySnapCount": 0,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 34754.67032067679,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000863-17-38619-35789",
@@ -39728,6 +40217,9 @@
       "fallbackAreaShare": 0.002820637598002397,
       "unitySnapCount": 10,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.3535533905932738,
+      "achievedTexelRatio": 0.3535533905932738,
       "wallAreaSquareMeters": 263056.73829812673,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000864-16-19308-17895",
@@ -40219,6 +40711,9 @@
       "fallbackAreaShare": 0.004948855145701807,
       "unitySnapCount": 4,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 113252.68911170945,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000865-16-19309-17895",
@@ -40450,6 +40945,9 @@
       "fallbackAreaShare": 0.0008288808809613108,
       "unitySnapCount": 10,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 209761.77615603156,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000866-16-19310-17888",
@@ -40865,6 +41363,9 @@
       "fallbackAreaShare": 0.0010166625445078153,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 166906.7448693233,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000867-16-19311-17888",
@@ -41152,6 +41653,9 @@
       "fallbackAreaShare": 0.002971696806220525,
       "unitySnapCount": 5,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 138985.7634368454,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000868-15-9654-8944",
@@ -41431,6 +41935,9 @@
       "fallbackAreaShare": 0.0008642381692670753,
       "unitySnapCount": 8,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.3535533905932738,
+      "achievedTexelRatio": 0.3535533905932738,
       "wallAreaSquareMeters": 229660.2711499199,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000869-16-19310-17889",
@@ -41878,6 +42385,9 @@
       "fallbackAreaShare": 0.0008359866458713099,
       "unitySnapCount": 3,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 140614.5825687346,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000870-16-19311-17889",
@@ -42181,6 +42691,9 @@
       "fallbackAreaShare": 0.001485074954963056,
       "unitySnapCount": 4,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 193597.43789461395,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000871-16-19310-17890",
@@ -42560,6 +43073,9 @@
       "fallbackAreaShare": 0.002373102666297783,
       "unitySnapCount": 5,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 99735.97436193384,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000872-16-19311-17890",
@@ -42767,6 +43283,9 @@
       "fallbackAreaShare": 0.00027191703289949253,
       "unitySnapCount": 10,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.3535533905932738,
+      "achievedTexelRatio": 0.3535533905932738,
       "wallAreaSquareMeters": 352507.35441899695,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000873-15-9654-8945",
@@ -43226,6 +43745,9 @@
       "fallbackAreaShare": 0.0004736752007708766,
       "unitySnapCount": 2,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 50731.139128941446,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000874-16-19310-17891",
@@ -43329,6 +43851,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 0,
       "atlasPixels": 128,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 10306.783322162619,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000875-16-19311-17891",
@@ -43392,6 +43917,9 @@
       "fallbackAreaShare": 0.0006679565974385953,
       "unitySnapCount": 0,
       "atlasPixels": 256,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 42894.183986934746,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000876-14-4828-4472",
@@ -43491,6 +44019,9 @@
       "fallbackAreaShare": 0,
       "unitySnapCount": 8,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 171875.3677793905,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000877-14-4827-4471",
@@ -43882,6 +44413,9 @@
       "fallbackAreaShare": 0.014121483021063589,
       "unitySnapCount": 3,
       "atlasPixels": 128,
+      "underResolved": false,
+      "appliedScale": 1,
+      "achievedTexelRatio": 1,
       "wallAreaSquareMeters": 7221.223102462249,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000878-16-19312-17884",
@@ -43969,6 +44503,9 @@
       "fallbackAreaShare": 0.0115728754701091,
       "unitySnapCount": 2,
       "atlasPixels": 128,
+      "underResolved": true,
+      "appliedScale": 0.7071067811865476,
+      "achievedTexelRatio": 0.7071067811865476,
       "wallAreaSquareMeters": 24077.322145699713,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000879-16-19313-17884",
@@ -44096,6 +44633,9 @@
       "fallbackAreaShare": 0.005536433136756638,
       "unitySnapCount": 4,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 144121.46674556594,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000880-16-19312-17885",
@@ -44547,6 +45087,9 @@
       "fallbackAreaShare": 0.004861220428966552,
       "unitySnapCount": 6,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 108925.76602232497,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000881-16-19313-17885",
@@ -44886,6 +45429,9 @@
       "fallbackAreaShare": 0.000772400178920791,
       "unitySnapCount": 0,
       "atlasPixels": 256,
+      "underResolved": true,
+      "appliedScale": 0.5,
+      "achievedTexelRatio": 0.5,
       "wallAreaSquareMeters": 105435.89369158371,
       "entry": {
         "cellId": "manhattan-exterior-cell-w05-000882-15-9656-8943",

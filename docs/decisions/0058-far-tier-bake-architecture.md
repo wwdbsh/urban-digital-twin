@@ -594,6 +594,12 @@ a bar. `assertFarTierAdoptedRecipe` now names v4 and carries what it superseded.
 
 ### Campaign results
 
+> **SUPERSEDED IN PART — see [Amendment — the phantom shaft zone](#amendment--the-phantom-shaft-zone-post-goal-no-issue-2026-08-23) (2026-08-23).**
+> The 43 honest stops were a defect, not a property of those cells. Every one of
+> the 883 ledger cells now bakes; the tile count, the coverage arithmetic, the
+> under-resolved figures, the pin and the budget below are all superseded there.
+> The numbers in this section are left exactly as they were measured.
+
 | | |
 | --- | --- |
 | Ledger cells | 883 |
@@ -675,6 +681,12 @@ Evidence: `data/far-tier-hlod-promotion-20260819/` — `promoted-inventory.json`
 `.sha256`.
 
 ### What was built
+
+> **SUPERSEDED IN PART — see [Amendment — the phantom shaft zone](#amendment--the-phantom-shaft-zone-post-goal-no-issue-2026-08-23) (2026-08-23).**
+> The 43 honest stops were a defect, not a property of those cells. Every one of
+> the 883 ledger cells now bakes; the tile count, the coverage arithmetic, the
+> under-resolved figures, the pin and the budget below are all superseded there.
+> The numbers in this section are left exactly as they were measured.
 
 - **The promoted inventory**: six sealed wave inventories merged into one —
   840 entries, 43 honest stops, 883 against the ledger, 44,076 members with the
@@ -1139,8 +1151,21 @@ two belonged to the stopped cell and had no tile to hide under. Sweep-3 reads
 **3, 3, 3**. That is a draw-composition reading, not a fetch: those buildings
 could only move to far-tier alpha under a tile that is actually drawn.
 
-Across the island at P5, 2,349 more massing buildings are covered than at
-sweep-2.
+Coverage is up at every pose, but **no precise delta is claimed except at P3**.
+The `active` and `covered` counts stream in over the 32-second settle and do not
+land on the same set twice: two passes of the same pose on the same build read
+P5 covered as 31,413 and 30,087, a spread of 1,326. An earlier revision quoted
+"2,349 more buildings covered at P5" as a fact; that is one draw from a
+distribution and is **withdrawn**. What is stable across both passes is the
+invariant the verdict rests on — `uncovered = 0`, `drawn = 882`, every failure
+column 0 — and P3, whose three buildings do not stream.
+
+**One attempt per pose, and no re-runs.** Each pose was visited once, settled for
+32 seconds — sweep-2's own rule — and read once. No pose was revisited, no
+reading was discarded, and no verdict was taken from a second look. That matters
+as much as the port guard below: a sweep that may be re-run until it passes has
+no failure mode, and the readings here would be worth nothing if a first pass had
+been quietly dropped.
 
 **Two vehicle facts are on the record.** The six `<!doctype` notices appear again
 — the `-s2` exterior packages are still absent from disk, so this sweep, like both
@@ -1151,13 +1176,42 @@ unchanged would have scored the wrong build. It was caught by checking the serve
 inventory digest before visiting a pose, and every pose ran on 4174 with only the
 port substituted.
 
-The `882 of 883` drawn shortfall is **carried forward unexplained**. Sweep-2 read
-`839 of 840` — the same one-cell gap, unchanged in size by adding 43 tiles. This
-task did not investigate it, and naming it is not closing it.
+**The `882 of 883` gap is not a shortfall, and an earlier revision of this
+amendment was wrong to carry it forward as "unexplained".** `declared` counts
+OUTCOMES, not drawn-eligible tiles, so `882 drawn + 1 not-declared = 883` closes
+exactly. The one `not-declared` outcome is
+`manhattan-exterior-cell-w00-000000-block-00835`: that state is produced only by
+`FarTierAnchorError`, which is thrown only for a cell id carrying no
+`-<z>-<x>-<y>` tile coordinate, and exactly one of the 883 declared ids lacks one
+— the Block 835 alias, which the committed T005 exemption record names for the
+same reason. Sweep-2's `839 of 840` has the identical structure and was equally
+not a shortfall.
+
+What remains true is narrower and was already known: Block 835's tile is baked,
+declared and staged, and can never be **placed**, because its alias carries no
+tile coordinate.
+
+### The restored cells refuse buildings at 5.2x the island's rate
+
+19 of the 1,118 member buildings in the 43 restored cells are refused by the V3
+grammar — **1.70%**, against **0.32%** across the 840 that were already baked.
+That is not what fixing a metric bug would predict, and it is worth saying out
+loud rather than leaving inside a totals line: whatever makes a cell's faces run
+base-to-top often enough to trip a face-keyed area metric also correlates with
+geometry the grammar will not build. **This is a signal about those 43 cells, not
+a conclusion** — it was not investigated here, and one plausible reading is
+simply that unusual massing is unusual in more than one way at once.
 
 ### What this amendment does not do
 
-It retires residual **R13** and nothing else. No criterion verdict moves, the
+It retires residual **R13** and adds **R17** — the far tier sits 0.14% inside its
+frozen GPU bar, and that margin must not be spent; re-derive the bar before any
+further tile, any atlas ceiling above 256, or any larger city. The sealed
+register cannot be appended to, so R17 is added by statement in
+`data/far-tier-hlod-phantom-shaft-20260823/acceptance-amendment.json`, and a
+reader of the sealed register must read that record alongside it.
+
+Beyond those two, no criterion verdict moves, the
 goal's completion decision remains the user's to take, and criteria 3, 4, 8 and 9
 stand exactly as the sealed acceptance record leaves them. Coverage is not
 correctness: 883 tiles is a coverage fact, not an appearance verdict. And the

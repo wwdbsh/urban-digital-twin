@@ -134,6 +134,11 @@ async function commandPreRegister() {
         claim: "EVERY facade-only fallback zone in the entire frozen campaign is a `shaft` zone. Not one is a `base` zone.",
         stoppedCells: { zones: 4_161, base: 0, shaft: 4_161 },
         bakedCells: { cellsWithFallbackZones: 730, zones: 21_063, base: 0, shaft: 21_063 },
+        theTwoHalvesDoNOTHaveEqualStANDING: {
+          stoppedHalf: "VERIFIABLE FROM COMMITTED TEXT. The 4,161 zones are listed in data/far-tier-hlod-mass-20260819/campaign-summary.json honestStops[].detail.zones, which is digest-pinned above. Anyone can recount them.",
+          bakedHalf: "NOT COMMITTED AS A ZONE LIST. `cellsWithFallbackZones` in the frozen telemetry carries the per-cell zone arrays, and the 21,063 figure was counted from them in-session. The count is reproducible from committed bytes, but the COUNTING was not itself committed as an artifact.",
+          whyItIsStatedAnyway: "The stopped half alone carries the argument: 4,161 of 4,161 shaft, 0 base. The baked half widens the sample and does not create the conclusion.",
+        },
         why: "`resolveZone(baseId, \"base\")` was ALREADY guarded by `split > 0`, so it was only ever called when base geometry exists — and then its aggregate is always present. The shaft call had no such guard. The complete absence of base fallbacks is the asymmetry the guard predicts.",
         sevenAtUnity: "Seven of the 43 were reported at a share of EXACTLY 1.000000, which is what a cell whose every face has `split === 1` must report under this defect.",
       },
@@ -332,6 +337,12 @@ async function commandMeasure(waveId) {
       fallbackAreaShare: result.bake.telemetry.fallbackAreaShare,
       unitySnapCount: result.bake.telemetry.unitySnapCount,
       atlasPixels: result.bake.telemetry.atlasPixels,
+      // The two fields the README's resolution claim is derived from. Recorded
+      // per cell so that claim has a committed derivation instead of a number
+      // recomputed once in a session and typed into prose.
+      underResolved: result.bake.telemetry.underResolved,
+      appliedScale: result.bake.telemetry.appliedScale,
+      achievedTexelRatio: result.bake.telemetry.achievedTexelRatio,
       wallAreaSquareMeters: result.bake.telemetry.wallAreaSquareMeters,
       entry: inventoryEntry(cell, result.bake, emitted),
     });
@@ -513,6 +524,23 @@ async function commandVerify() {
     note: "The frozen telemetry-w0N.json records are NOT edited. They truthfully record what the defective code did and are amended by statement.",
   };
 
+  // ---- Resolution: the figure the README quotes, derived here -------------
+  const scales = allCells.map((cell) => cell.appliedScale).sort((left, right) => left - right);
+  const median = scales.length % 2 === 1
+    ? scales[(scales.length - 1) / 2]
+    : (scales[scales.length / 2 - 1] + scales[scales.length / 2]) / 2;
+  const underResolvedCells = allCells.filter((cell) => cell.underResolved);
+  const resolution = {
+    claim: "The under-resolved figure the README quotes, derived from the per-cell rows in this task's own measurements rather than carried over from the 840-cell era.",
+    cells: allCells.length,
+    underResolved: underResolvedCells.length,
+    underResolvedShare: round(underResolvedCells.length / allCells.length, 6),
+    appliedScale: { min: round(scales[0], 6), median: round(median, 6), max: round(scales[scales.length - 1], 6) },
+    medianRule: `MEDIAN OVER ALL ${allCells.length} CELLS, recomputed. For an even count it is the mean of the two central values, so it is not simply "the 840-era number with more cells behind it".`,
+    priorEra: { cells: 840, underResolved: 764, underResolvedShare: 0.9095 },
+    direction: "The SHARE fell and the COUNT rose. Restoring 43 tiles did not improve resolution anywhere; it added 43 more cells at the same recipe and the same atlas ceiling.",
+  };
+
   // ---- P5: decoded GPU bytes, all 883 leaves resident ---------------------
   let atlasGpu = 0;
   let geometryGpu = 0;
@@ -580,6 +608,7 @@ async function commandVerify() {
     recipeSha256: farTierRecipeHashV4(),
     totals: { ledgerCells: waves.reduce((sum, wave) => sum + wave.ledgerCellCount, 0), baked: allCells.length, stops: stops.length },
     verdicts,
+    resolution,
     P1: p1,
     P2: p2,
     P3: p3,
@@ -594,7 +623,7 @@ async function commandVerify() {
   const text = serialize(record);
   await writeFile(join(evidenceRoot, "verification.json"), text);
   await writeFile(join(evidenceRoot, "verification.sha256"), `${sha256(text)}  verification.json\n`);
-  console.log(serialize({ ok: Object.values(verdicts).every((verdict) => verdict === "PASS" || verdict === "DISCLOSED"), verdicts, totals: record.totals, P1: p1.anchors, P5: { totalGpuBytes: p5.totalGpuBytes, ceiling: CEILINGS.gpu.value, headroomBytes: p5.headroomBytes, verdict: p5.verdict }, P6: { declaredFileBytes: p6.declaredFileBytes, ceiling: CEILINGS.file.value, headroomBytes: p6.headroomBytes, verdict: p6.verdict }, sha256: sha256(text) }));
+  console.log(serialize({ ok: Object.values(verdicts).every((verdict) => verdict === "PASS" || verdict === "DISCLOSED"), verdicts, totals: record.totals, resolution, P1: p1.anchors, P5: { totalGpuBytes: p5.totalGpuBytes, ceiling: CEILINGS.gpu.value, headroomBytes: p5.headroomBytes, verdict: p5.verdict }, P6: { declaredFileBytes: p6.declaredFileBytes, ceiling: CEILINGS.file.value, headroomBytes: p6.headroomBytes, verdict: p6.verdict }, sha256: sha256(text) }));
 }
 
 // ---------------------------------------------------------------------------
@@ -722,8 +751,13 @@ const PROMOTION_ID = "far-tier-hlod-promotion-20260823";
 async function commandSeal() {
   const verification = JSON.parse(await readFile(join(evidenceRoot, "verification.json"), "utf8"));
   if (verification.verdicts.P3 !== "PASS") fail("P3 did not pass; nothing is sealed on unverified bytes.");
-  const replay = JSON.parse(await readFile(join(evidenceRoot, "replay-new-tiles.json"), "utf8"));
+  const replayText = await readFile(join(evidenceRoot, "replay-new-tiles.json"), "utf8");
+  const replay = JSON.parse(replayText);
   if (replay.verdict !== "PASS") fail("the determinism replay did not pass; nothing is sealed on it.");
+  // HASH THE FILE. An earlier version read `replay.recordSha256`, a field that
+  // record does not have, so `?? null` shipped a null provenance digest into
+  // six sealed inventories without failing anything.
+  const replaySha256 = sha256(replayText);
 
   const sealed = [];
   for (const waveId of WAVE_IDS) {
@@ -759,7 +793,7 @@ async function commandSeal() {
         restoredTiles: {
           count: measured.cells.filter((cell) => cell.byteIdentity === "NEW-TILE").length,
           evidence: `data/${EVIDENCE_ID}/replay-new-tiles.json — two passes in fresh child processes, comparing glb digest, atlas digest, fallback share and unity-snap count.`,
-          replayRecordSha256: replay.recordSha256 ?? null,
+          replayRecordSha256: replaySha256,
         },
         notClaimed: "This session did NOT re-replay the 840 in fresh children. Doing so would compare this session against itself; the stronger evidence is that they reproduce the digests a DIFFERENT session sealed.",
       },
@@ -785,7 +819,7 @@ async function commandMerge() {
     const declared = (await readFile(join(evidenceRoot, `inventory-${waveId}.sha256`), "utf8")).trim().split(/\s+/u)[0];
     if (sha256(text) !== declared) fail(`inventory-${waveId}.json does not match its own sidecar.`);
     const json = JSON.parse(text);
-    waves.push({ waveId, entries: json.entries, recordSha256: sha256(text) });
+    waves.push({ waveId, entries: json.entries, recordPath: `data/${EVIDENCE_ID}/inventory-${waveId}.json`, recordSha256: sha256(text) });
   }
   const ledgerChecksumSha256 = JSON.parse(await readFile(join(evidenceRoot, "measure-w00.json"), "utf8")).parentLedgerChecksumSha256;
 
@@ -798,12 +832,15 @@ async function commandMerge() {
       ledgerChecksumSha256,
       recipeId: FAR_TIER_BAKE_RECIPE_V4.recipeId,
       recipeSha256: farTierRecipeHashV4(),
-      campaignSummarySha256: sha256(await readFile(join(evidenceRoot, "verification.json"), "utf8")),
+      inventoryId: PROMOTION_ID,
+      // THE TRUE PROVENANCE OF THIS PROMOTION. Not T004's campaign summary:
+      // these 883 entries come from THIS task's verification chain, and the
+      // path and the digest name the same file.
+      derivedFromRecord: { path: `data/${EVIDENCE_ID}/verification.json`, sha256: sha256(await readFile(join(evidenceRoot, "verification.json"), "utf8")) },
     });
   } catch (error) {
     fail(error.message);
   }
-  promoted.inventoryId = PROMOTION_ID;
   const text = serializeFarTierInventory(promoted);
   const promotionRoot = join(repositoryRoot, "data", PROMOTION_ID);
   await mkdir(promotionRoot, { recursive: true });

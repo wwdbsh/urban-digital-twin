@@ -20,6 +20,24 @@
     "P5": "PASS",
     "P6": "PASS"
   },
+  "resolution": {
+    "claim": "The under-resolved figure the README quotes, derived from the per-cell rows in this task's own measurements rather than carried over from the 840-cell era.",
+    "cells": 883,
+    "underResolved": 785,
+    "underResolvedShare": 0.889015,
+    "appliedScale": {
+      "min": 0.176777,
+      "median": 0.707107,
+      "max": 1
+    },
+    "medianRule": "MEDIAN OVER ALL 883 CELLS, recomputed. For an even count it is the mean of the two central values, so it is not simply \"the 840-era number with more cells behind it\".",
+    "priorEra": {
+      "cells": 840,
+      "underResolved": 764,
+      "underResolvedShare": 0.9095
+    },
+    "direction": "The SHARE fell and the COUNT rose. Restoring 43 tiles did not improve resolution anywhere; it added 43 more cells at the same recipe and the same atlas ceiling."
+  },
   "P1": {
     "provenance": "SUPPLIED BY THE ARCHITECT in the task brief, before this session ran any bake. NOT verified against any measurement at the time of writing.",
     "anchors": [

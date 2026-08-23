@@ -16,7 +16,7 @@ function readText(path: string): string {
   return new TextDecoder("utf-8", { fatal: true }).decode(readFileSync(path));
 }
 import { sha256HexSync } from "../domain/deterministic-hash";
-import { FAR_TIER_CELL_STATES, FAR_TIER_PAYLOAD_INVENTORY_SHA256, FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSOR, FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSORS, FAR_TIER_RUNTIME_BUDGETS } from "./far-tier-serving";
+import { FAR_TIER_CELL_STATES, FAR_TIER_PAYLOAD_INVENTORY_SHA256, FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSORS, FAR_TIER_RUNTIME_BUDGETS } from "./far-tier-serving";
 import { EXTERIOR_RUNTIME_BUDGETS } from "./exterior-cell-runtime";
 
 const ROOT = "data/far-tier-hlod-runtime-20260818";
@@ -97,7 +97,7 @@ describe("far-tier runtime records", () => {
     expect(record.servingPath.inventoryPin.digest).toBe(FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSORS[0]);
     expect(record.servingPath.inventoryPin.failDirection).toContain("WHOLE TIER");
     expect(sha256HexSync(readText(`${ROOT}/payload-inventory.json`))).toBe(FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSORS[0]);
-    expect(FAR_TIER_PAYLOAD_INVENTORY_SHA256).not.toBe(FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSOR);
+    expect(FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSORS).not.toContain(FAR_TIER_PAYLOAD_INVENTORY_SHA256);
   });
 
   it("records that BOTH payloads are verified, and what an atlas mismatch does", () => {
