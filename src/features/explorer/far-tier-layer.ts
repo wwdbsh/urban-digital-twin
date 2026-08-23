@@ -31,7 +31,7 @@ import { farTierCellDistanceMeters, farTierCellInRange, type FarTierCameraPose, 
 import { verifiedExteriorModelResource } from "./exterior-verified-resource";
 import {
   farTierAdmission, farTierAtlasRef, farTierEntryByteCost, farTierTileRef,
-  loadVerifiedFarTierAtlas, loadVerifiedFarTierTile, FAR_TIER_MAX_LOADS_PER_PASS, FAR_TIER_RUNTIME_BUDGETS_V2,
+  loadVerifiedFarTierAtlas, loadVerifiedFarTierTile, FAR_TIER_MAX_LOADS_PER_PASS, FAR_TIER_RUNTIME_BUDGETS_V3,
   type FarTierFetcher, type FarTierInventoryEntry, type FarTierLoadOutcome,
 } from "../../runtime/far-tier-serving";
 
@@ -172,7 +172,7 @@ export interface FarTierResidency {
 export function createFarTierResidency(options: FarTierResidencyOptions): FarTierResidency {
   const modelFactory = options.modelFactory ?? createFarTierModel;
   const maxLoadsPerPass = options.maxLoadsPerPass ?? FAR_TIER_MAX_LOADS_PER_PASS;
-  const budgets = options.budgets ?? FAR_TIER_RUNTIME_BUDGETS_V2;
+  const budgets = options.budgets ?? FAR_TIER_RUNTIME_BUDGETS_V3;
 
   /** Anchors are resolved once per cell: a cell id's rectangle never changes. */
   const anchors = new Map<string, { modelMatrix: Matrix4; bounds: FarTierRectangle } | FarTierLoadOutcome>();

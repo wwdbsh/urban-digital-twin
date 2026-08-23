@@ -28,7 +28,7 @@ import {
 import { farTierTileAnchor } from "../../runtime/far-tier-anchor";
 
 const readText = (path: string): string => new TextDecoder("utf-8", { fatal: true }).decode(readFileSync(path));
-const PROMOTED = readText("data/far-tier-hlod-promotion-20260819/promoted-inventory.json");
+const PROMOTED = readText("data/far-tier-hlod-promotion-20260823/promoted-inventory.json");
 const STALE_ONE_CELL = readText("data/far-tier-hlod-runtime-20260818/payload-inventory.json");
 
 const TILE_BYTES = new Uint8Array([0x67, 0x6c, 0x54, 0x46, 0x02, 0x00, 0x00, 0x00]);
@@ -98,7 +98,7 @@ describe("ARM 1 — a stale pin takes the whole tier down, not one cell", () => 
 
   it("accepts the promoted inventory, so the refusal above is about the pin and not the parser", () => {
     const inventory = parseVerifiedFarTierInventory(PROMOTED) as FarTierInventory;
-    expect(inventory.entries).toHaveLength(840);
+    expect(inventory.entries).toHaveLength(883);
     expect(sha256HexBytes(new TextEncoder().encode(PROMOTED))).toBe(FAR_TIER_PAYLOAD_INVENTORY_SHA256);
   });
 

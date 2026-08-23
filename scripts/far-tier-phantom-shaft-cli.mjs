@@ -33,6 +33,7 @@ import { emitTileBytes, inventoryEntry, tileAtlasName, tileGlbName } from "./far
 import { FALLBACK_AREA_SHARE_BAR, WAVE_IDS, bakeOneCell, loadWaveInventory, materializeOneCell, waveWiring } from "./far-tier-mass-bake-cli.mjs";
 import { FAR_TIER_BAKE_RECIPE_V4, farTierRecipeHashV4 } from "../src/release/far-tier-bake.ts";
 import { FarTierCellStop } from "../src/release/far-tier-campaign.ts";
+import { mergeFarTierWaveInventories, serializeFarTierInventory } from "../src/release/far-tier-promoted-inventory.ts";
 
 const TOOL = "far-tier-phantom-shaft-cli";
 const EVIDENCE_ID = "far-tier-hlod-phantom-shaft-20260823";
@@ -703,6 +704,126 @@ async function commandReplayNew(passes) {
 }
 
 // ---------------------------------------------------------------------------
+// seal / merge — the 883-cell inventories and the promoted inventory
+// ---------------------------------------------------------------------------
+
+const PROMOTION_ID = "far-tier-hlod-promotion-20260823";
+
+/**
+ * THE ORDERING RULE, stated because the bytes are pinned and order is part of
+ * the artifact.
+ *
+ * Entries run in LEDGER ORDER within a wave, and waves run w00..w05. That is
+ * the rule T004 used, and it is verified rather than assumed: the 840 tiles
+ * that already existed keep their exact relative order inside the 883, with the
+ * 43 restored tiles interleaved at their own ledger positions. A re-sort here
+ * would move every byte of the promoted inventory for no reason.
+ */
+async function commandSeal() {
+  const verification = JSON.parse(await readFile(join(evidenceRoot, "verification.json"), "utf8"));
+  if (verification.verdicts.P3 !== "PASS") fail("P3 did not pass; nothing is sealed on unverified bytes.");
+  const replay = JSON.parse(await readFile(join(evidenceRoot, "replay-new-tiles.json"), "utf8"));
+  if (replay.verdict !== "PASS") fail("the determinism replay did not pass; nothing is sealed on it.");
+
+  const sealed = [];
+  for (const waveId of WAVE_IDS) {
+    const measured = JSON.parse(await readFile(join(evidenceRoot, `measure-${waveId}.json`), "utf8"));
+    const frozenText = await readFile(join(repositoryRoot, "data", "far-tier-hlod-mass-20260819", `inventory-${waveId}.json`), "utf8");
+    const frozen = JSON.parse(frozenText);
+    const record = {
+      schemaVersion: "1.0",
+      recordId: `${EVIDENCE_ID}:inventory-${waveId}`,
+      artifact: "far-tier-phantom-shaft-wave-inventory",
+      capturedAt: null,
+      capturedAtStatement: "NULL BY CONSTRUCTION.",
+      waveId,
+      recipeId: measured.recipeId,
+      recipeSha256: measured.recipeSha256,
+      adoptedRecipe: frozen.adoptedRecipe,
+      payloadLayout: frozen.payloadLayout,
+      supersedes: {
+        record: `data/far-tier-hlod-mass-20260819/inventory-${waveId}.json`,
+        sha256: BOUND_TO.waveInventories[waveId],
+        statement: "SUPERSEDED BY STATEMENT, NOT EDITED. The T004 inventory is unchanged on disk and still verifies against its own sidecar. It declares the tiles that wave could bake before the phantom shaft zone was fixed.",
+        entriesThere: frozen.entries.length,
+        entriesHere: measured.cells.length,
+        added: measured.cells.filter((cell) => cell.byteIdentity === "NEW-TILE").map((cell) => cell.cellId),
+      },
+      orderingRule: "Ledger order within the wave. VERIFIED, not assumed: every tile the superseded inventory declared keeps its exact relative position here, with the restored tiles interleaved at their own ledger positions.",
+      byteReplay: {
+        claim: "Every entry below has child-process replay evidence. NOT ALL OF IT WAS PRODUCED IN THIS SESSION, and the two sources are named rather than blended.",
+        preExistingTiles: {
+          count: measured.cells.filter((cell) => cell.byteIdentity === "IDENTICAL").length,
+          evidence: "T004's own batched child-process replay, which sealed the superseded inventory. This session reproduced those exact digests and byte sizes and changed none of them.",
+        },
+        restoredTiles: {
+          count: measured.cells.filter((cell) => cell.byteIdentity === "NEW-TILE").length,
+          evidence: `data/${EVIDENCE_ID}/replay-new-tiles.json — two passes in fresh child processes, comparing glb digest, atlas digest, fallback share and unity-snap count.`,
+          replayRecordSha256: replay.recordSha256 ?? null,
+        },
+        notClaimed: "This session did NOT re-replay the 840 in fresh children. Doing so would compare this session against itself; the stronger evidence is that they reproduce the digests a DIFFERENT session sealed.",
+      },
+      inventoryId: `${EVIDENCE_ID}:${waveId}`,
+      entries: measured.cells.map((cell) => cell.entry),
+    };
+    const text = serialize(record);
+    await writeFile(join(evidenceRoot, `inventory-${waveId}.json`), text);
+    await writeFile(join(evidenceRoot, `inventory-${waveId}.sha256`), `${sha256(text)}  inventory-${waveId}.json\n`);
+    sealed.push({ waveId, entries: record.entries.length, sha256: sha256(text) });
+  }
+  console.log(serialize({ ok: true, waves: sealed, totalEntries: sealed.reduce((sum, wave) => sum + wave.entries, 0) }));
+}
+
+async function commandMerge() {
+  const verification = JSON.parse(await readFile(join(evidenceRoot, "verification.json"), "utf8"));
+  for (const key of ["P1", "P2", "P3", "P5", "P6"]) {
+    if (verification.verdicts[key] !== "PASS") fail(`${key} is ${verification.verdicts[key]}; the pre-registered stop rule forbids promotion.`);
+  }
+  const waves = [];
+  for (const waveId of WAVE_IDS) {
+    const text = await readFile(join(evidenceRoot, `inventory-${waveId}.json`), "utf8");
+    const declared = (await readFile(join(evidenceRoot, `inventory-${waveId}.sha256`), "utf8")).trim().split(/\s+/u)[0];
+    if (sha256(text) !== declared) fail(`inventory-${waveId}.json does not match its own sidecar.`);
+    const json = JSON.parse(text);
+    waves.push({ waveId, entries: json.entries, recordSha256: sha256(text) });
+  }
+  const ledgerChecksumSha256 = JSON.parse(await readFile(join(evidenceRoot, "measure-w00.json"), "utf8")).parentLedgerChecksumSha256;
+
+  let promoted;
+  try {
+    promoted = mergeFarTierWaveInventories({
+      waves,
+      honestStopCellIds: [],
+      ledgerCellCount: 883,
+      ledgerChecksumSha256,
+      recipeId: FAR_TIER_BAKE_RECIPE_V4.recipeId,
+      recipeSha256: farTierRecipeHashV4(),
+      campaignSummarySha256: sha256(await readFile(join(evidenceRoot, "verification.json"), "utf8")),
+    });
+  } catch (error) {
+    fail(error.message);
+  }
+  promoted.inventoryId = PROMOTION_ID;
+  const text = serializeFarTierInventory(promoted);
+  const promotionRoot = join(repositoryRoot, "data", PROMOTION_ID);
+  await mkdir(promotionRoot, { recursive: true });
+  await writeFile(join(promotionRoot, "promoted-inventory.json"), text);
+  await writeFile(join(promotionRoot, "promoted-inventory.sha256"), `${sha256(text)}  promoted-inventory.json\n`);
+
+  const fileBytes = promoted.entries.reduce((sum, entry) => sum + entry.glbByteSize + entry.atlasByteSize, 0);
+  console.log(serialize({
+    ok: true,
+    entries: promoted.entries.length,
+    honestStops: promoted.coverage.honestStopCells,
+    accountedFor: promoted.coverage.accountedFor,
+    ledgerCellCount: promoted.coverage.ledgerCellCount,
+    declaredFileBytes: fileBytes,
+    inventorySha256: sha256(text),
+    predecessorSha256: BOUND_TO.promotedInventory.sha256,
+  }));
+}
+
+// ---------------------------------------------------------------------------
 
 function isDirectEntryPoint() {
   const entry = process.argv[1];
@@ -722,5 +843,7 @@ if (isDirectEntryPoint()) {
   else if (command === "verify") await commandVerify();
   else if (command === "replay-batch") await commandReplayBatch(flag("wave"), flag("cells"));
   else if (command === "replay-new") await commandReplayNew(Number(flag("passes") ?? 2));
-  else fail("usage: far-tier-phantom-shaft-cli.mjs <pre-register|measure|verify|replay-new> [--wave wXX] [--passes N]");
+  else if (command === "seal") await commandSeal();
+  else if (command === "merge") await commandMerge();
+  else fail("usage: far-tier-phantom-shaft-cli.mjs <pre-register|measure|verify|replay-new|seal|merge> [--wave wXX] [--passes N]");
 }

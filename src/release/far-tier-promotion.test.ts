@@ -23,15 +23,17 @@ import {
   FAR_TIER_FAILURE_DETAIL_LIMIT,
   FAR_TIER_PAYLOAD_INVENTORY_SHA256,
   FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSOR,
+  FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSORS,
   FAR_TIER_RUNTIME_BUDGETS,
   FAR_TIER_RUNTIME_BUDGETS_V2,
+  FAR_TIER_RUNTIME_BUDGETS_V3,
   farTierEntryByteCost,
   farTierFailureDetail,
 } from "../runtime/far-tier-serving";
 import { FAR_TIER_BUDGET_CONTRACT } from "./far-tier-budget";
 
 const readText = (path: string): string => new TextDecoder("utf-8", { fatal: true }).decode(readFileSync(path));
-const COMMITTED_PATH = "data/far-tier-hlod-promotion-20260819/promoted-inventory.json";
+const COMMITTED_PATH = "data/far-tier-hlod-promotion-20260823/promoted-inventory.json";
 const STAGED_PATH = "public/far-tier/payload-inventory.json";
 const committedText = readText(COMMITTED_PATH);
 const committed = JSON.parse(committedText) as FarTierPromotedInventory;
@@ -43,21 +45,28 @@ describe("the promoted inventory is what the runtime pins", () => {
 
   it("moved the pin, and says what it moved from", () => {
     expect(FAR_TIER_PAYLOAD_INVENTORY_SHA256).not.toBe(FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSOR);
-    // The predecessor is still the digest of the record T003 shipped, so the
-    // constant is a fact about history rather than a comment about it.
-    expect(sha256HexSync(readText("data/far-tier-hlod-runtime-20260818/payload-inventory.json")))
+    // The predecessor is the digest of the 840-tile promotion this one replaced,
+    // so the constant is a fact about history rather than a comment about it.
+    expect(sha256HexSync(readText("data/far-tier-hlod-promotion-20260819/promoted-inventory.json")))
       .toBe(FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSOR);
+    // The tier has been re-declared twice. Both earlier pins are still
+    // re-derivable, so neither swap can be quietly dropped.
+    expect(sha256HexSync(readText("data/far-tier-hlod-runtime-20260818/payload-inventory.json")))
+      .toBe(FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSORS[0]);
+    expect(FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSORS[1]).toBe(FAR_TIER_PAYLOAD_INVENTORY_SHA256_PREDECESSOR);
   });
 
-  it("carries 840 unique cells and closes 840 + 43 against the ledger", () => {
-    expect(committed.entries).toHaveLength(840);
-    expect(new Set(committed.entries.map((entry) => entry.cellId)).size).toBe(840);
+  it("carries 883 unique cells and closes 883 + 0 against the ledger", () => {
+    // The 43 that used to be honest stops now bake, so the coverage that used
+    // to read 840 + 43 reads 883 + 0. The ledger total is unchanged.
+    expect(committed.entries).toHaveLength(883);
+    expect(new Set(committed.entries.map((entry) => entry.cellId)).size).toBe(883);
     const coverage = committed.coverage as Record<string, number | boolean | readonly string[]>;
-    expect(coverage.bakedCells).toBe(840);
-    expect(coverage.honestStopCells).toBe(43);
+    expect(coverage.bakedCells).toBe(883);
+    expect(coverage.honestStopCells).toBe(0);
     expect(coverage.accountedFor).toBe(883);
     expect(coverage.ledgerCellCount).toBe(883);
-    expect((coverage.honestStopCellIds as readonly string[])).toHaveLength(43);
+    expect((coverage.honestStopCellIds as readonly string[])).toHaveLength(0);
     // A stop that is also an entry would be a cell counted twice.
     const stops = new Set(coverage.honestStopCellIds as readonly string[]);
     for (const entry of committed.entries) expect(stops.has(entry.cellId)).toBe(false);
@@ -65,8 +74,8 @@ describe("the promoted inventory is what the runtime pins", () => {
 
   it("keeps every refused member, because the massing still has to explain itself", () => {
     const members = committed.entries.flatMap((entry) => entry.members);
-    expect(members).toHaveLength(44_076);
-    expect(members.filter((member) => !member.included)).toHaveLength(143);
+    expect(members).toHaveLength(45_194);
+    expect(members.filter((member) => !member.included)).toHaveLength(162);
   });
 });
 
@@ -137,19 +146,48 @@ describe("the merge refuses rather than papering over", () => {
   });
 });
 
-describe("budgets v2 is derived, additive, and stated in its own unit", () => {
+describe("budgets v3 is derived, additive, and stated in its own unit", () => {
   it("sums to the declared file bytes of the promoted island", () => {
     const total = committed.entries.reduce((sum, entry) => sum + farTierEntryByteCost(entry), 0);
-    expect(total).toBe(258_644_848);
-    expect(FAR_TIER_RUNTIME_BUDGETS_V2.derivation.declaredFileBytesAllTiles).toBe(total);
-    expect(FAR_TIER_RUNTIME_BUDGETS_V2.derivation.glbBytes + FAR_TIER_RUNTIME_BUDGETS_V2.derivation.atlasBytes).toBe(total);
+    expect(total).toBe(266_051_784);
+    expect(FAR_TIER_RUNTIME_BUDGETS_V3.derivation.declaredFileBytesAllTiles).toBe(total);
+    expect(FAR_TIER_RUNTIME_BUDGETS_V3.derivation.glbBytes + FAR_TIER_RUNTIME_BUDGETS_V3.derivation.atlasBytes).toBe(total);
+  });
+
+  it("keeps v2 in place as the record of the 840-tile island", () => {
+    // V2 is superseded, NOT deleted, and it still has to be true about the
+    // island it described. If this drifts, the supersession has been faked.
+    expect(FAR_TIER_RUNTIME_BUDGETS_V2.derivation.promotedTiles).toBe(840);
+    expect(FAR_TIER_RUNTIME_BUDGETS_V2.derivation.declaredFileBytesAllTiles).toBe(258_644_848);
+    expect(FAR_TIER_RUNTIME_BUDGETS_V3.supersedes.constant).toBe("FAR_TIER_RUNTIME_BUDGETS_V2");
+    expect(FAR_TIER_RUNTIME_BUDGETS_V3.supersedes.declaredFileBytesAllTiles).toBe(FAR_TIER_RUNTIME_BUDGETS_V2.derivation.declaredFileBytesAllTiles);
+    // The CEILING did not move. The 43 restored tiles fit in headroom v2 had.
+    expect(FAR_TIER_RUNTIME_BUDGETS_V3.maxCachedBytes).toBe(FAR_TIER_RUNTIME_BUDGETS_V2.maxCachedBytes);
+    expect(FAR_TIER_RUNTIME_BUDGETS_V3.supersedes.ceilingMoved).toBe(false);
+  });
+
+  it("meets the frozen GPU bar TERM BY TERM, in the bar's own unit", () => {
+    // The bar's geometry term was derived with farTierGeometryGpuBytes, which
+    // counts decoded vertices and indices. V2's justification substituted GLB
+    // FILE bytes for it -- a looser quantity in a different unit. On 883 tiles
+    // that proxy goes OVER the bar while the real measurement stays inside, so
+    // the substitution is not merely conservative and is not repeated.
+    const gpu = FAR_TIER_RUNTIME_BUDGETS_V3.gpuJustification;
+    expect(gpu.islandAtlasGpuBytes).toBeLessThan(gpu.islandAtlasModelledBound);
+    expect(gpu.islandGeometryGpuBytes).toBeLessThan(gpu.islandGeometryModelledBound);
+    expect(gpu.islandAtlasGpuBytes + gpu.islandGeometryGpuBytes).toBe(gpu.islandResidentGpuBytes);
+    expect(gpu.islandResidentGpuBytes).toBeLessThan(FAR_TIER_BUDGET_CONTRACT.maxResidentTotalGpuBytes);
+    expect(gpu.frozenMaxResidentTotalGpuBytes).toBe(FAR_TIER_BUDGET_CONTRACT.maxResidentTotalGpuBytes);
+    expect(gpu.v2ProxyCorrection.sameProxyOn883).toBeGreaterThan(FAR_TIER_BUDGET_CONTRACT.maxResidentTotalGpuBytes);
+    // The margin is thin and must be stated as such, not rounded up to v2's.
+    expect(gpu.marginShare).toBeLessThan(0.002);
   });
 
   it("admits the whole island with the stated headroom", () => {
-    const total = FAR_TIER_RUNTIME_BUDGETS_V2.derivation.declaredFileBytesAllTiles;
-    expect(FAR_TIER_RUNTIME_BUDGETS_V2.maxCachedBytes).toBeGreaterThan(total);
-    expect(FAR_TIER_RUNTIME_BUDGETS_V2.maxCachedBytes - total).toBe(FAR_TIER_RUNTIME_BUDGETS_V2.derivation.headroomBytes);
-    expect(FAR_TIER_RUNTIME_BUDGETS_V2.maxCacheEntries).toBeGreaterThanOrEqual(committed.entries.length);
+    const total = FAR_TIER_RUNTIME_BUDGETS_V3.derivation.declaredFileBytesAllTiles;
+    expect(FAR_TIER_RUNTIME_BUDGETS_V3.maxCachedBytes).toBeGreaterThan(total);
+    expect(FAR_TIER_RUNTIME_BUDGETS_V3.maxCachedBytes - total).toBe(FAR_TIER_RUNTIME_BUDGETS_V3.derivation.headroomBytes);
+    expect(FAR_TIER_RUNTIME_BUDGETS_V3.maxCacheEntries).toBeGreaterThanOrEqual(committed.entries.length);
   });
 
   it("names its unit as DECLARED FILE BYTES and refuses to be read as a GPU bar", () => {
