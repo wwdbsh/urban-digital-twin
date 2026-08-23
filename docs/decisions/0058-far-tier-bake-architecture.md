@@ -1040,3 +1040,126 @@ ceilings and the swapped inventory pin were never controlled for. The promotion
 is indicated; the attribution is not closed.
 
 The acceptance campaign's **NOT ACCEPTED** verdict stands unchanged.
+
+## Amendment — the phantom shaft zone (post-goal, no Issue, 2026-08-23)
+
+### The 43 honest stops were a defect in the metric, not a property of the cells
+
+`farTierFacesForPlan` resolved every wall face's **shaft** zone before it knew
+whether the face emits one. When `split === 1` the base zone reaches the top of
+the face, the face carries no shaft zone, and `farTierZoneAggregates` created no
+`<index>:shaft` key for that edge **by construction** — the base/shaft boundary
+*is* the top, so every in-scope surface lands in `base`. The unconditional call
+therefore missed, filed a facade-only fallback against a zone the tile does not
+contain, and returned a palette factor that was immediately discarded.
+
+That would have been untidy but harmless if the area metric were keyed by zone.
+It is keyed by **face**: `bakeFarTierCell` reduces the zone key to its edge index
+(`far-tier-campaign.ts:205`), so a single phantom entry attributed the **entire
+face's** wall area to the fallback total. Forty-three cells crossed the 5% bar on
+area they never lost, and seven of them reported a share of exactly `1.000000` —
+every face condemned.
+
+**The corroboration is an asymmetry, not a story.** Every facade-only fallback
+zone in the whole frozen campaign is a `shaft` zone: 4,161 of 4,161 across the 43
+stops and 21,063 of 21,063 across the 730 baked cells that carried any. Not one
+is a `base` zone — because the base resolution was **already** guarded by
+`split > 0`.
+
+The fix resolves the shaft only when the face emits one. It is written as a
+ternary rather than a move into the `split < 1` block, so the original
+shaft-before-base ordering of `facadeOnlyFallbackReport` and `unitySnapReport`
+survives and the *only* behavioural difference anywhere is the absent phantom
+calls.
+
+### What was pre-registered, and what deliberately was not
+
+The architect's three anchors were pinned before any cell was baked, and all
+three held to the digit: 43 of 43 under the unchanged bar; worst residual
+`w04-000572` at **0.03137993** against a predicted 0.03138; **exactly 17** at
+exactly 0.0.
+
+The remaining forty rows were **not** pre-registered, and that was a deliberate
+departure from the task brief. Rows recomputed by the measuring party with the
+measuring party's own code agree by construction and prove nothing. Only
+predictions fixed by someone else can falsify anything, so only those three carry
+evidentiary weight, and the record says so.
+
+### The 840 did not move, and the frozen records were not edited
+
+All 840 previously-baked tiles reproduce **byte-identically** — same GLB digest,
+same atlas digest, same sizes — against the per-wave inventories T004's own
+child-process replay sealed. Nothing the fix touches reaches a shipped byte:
+`emitTileBytes` writes no fallback telemetry into GLB metadata.
+
+The **telemetry** did move, and it was disclosed in advance rather than
+discovered: cells carrying any fallback zone fall from 730 to 627, and 574 cells'
+rows change. Those frozen records are **not** edited — they truthfully record
+what the defective code did. `totalUnitySnaps` is unchanged at 2,072, which
+settles by measurement whether a discarded shaft resolution could ever have
+snapped a factor to unity: it never did.
+
+### The GPU bar is met term by term, and the margin is 0.14%, not 2.0%
+
+`FAR_TIER_RUNTIME_BUDGETS_V2` justified admission with a total of 382,457,884
+and called it a 2.0% margin. **That sum was not in the bar's unit.** It added
+decoded atlas bytes to GLB *file* bytes, while `maxResidentGeometryGpuBytes` was
+derived with `farTierGeometryGpuBytes`, which counts decoded vertices and
+indices. Measured properly, from the shipped GLBs' own accessor counts:
+
+| term | measured | modelled bound | |
+| --- | --- | --- | --- |
+| atlas | 291,722,287 | 291,984,434 | inside |
+| geometry | 98,010,816 | 98,310,624 | inside |
+| **total** | **389,733,103** | **390,295,058** | **inside by 0.14%** |
+
+Under v2's own proxy the same 883 tiles come to **393,390,627** — over the bar by
+3,095,569 bytes. The proxy no longer merely errs safe, it **inverts the verdict**,
+so it is retired and a test pins that it would now fail.
+
+**A pass here is a weak result and is recorded as one.** The ceiling was not an
+independent budget: T003 derived it from a model of these same 883 cells, and for
+this tree `maxCut` exceeds the plain all-leaves sum by three bytes. So this is
+close to a test of whether the bake matched its own resolution model. It did,
+almost exactly — actual atlas edges came out `{64:22, 128:37, 256:824}` against a
+modelled `{64:22, 128:36, 256:825}`, one cell apart. A real GPU residency reading
+in the B3–B5 discipline would be stronger and is **not** claimed.
+
+### Sweep-3, and a pose whose premise inverted
+
+All six **registered** poses pass, reused unchanged so the comparison is
+pose-for-pose: 882 drawn of 883 declared, zero uncovered massing, zero absent,
+checksum-mismatch, build-failure or over-budget.
+
+**P3 was registered as "over an honest-stop cell — the far tier must show massing
+here, not a tile."** That premise no longer holds, and the pose is reported
+against the inverted expectation rather than quietly rescored. Sweep-2 read 3
+massing buildings active with only **1** suppressible and **1** covered; the other
+two belonged to the stopped cell and had no tile to hide under. Sweep-3 reads
+**3, 3, 3**. That is a draw-composition reading, not a fetch: those buildings
+could only move to far-tier alpha under a tile that is actually drawn.
+
+Across the island at P5, 2,349 more massing buildings are covered than at
+sweep-2.
+
+**Two vehicle facts are on the record.** The six `<!doctype` notices appear again
+— the `-s2` exterior packages are still absent from disk, so this sweep, like both
+before it, does **not** clear the three-tier composition with exterior waves
+present. And port 4173 was already held by a preview server from a *different*
+checkout serving the superseded 840-tile inventory; sweeping the registered URLs
+unchanged would have scored the wrong build. It was caught by checking the served
+inventory digest before visiting a pose, and every pose ran on 4174 with only the
+port substituted.
+
+The `882 of 883` drawn shortfall is **carried forward unexplained**. Sweep-2 read
+`839 of 840` — the same one-cell gap, unchanged in size by adding 43 tiles. This
+task did not investigate it, and naming it is not closing it.
+
+### What this amendment does not do
+
+It retires residual **R13** and nothing else. No criterion verdict moves, the
+goal's completion decision remains the user's to take, and criteria 3, 4, 8 and 9
+stand exactly as the sealed acceptance record leaves them. Coverage is not
+correctness: 883 tiles is a coverage fact, not an appearance verdict. And the
+refusals went the **wrong** way — 143 individual buildings refused became 162,
+because the restored cells contain 19 more the grammar will not build.

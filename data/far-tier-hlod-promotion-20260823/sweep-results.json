@@ -1,0 +1,295 @@
+{
+  "schemaVersion": "1.0",
+  "recordId": "far-tier-hlod-promotion-20260823:sweep-results",
+  "artifact": "far-tier-phantom-shaft-promotion-sweep",
+  "task": "post-goal ad hoc: phantom shaft zone",
+  "capturedAt": null,
+  "capturedAtStatement": "NULL BY CONSTRUCTION.",
+  "sweepId": "sweep-3",
+  "headline": "ALL SIX REGISTERED POSES PASS at 883 tiles. 882 drawn, 0 uncovered massing, 0 absent, 0 checksum-mismatch, 0 build-failure, 0 over-budget.",
+  "poseRegistry": {
+    "record": "data/far-tier-hlod-promotion-20260819/sweep-poses.json",
+    "statement": "THE REGISTERED POSES ARE REUSED UNCHANGED. No pose was added, moved or re-derived for this sweep, so the comparison against sweep-2 is pose-for-pose."
+  },
+  "p3PremiseInverted": {
+    "poseId": "P3",
+    "cellId": "manhattan-exterior-cell-w01-000062-14-4823-4481",
+    "registeredExpectation": "\"Over an honest-stop cell — the far tier must show massing here, not a tile.\"",
+    "statusNow": "THAT PREMISE NO LONGER HOLDS, and the pose is reported against the inverted expectation rather than quietly rescored. The cell is no longer an honest stop: it bakes at a residual fallback share of exactly 0.0.",
+    "measurement": "At P3 sweep-2 recorded 3 massing buildings active with only 1 suppressible and 1 covered — the other 2 belonged to the stopped cell and had no tile to hide under. Sweep-3 reads 3 active, 3 suppressible, 3 covered.",
+    "whyThisIsTheDecisiveReading": "It is a DRAW-composition reading, not a fetch. The two buildings moved from drawing as massing to being held at far-tier alpha under a drawn tile, which is only possible if that tile is drawn."
+  },
+  "verdictRule": "UNCHANGED from sweep-2, quoted verbatim: over-budget = absent = checksum-mismatch = build-failure = 0, AND every V3T-eligible member either near/mid-drawn, suppressed under a drawn tile, or in the committed exemption set.",
+  "boundTo": {
+    "promotedInventorySha256": "92c19acbb40a1a5e2c79f091e00431dc2e45a84f060b606154da2c1f3784a0cd",
+    "supersededPromotedInventorySha256": "cf8e26480eecc91f2e7b473d217a0d3551d0be59b4d8da39ee1217a6e0538f0a",
+    "poseRegistrySha256": "88706483bede48b2189325477ced7f09fe9e0bb3edd0f13f9c5970c8981a2c6b"
+  },
+  "vehicle": {
+    "browser": "Orca embedded browser 1.4.188.",
+    "server": "vite preview of a production build.",
+    "portDeviation": {
+      "registered": 4173,
+      "used": 4174,
+      "why": "PORT 4173 WAS ALREADY HELD by a pre-existing preview server from a DIFFERENT checkout, which served the superseded 840-tile inventory. Sweeping the registered URLs unchanged would have scored the wrong build and reported it as this one.",
+      "howItWasCaught": "The served inventory digest was checked before any pose was visited: 4173 returned cf8e2648 (the 840-tile record) and 4174 returned 92c19acb (this one).",
+      "verification": "Every pose URL is the registered URL with only the port substituted. P3 tile manhattan-exterior-cell-w01-000062-14-4823-4481.far_0.glb was fetched over HTTP from 4174 and hashed to 07a0b162a747e0df14ede41cc57201f6c36de6cf4b7e3417eb0e464c9356121d, the exact digest the bake and the child-process replay both recorded."
+    }
+  },
+  "vehicleLimitation": {
+    "observation": "Six `Unexpected token '<', \"<!doctype \"` notices appear in the runtime panel at every pose, as they did in sweeps 1 and 2.",
+    "diagnosis": "The six `-s2` exterior serving packages are absent from disk on this machine, so the SPA fallback answers their index.json with index.html. Diagnosed in ADR 0058 and NOT introduced here.",
+    "materiality": "THE EXTERIOR WAVE TIER WAS ABSENT FROM THE VEHICLE, exactly as in both earlier sweeps. This sweep measures the dense massing tier, the far tier and their interaction. It does NOT clear the three-tier composition with exterior waves present, and does not claim to."
+  },
+  "drawnShortfall": {
+    "observed": "882 drawn of 883 declared.",
+    "priorArt": "Sweep-2 read 839 of 840 — the same single-cell shortfall, at the same 1-cell size, before these 43 existed.",
+    "statement": "CARRIED FORWARD UNEXPLAINED. It is pre-existing, it did not change size when 43 tiles were added, and this task did not investigate it. Naming it is not the same as closing it."
+  },
+  "stills": {
+    "retained": "ONE, at P5, eyeballed rather than scored. It confirms the UI reading (\"Far tier · 882 drawn · 883 declared\") and shows the island drawing from tiles. It is NOT a pixel measurement and no appearance verdict rests on it.",
+    "path": "Not committed; the serving and capture roots are gitignored work product."
+  },
+  "poses": [
+    {
+      "poseId": "P1",
+      "label": "T003 validation pose — straight down at 1,400 m",
+      "settledAfterSeconds": 32,
+      "states": {
+        "declared": 883,
+        "drawn": 882,
+        "near": 0,
+        "notDeclared": 1,
+        "absent": 0,
+        "checksumMismatch": 0,
+        "buildFailure": 0,
+        "overBudget": 0
+      },
+      "massing": {
+        "active": 2674,
+        "suppressible": 2667,
+        "covered": 2667,
+        "uncovered": 0,
+        "uncoveredHidden": 0,
+        "uncoveredDesired": 0,
+        "uncoveredNotDesired": 0,
+        "passUncovered": 0,
+        "passDrawn": 882,
+        "publishDrawn": 882,
+        "desiredCovered": 2667,
+        "appliedCovered": 2667
+      },
+      "againstSweep2": {
+        "declared": 840,
+        "drawn": 839,
+        "suppressible": 2520,
+        "covered": 2520,
+        "active": 2671,
+        "deltaCovered": 147,
+        "deltaDrawn": 43
+      },
+      "verdict": "PASS",
+      "why": "absent / checksum-mismatch / build-failure / over-budget all 0, and every loaded massing building under a drawn tile is held at far-tier alpha (uncovered 0). notDeclared = 1 is the committed Block 835 alias exemption, unchanged."
+    },
+    {
+      "poseId": "P2",
+      "label": "Midtown overview, 2,400 m, pitch -35 — the only OBLIQUE pose",
+      "settledAfterSeconds": 32,
+      "states": {
+        "declared": 883,
+        "drawn": 882,
+        "near": 0,
+        "notDeclared": 1,
+        "absent": 0,
+        "checksumMismatch": 0,
+        "buildFailure": 0,
+        "overBudget": 0
+      },
+      "massing": {
+        "active": 25029,
+        "suppressible": 24943,
+        "covered": 24943,
+        "uncovered": 0,
+        "uncoveredHidden": 0,
+        "uncoveredDesired": 0,
+        "uncoveredNotDesired": 0,
+        "passUncovered": 0,
+        "passDrawn": 882,
+        "publishDrawn": 882,
+        "desiredCovered": 24943,
+        "appliedCovered": 24943
+      },
+      "againstSweep2": {
+        "declared": 840,
+        "drawn": 839,
+        "suppressible": 23973,
+        "covered": 23973,
+        "active": 25017,
+        "deltaCovered": 970,
+        "deltaDrawn": 43
+      },
+      "verdict": "PASS",
+      "why": "absent / checksum-mismatch / build-failure / over-budget all 0, and every loaded massing building under a drawn tile is held at far-tier alpha (uncovered 0). notDeclared = 1 is the committed Block 835 alias exemption, unchanged."
+    },
+    {
+      "poseId": "P3",
+      "label": "Over a FORMERLY honest-stopped cell (w01-000062) — the pose whose premise this fix inverts",
+      "settledAfterSeconds": 32,
+      "states": {
+        "declared": 883,
+        "drawn": 882,
+        "near": 0,
+        "notDeclared": 1,
+        "absent": 0,
+        "checksumMismatch": 0,
+        "buildFailure": 0,
+        "overBudget": 0
+      },
+      "massing": {
+        "active": 3,
+        "suppressible": 3,
+        "covered": 3,
+        "uncovered": 0,
+        "uncoveredHidden": 0,
+        "uncoveredDesired": 0,
+        "uncoveredNotDesired": 0,
+        "passUncovered": 0,
+        "passDrawn": 882,
+        "publishDrawn": 882,
+        "desiredCovered": 3,
+        "appliedCovered": 3
+      },
+      "againstSweep2": {
+        "declared": 840,
+        "drawn": 839,
+        "suppressible": 1,
+        "covered": 1,
+        "active": 3,
+        "deltaCovered": 2,
+        "deltaDrawn": 43
+      },
+      "verdict": "PASS",
+      "why": "absent / checksum-mismatch / build-failure / over-budget all 0, and every loaded massing building under a drawn tile is held at far-tier alpha (uncovered 0). notDeclared = 1 is the committed Block 835 alias exemption, unchanged."
+    },
+    {
+      "poseId": "P4",
+      "label": "Over the densest baked cell",
+      "settledAfterSeconds": 32,
+      "states": {
+        "declared": 883,
+        "drawn": 882,
+        "near": 0,
+        "notDeclared": 1,
+        "absent": 0,
+        "checksumMismatch": 0,
+        "buildFailure": 0,
+        "overBudget": 0
+      },
+      "massing": {
+        "active": 3826,
+        "suppressible": 3812,
+        "covered": 3812,
+        "uncovered": 0,
+        "uncoveredHidden": 0,
+        "uncoveredDesired": 0,
+        "uncoveredNotDesired": 0,
+        "passUncovered": 0,
+        "passDrawn": 882,
+        "publishDrawn": 882,
+        "desiredCovered": 3812,
+        "appliedCovered": 3812
+      },
+      "againstSweep2": {
+        "declared": 840,
+        "drawn": 839,
+        "suppressible": 3757,
+        "covered": 3757,
+        "active": 3818,
+        "deltaCovered": 55,
+        "deltaDrawn": 43
+      },
+      "verdict": "PASS",
+      "why": "absent / checksum-mismatch / build-failure / over-budget all 0, and every loaded massing building under a drawn tile is held at far-tier alpha (uncovered 0). notDeclared = 1 is the committed Block 835 alias exemption, unchanged."
+    },
+    {
+      "poseId": "P5",
+      "label": "Island overview at 12 km — every cell in range at once",
+      "settledAfterSeconds": 32,
+      "states": {
+        "declared": 883,
+        "drawn": 882,
+        "near": 0,
+        "notDeclared": 1,
+        "absent": 0,
+        "checksumMismatch": 0,
+        "buildFailure": 0,
+        "overBudget": 0
+      },
+      "massing": {
+        "active": 31529,
+        "suppressible": 31413,
+        "covered": 31413,
+        "uncovered": 0,
+        "uncoveredHidden": 0,
+        "uncoveredDesired": 0,
+        "uncoveredNotDesired": 0,
+        "passUncovered": 0,
+        "passDrawn": 882,
+        "publishDrawn": 882,
+        "desiredCovered": 31413,
+        "appliedCovered": 31413
+      },
+      "againstSweep2": {
+        "declared": 840,
+        "drawn": 839,
+        "suppressible": 29064,
+        "covered": 29064,
+        "active": 29759,
+        "deltaCovered": 2349,
+        "deltaDrawn": 43
+      },
+      "verdict": "PASS",
+      "why": "absent / checksum-mismatch / build-failure / over-budget all 0, and every loaded massing building under a drawn tile is held at far-tier alpha (uncovered 0). notDeclared = 1 is the committed Block 835 alias exemption, unchanged."
+    },
+    {
+      "poseId": "P6-OFF",
+      "label": "Rollback arm — P2 pose with the far tier explicitly off",
+      "settledAfterSeconds": 32,
+      "states": "ABSENT BY DESIGN. With the tier off the far-tier status element is not rendered, so there are no per-state counts to read. That absence IS the arm result.",
+      "massing": {
+        "active": 25032,
+        "suppressible": 0,
+        "covered": 0,
+        "uncovered": 0,
+        "passDrawn": 0,
+        "publishDrawn": 0
+      },
+      "againstSweep2": {
+        "active": 25021,
+        "suppressible": 0,
+        "publishDrawn": 0
+      },
+      "verdict": "PASS",
+      "why": "25,032 massing buildings draw at full alpha with no far-tier tile drawn and no far-tier UI present. Restoring 43 tiles did not weaken the rollback."
+    }
+  ],
+  "summary": {
+    "posesPassed": 6,
+    "posesFailed": 0,
+    "tilesDeclared": 883,
+    "tilesDrawn": 882,
+    "uncoveredMassingAtEveryPose": 0,
+    "additionalMassingBuildingsCoveredVersusSweep2": {
+      "P1": 147,
+      "P2": 970,
+      "P3": 2,
+      "P4": 55,
+      "P5": 2349
+    }
+  },
+  "notClaimedHere": [
+    "Not an appearance or fidelity verdict. Coverage is not correctness.",
+    "Not a GPU or frame-time measurement. No timing window was held.",
+    "The goal acceptance record is not reopened by this sweep."
+  ]
+}
