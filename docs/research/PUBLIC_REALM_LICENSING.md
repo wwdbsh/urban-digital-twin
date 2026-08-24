@@ -1,9 +1,12 @@
 # Public-realm licensing evidence and source selection (T001)
 
 Task: `manhattan-citywide-public-realm` T001 (Issue #130).
-Verified: 2026-08-24, via live browser session (NYC pages block automated
-fetch with 403) plus web research. Quotes are verbatim from the cited pages
-as read on that date.
+Verified: 2026-08-24, via live browser session plus web research, with an
+independent re-check of machine-fetchable sources. `nyc.gov` proper and
+`usgs.gov` 403-block automated fetch (browser-verified only); the
+`opendata.cityofnewyork.us` portal pages are machine-fetchable and were
+re-verified verbatim. Quotes are verbatim from the cited pages as read on
+that date.
 
 ## 1. NYC Open Data terms (governs Planimetrics, Hydrography, Plazas)
 
@@ -101,9 +104,11 @@ imagery source is the New York State Statewide Digital Orthoimagery Program.
 **Download channel (file-based, no credentials):** NYS GIS NYC downloads page
 (<https://gis.ny.gov/new-york-city-orthoimagery-downloads>) lists Manhattan
 zips for 2006–2024. 2024 Manhattan URL verified in-browser:
-`https://gisdata.ny.gov/ortho/nysdop12/new_york_city/spcs/zips/boro_manhattan_sp24.zip`.
+`https://gisdata.ny.gov/ortho/nysdop12/new_york_city/spcs/zips/boro_manhattan_sp24.zip`
+(HEAD-verified 2026-08-24: HTTP 200, ~2.4 GB, Last-Modified 2025-06-05).
 This resolves the earlier vintage uncertainty: **2024 Manhattan is
-downloadable; select the 2024 vintage.**
+downloadable; select the 2024 vintage.** The ~2.4 GB borough zip size should
+inform the T004 envelope (full-borough download, then zone clipping).
 
 **Honest gap.** NYS FGDC metadata for the 2024 NYC vintage was not located as
 a standalone page. Older vintages (2001–2010) carry this boilerplate
