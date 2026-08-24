@@ -279,6 +279,40 @@ export function groundMembershipChecksum(partIds: readonly string[]): string {
   return sha256HexSync(stableSerialize(sortGroundIds(partIds)));
 }
 
+/** The identity a ledger id is derived from. Cells contribute id, order, bounds and membership. */
+export interface GroundOwnershipLedgerIdentity {
+  cityId: string;
+  configId: string;
+  partitionSchemeId: string;
+  extentId: string;
+  coverage: GroundBounds;
+  baseIdentitySet: GroundOwnershipLedger["baseIdentitySet"];
+  cells: readonly Pick<GroundOwnershipCell, "cellId" | "order" | "bounds" | "membershipChecksumSha256">[];
+}
+
+/**
+ * The ledger id, derived rather than declared.
+ *
+ * Exported because a RUNTIME must be able to ask the question the builder
+ * answered: does this `ledger.json` actually produce the id the release
+ * document pins? The ledger file carries no checksum of its own, so
+ * re-deriving its id is the only cryptographic link between the two documents,
+ * and a second copy of this derivation in the runtime would be a link to
+ * nothing. `buildGroundOwnershipLedger` below is the only other caller.
+ */
+export function groundOwnershipLedgerId(identity: GroundOwnershipLedgerIdentity): string {
+  const citySlug = identity.cityId.replaceAll(":", "-");
+  return `ground-ledger:${citySlug}:${identity.partitionSchemeId}:${domainSeparatedSha256(GROUND_LEDGER_ID_DOMAIN, {
+    cityId: identity.cityId,
+    configId: identity.configId,
+    partitionSchemeId: identity.partitionSchemeId,
+    extentId: identity.extentId,
+    coverage: identity.coverage,
+    baseIdentitySet: identity.baseIdentitySet,
+    cells: identity.cells.map((cell) => ({ cellId: cell.cellId, order: cell.order, bounds: cell.bounds, membershipChecksumSha256: cell.membershipChecksumSha256 })),
+  }).slice(0, 32)}`;
+}
+
 // ---------------------------------------------------------------------------
 // Ledger construction
 // ---------------------------------------------------------------------------
@@ -372,17 +406,15 @@ export function buildGroundOwnershipLedger(input: GroundOwnershipLedgerInput): G
     partCount: parts.length,
   };
 
-  const identity = {
+  const ledgerId = groundOwnershipLedgerId({
     cityId: input.cityId,
     configId: input.configId,
     partitionSchemeId: input.partitionSchemeId,
     extentId: input.extent.extentId,
     coverage,
     baseIdentitySet,
-    cells: resolvedCells.map((cell) => ({ cellId: cell.cellId, order: cell.order, bounds: cell.bounds, membershipChecksumSha256: cell.membershipChecksumSha256 })),
-  };
-  const citySlug = input.cityId.replaceAll(":", "-");
-  const ledgerId = `ground-ledger:${citySlug}:${input.partitionSchemeId}:${domainSeparatedSha256(GROUND_LEDGER_ID_DOMAIN, identity).slice(0, 32)}`;
+    cells: resolvedCells,
+  });
 
   return {
     ledger: {
