@@ -57,6 +57,41 @@ records the decisions a future maintainer must not rediscover in a PR.
    reuses `src/domain/deterministic-hash.ts` exclusively. No budget numbers
    are restated; materialization tasks derive against live budgets.
 
+## T006 materialization record (release `manhattan-ground-20260824`)
+
+Built by `scripts/manhattan-ground-build-cli.mjs` (deterministic: two full
+builds byte-identical across 356 files); validated by
+`scripts/validate-manhattan-ground-release.mjs`, composed into
+`pnpm citywide:validate` alongside the untouched buildings phase.
+
+- **Content-addressed identity**: `udt:ground:manhattan:<class>:<sha256-16>`
+  over `{geometry, properties}` — chosen because measured source ids are not
+  identities (1,853 duplicate roadbed `source_id`s, sidewalk `"0.0"` ×871,
+  plazas have none). `source_id`/`objectid` retained as attributes;
+  0 collisions across 42,384 minted ids.
+- **Scale**: 140 cells, 42,778 features → 47,779 parts, 352 per-class
+  per-cell JSON artifacts, 182 MB. Only boundary-crossing features are
+  clipped (Sutherland–Hodgman vs cell rectangle, no buffer); single-cell
+  features require full containment (build-failing assertion).
+- **Coordinates quantized to 7 dp** (~1.1 cm), disclosed in
+  `geometryValidation.method`. One roadbed sliver (0.0066 m²) has no
+  representable area at 7 dp and was explicitly REFUSED with measurements
+  (refusal-transparency precedent), not dropped.
+- **Area gates**: the pre-registered relative bar (1e-9) FAILED at 2.48e-9;
+  investigation showed a relative bar cannot bound fixed-magnitude float
+  error on small polygons. An absolute gate (1.07e-14 deg² ≈ 1 cm²) is
+  operative; both bars, both observations, and the failure are recorded in
+  the release. Areas use local-origin shoelace (naive shoelase loses ~1%
+  to cancellation at −74°).
+- **Honest censuses**: empty-class cells /140 — roadbed 45, sidewalk 45,
+  water 64, plaza 102, park 92 (water/margin cells; the "every cell has
+  roadbed+sidewalk" acceptance wording is unmeetable literally and is
+  recorded as a census instead). 66 self-touching rings shipped unrepaired
+  and measured for T007. Pavement-edge (45,129 features) deliberately left
+  raw for T009.
+- **Known gap**: `generatedAt` tampering is NOT caught (T005 schema has no
+  self-digest field) — future schema task.
+
 ## Known limitations (recorded, not hidden)
 
 - The Manhattan ground extent (`-74.03/40.68/-73.90/40.89`, outward-snapped
