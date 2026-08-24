@@ -24,6 +24,7 @@ import {
   type GroundOwnershipLedgerInput,
   type GroundReleaseDocument,
 } from "./ground-release.ts";
+import { CITYWIDE_PUBLIC_REALM_VECTOR_APPROVAL_EVIDENCE } from "../data/source-registry.ts";
 import { sha256HexSync, stableSerialize } from "../domain/deterministic-hash.ts";
 import { groundPartId, type GroundFeature, type GroundSurfaceFeature, type GroundTier } from "../domain/ground.ts";
 import { tileBounds, tileKeyString } from "../runtime/spatial.ts";
@@ -224,6 +225,23 @@ describe("ground partition scheme", () => {
     const { ledger } = buildGroundOwnershipLedger(ledgerInput({ extent: MANHATTAN_GROUND_EXTENT }));
     expect(ledger.cells).toHaveLength(140);
     expect(validateGroundPartitionCoverage(ledger).ok, messages(validateGroundPartitionCoverage(ledger))).toBe(true);
+  });
+
+  /**
+   * `scripts/citywide-public-realm-cli.mjs` clips the T003 vector acquisition to
+   * this rectangle, and `CITYWIDE_PUBLIC_REALM_VECTOR_APPROVAL_EVIDENCE.scope`
+   * states it as the approved envelope. Neither can import this module — one is
+   * dependency-free `.mjs`, the other is a frozen approval record — so both
+   * restate the numbers. This is the assertion that keeps the restatements
+   * honest: change the extent or the partition scheme and this fails loudly
+   * instead of letting a snapshot clip to a stale envelope.
+   */
+  it("snapped Manhattan ground coverage is the clip envelope restated in the T003 acquisition CLI", () => {
+    const { coverage } = groundPartitionTiles(MANHATTAN_GROUND_EXTENT, GROUND_PARTITION_SCHEME_ID);
+    expect(coverage).toEqual({ west: -74.0478515625, south: 40.67138671875, east: -73.89404296875, north: 40.89111328125 });
+    for (const bound of Object.values(coverage)) {
+      expect(CITYWIDE_PUBLIC_REALM_VECTOR_APPROVAL_EVIDENCE.scope).toContain(String(bound));
+    }
   });
 });
 

@@ -155,3 +155,36 @@ Fallback consequence recorded honestly: resolution drops from 6 inch to
 
 All acquisitions remain gated behind the T003/T004 user-approved envelopes;
 nothing was downloaded during T001.
+
+## 7. Acquisition record (T003, 2026-08-24)
+
+The vector envelope was user-approved and executed via
+`scripts/citywide-public-realm-cli.mjs` (subcommands `acquire`,
+`acquire:hydro-intersects`, `validate:raw`). Approval evidence:
+`CITYWIDE_PUBLIC_REALM_VECTOR_APPROVAL_EVIDENCE` (fingerprint = sha256 of the
+verbatim approval statement embedded in the constant). Orthoimagery remains
+`pending` until the T004 gate.
+
+- **Primary snapshot** `data/raw/citywide-public-realm-20260824/` (373 MB,
+  gitignored; manifest sha256 `da4653767ff95581…`): five datasets, 87,504
+  features, server-side `within_box` clip on the T005 snapped ground coverage
+  (`-74.0478515625/40.67138671875/-73.89404296875/40.89111328125`),
+  deterministic `$order=:id` paging, client-side bbox re-validation,
+  0 quarantined. Adjacent-borough features inside the rectangle are retained
+  by design; the ground ledger is the rendered-scope authority.
+- **Hydrography companion** `data/raw/citywide-public-realm-20260824-hydro-intersects/`
+  (2.0 MB; manifest sha256 `9e31d42ff7832bfb…`, cross-references the primary):
+  `within_box` requires full containment and silently excluded 9 straddling
+  water bodies **including the East River (10262000010) and Hudson River
+  (12262000008)**. Re-acquired pjs3-c3z5 alone with an `intersects` predicate
+  on the same rectangle → 64 features (55 contained + 9 straddlers).
+  Rationale: river polygons straddling the clip are intrinsic Manhattan
+  water; the envelope is unchanged (same dataset, host, rectangle).
+  Roadbed/sidewalk/pavement-edge/plaza straddlers (1,181) remain excluded:
+  Manhattan land is fully interior to the rectangle, so those are
+  adjacent-borough edge features (recorded as a decision in the manifest).
+- **T006 consumption rule**: use the companion as the hydrography source and
+  the primary for the other four, keyed off each manifest's `clipPredicate`.
+- Metadata divergence disclosed: portal `rowsUpdatedAt` (hydrography
+  2024-04-24, plazas 2026-08-01) differs from catalog last-updated values
+  recorded at T002; both are captured in the manifests.
