@@ -9,6 +9,8 @@ import { DOMAIN_SCHEMA_VERSION } from "../domain/schema.ts";
 
 const evidenceDate = "2026-08-03T00:00:00Z";
 const realWaveApprovalDate = "2026-08-04T00:00:00Z";
+/** The user turn that granted the T003 citywide vector-acquisition envelope. */
+const citywideVectorApprovalDate = "2026-08-24T00:00:00Z";
 const commercialApprovalEvidence: SourceApprovalEvidence = {
   evidenceId: "codex-user-turn:2026-08-05:bounded-overpass-single-query-approval",
   fingerprintSha256: "b4fc25a430fabacaba0250bc223e99e071b1aaa04f563607e5c8c97b05b20949",
@@ -27,13 +29,23 @@ export const BLOCK835_PUBLIC_REALM_APPROVAL_EVIDENCE: SourceApprovalEvidence = {
 /**
  * Draft approval-evidence record for the T002 citywide public-realm
  * registration (goal `manhattan-citywide-public-realm`). This is NOT an
- * approved envelope: acquisition of any dataset referenced below remains
- * gated on the still-pending T003/T004 user approvals. The `:pending-user-
+ * approved envelope: acquisition of any dataset that still cites this constant
+ * remains gated on the pending T004 user approval. The `:pending-user-
  * approval` suffix on `evidenceId` is the deliberate marker distinguishing
  * this draft from `BLOCK835_PUBLIC_REALM_APPROVAL_EVIDENCE`'s `:user-approved`
  * form; every source entry that cites this constant is registered with
  * `pendingEntry(...)` (approval.state === "pending") so no downstream code
  * can treat it as ingestion- or runtime-ready.
+ *
+ * On 2026-08-24 the five VECTOR datasets named in `scope` below graduated to
+ * `CITYWIDE_PUBLIC_REALM_VECTOR_APPROVAL_EVIDENCE`, which is a real user-granted
+ * envelope. The remaining consumer of this draft is
+ * `nyc.orthoimagery-2024-manhattan`, whose T004 imagery gate has NOT been
+ * granted. `scope` and `fingerprintSha256` are deliberately left byte-identical
+ * to their T002 form: the fingerprint attests to the recorded T002 draft text,
+ * so rewriting the scope here would silently repoint an already-recorded
+ * fingerprint at different words. Read `scope` as the T002 draft it hashes, and
+ * this comment as the authority on which of its datasets are still pending.
  */
 export const CITYWIDE_PUBLIC_REALM_APPROVAL_EVIDENCE: SourceApprovalEvidence = {
   evidenceId: "approval:citywide-public-realm:20260824:pending-user-approval",
@@ -41,6 +53,43 @@ export const CITYWIDE_PUBLIC_REALM_APPROVAL_EVIDENCE: SourceApprovalEvidence = {
   scope: "Draft scope pending T003/T004 approval: local-only immutable Manhattan-clipped snapshots for citywide Roadbed xgwd-7vhd, Sidewalk vfx9-tbb6, and Pavement Edge x9uq-u3qs, plus the NYC Planimetric Database: Hydrography pjs3-c3z5 and NYC DOT Pedestrian Plazas (Polygon) k5k6-6jex, plus 2024 Manhattan orthoimagery clipped to park/water/plaza zones.",
   exclusions: ["Google products/data/imagery", "OSM/Overpass/third-party extracts", "paid or credentialed services", "runtime external network", "public deployment or conveyance", "current-paint or survey-grade crosswalk/curb claims", "street furniture/landscaping/traffic/lighting/signs/facades"],
 };
+
+/**
+ * The exact user turn that granted the T003 vector-acquisition envelope,
+ * recorded verbatim as a single line with no trailing newline.
+ *
+ * `CITYWIDE_PUBLIC_REALM_VECTOR_APPROVAL_EVIDENCE.fingerprintSha256` is the
+ * SHA-256 of this string, so the fingerprint is reproducible from the constant
+ * itself rather than resting on a number nobody can recompute.
+ * `src/data/source-registry.test.ts` recomputes it, and
+ * `scripts/citywide-public-realm-cli.mjs` duplicates the statement and refuses
+ * to open a socket unless its own recomputation matches.
+ */
+export const CITYWIDE_PUBLIC_REALM_VECTOR_APPROVAL_STATEMENT =
+  "User turn 2026-08-24: authorized T005-then-T003 sequential execution with the same full-auto-through-merge envelope; T003 vector acquisition envelope approved as presented: citywide->Manhattan clip of Roadbed xgwd-7vhd, Sidewalk vfx9-tbb6, Pavement Edge x9uq-u3qs, plus Hydrography pjs3-c3z5 and DOT Pedestrian Plazas k5k6-6jex; local-only immutable snapshots, no redistribution, no public deployment";
+
+/**
+ * User-granted approval for the T003 citywide->Manhattan VECTOR acquisition.
+ *
+ * This is a real envelope, not a draft: the five datasets it names are
+ * registered with `approvedEntry(...)` (or, for the three Block 835
+ * planimetrics entries, keep their own Block 835 approval and cite this
+ * constant additionally for the wider Manhattan clip). Imagery is deliberately
+ * absent — `nyc.orthoimagery-2024-manhattan` stays on the pending
+ * `CITYWIDE_PUBLIC_REALM_APPROVAL_EVIDENCE` draft until the T004 gate is
+ * granted.
+ *
+ * `exclusions` mirrors the T002 draft's exactly, so graduating from draft to
+ * approved widened only the acquisition permission, never the use permission:
+ * runtime external network, public deployment, and conveyance stay excluded.
+ */
+export const CITYWIDE_PUBLIC_REALM_VECTOR_APPROVAL_EVIDENCE = Object.freeze({
+  evidenceId: "approval:citywide-public-realm-vector:20260824:user-approved",
+  fingerprintSha256: "b4977f62687c29d0d4dfc43fbbe2237f579da7622bc5725fd9d3df7511cfcff7",
+  approvalStatement: CITYWIDE_PUBLIC_REALM_VECTOR_APPROVAL_STATEMENT,
+  scope: "Local-only immutable Manhattan-clipped snapshots of five NYC Open Data vector datasets: citywide Roadbed xgwd-7vhd, Sidewalk vfx9-tbb6, and Pavement Edge x9uq-u3qs, plus NYC Planimetric Database: Hydrography pjs3-c3z5 and NYC DOT Pedestrian Plazas (Polygon) k5k6-6jex. Clipped server-side with within_box to the snapped Manhattan ground coverage (west -74.0478515625, south 40.67138671875, east -73.89404296875, north 40.89111328125) derived from MANHATTAN_GROUND_EXTENT in src/release/ground-release.ts. The bbox is a rectangular envelope, not a borough boundary: adjacent-borough and New Jersey features inside it are retained honestly rather than filtered. Imagery is NOT in this envelope.",
+  exclusions: ["Google products/data/imagery", "OSM/Overpass/third-party extracts", "paid or credentialed services", "runtime external network", "public deployment or conveyance", "current-paint or survey-grade crosswalk/curb claims", "street furniture/landscaping/traffic/lighting/signs/facades"],
+} satisfies SourceApprovalEvidence & { approvalStatement: string });
 
 const cityTerms = "https://www.nyc.gov/html/datamine/html/data/terms.html?dataSetJs=raw";
 const overtureTerms = "https://overturemaps.org/about/faq/";
@@ -87,6 +136,17 @@ const pendingAccess = {
   constraints: "Approval is required before download or runtime integration.",
 };
 
+/**
+ * Access posture for the T003-approved vector datasets. Download is now
+ * permitted; runtime integration is not, because the granted envelope is
+ * local-only immutable snapshots with no runtime external network.
+ */
+const citywideVectorAccess = {
+  keyOrAgreementRequired: false,
+  kind: "none" as const,
+  constraints: "No credential or fee. Download is authorized under approval:citywide-public-realm-vector:20260824:user-approved for a local-only immutable Manhattan-clipped snapshot; runtime provider requests, redistribution, and public deployment remain excluded.",
+};
+
 function pendingEntry(
   entry: Omit<SourceRegistryEntry, "schemaVersion" | "approval"> & { approvalNote: string },
 ): SourceRegistryEntry {
@@ -102,16 +162,23 @@ function pendingEntry(
   };
 }
 
+/**
+ * `reviewedAt` defaults to the 2026-08-04 real-wave approval date that every
+ * pre-existing approved entry was granted under. An entry approved by a later
+ * user turn must pass its own date rather than inherit a review that did not
+ * happen on that day.
+ */
 function approvedEntry(
-  entry: Omit<SourceRegistryEntry, "schemaVersion" | "approval"> & { approvalNote: string },
+  entry: Omit<SourceRegistryEntry, "schemaVersion" | "approval"> & { approvalNote: string; reviewedAt?: string },
 ): SourceRegistryEntry {
+  const { reviewedAt, ...rest } = entry;
   return {
     schemaVersion: DOMAIN_SCHEMA_VERSION,
-    ...entry,
+    ...rest,
     approval: {
       state: "approved",
       scope: "ingestion",
-      reviewedAt: realWaveApprovalDate,
+      reviewedAt: reviewedAt ?? realWaveApprovalDate,
       note: entry.approvalNote,
     },
   };
@@ -149,11 +216,11 @@ export const sourceRegistry = [
     retention: cityRetention,
     derivativePolicy: openDerivative,
     access: civicLocalAccess,
-    geographicScope: "Block 835 perimeter and four adjacent intersection approaches only; no Manhattan-wide derivative.",
+    geographicScope: "Two approved envelopes, recorded separately rather than merged. (1) Block 835 perimeter and four adjacent intersection approaches, under approval:block835-public-realm:20260806:user-approved. (2) The snapped Manhattan ground coverage rectangle (west -74.0478515625, south 40.67138671875, east -73.89404296875, north 40.89111328125), under approval:citywide-public-realm-vector:20260824:user-approved. Envelope (2) is a rectangle, not a borough boundary: adjacent-borough and New Jersey features inside it are retained honestly, and the rendered scope is governed by the ground ledger downstream.",
     expectedCrs: "EPSG:4326",
     expectedVerticalDatum: "NAVD88 where source-native Z is present; Socrata GeoJSON snapshot is CRS84 2D and retains that absence explicitly. Source capture rules document State Plane NAD83 US feet / NAVD88.",
     approvalEvidence: BLOCK835_PUBLIC_REALM_APPROVAL_EVIDENCE,
-    approvalNote: "Approved under approval:block835-public-realm:20260806:user-approved. Immutable local snapshot only; retain portal metadata, exact bounded query, raw bytes/hash, source IDs, CRS/vertical-datum notes, and NYC Open Data disclaimer.",
+    approvalNote: "Approved under approval:block835-public-realm:20260806:user-approved. Immutable local snapshot only; retain portal metadata, exact bounded query, raw bytes/hash, source IDs, CRS/vertical-datum notes, and NYC Open Data disclaimer. Additionally approved on 2026-08-24 under approval:citywide-public-realm-vector:20260824:user-approved for a WIDER local-only immutable snapshot clipped to the snapped Manhattan ground coverage rectangle (T003). That later approval adds an acquisition envelope only; it does not alter, widen, or reinterpret the Block 835 evidence recorded in approvalEvidence, whose fingerprint stays byte-identical.",
   }),
   approvedEntry({
     id: "nyc.oti-planimetrics-roadbed-block835",
@@ -171,11 +238,11 @@ export const sourceRegistry = [
     retention: cityRetention,
     derivativePolicy: openDerivative,
     access: civicLocalAccess,
-    geographicScope: "Block 835 perimeter and four adjacent intersection approaches only; no Manhattan-wide derivative.",
+    geographicScope: "Two approved envelopes, recorded separately rather than merged. (1) Block 835 perimeter and four adjacent intersection approaches, under approval:block835-public-realm:20260806:user-approved. (2) The snapped Manhattan ground coverage rectangle (west -74.0478515625, south 40.67138671875, east -73.89404296875, north 40.89111328125), under approval:citywide-public-realm-vector:20260824:user-approved. Envelope (2) is a rectangle, not a borough boundary: adjacent-borough and New Jersey features inside it are retained honestly, and the rendered scope is governed by the ground ledger downstream.",
     expectedCrs: "EPSG:4326",
     expectedVerticalDatum: "NAVD88 where source-native Z is present; Socrata GeoJSON snapshot is CRS84 2D and retains that absence explicitly. Source capture rules document State Plane NAD83 US feet / NAVD88.",
     approvalEvidence: BLOCK835_PUBLIC_REALM_APPROVAL_EVIDENCE,
-    approvalNote: "Approved under approval:block835-public-realm:20260806:user-approved. Immutable local snapshot only; retain portal metadata, exact bounded query, raw bytes/hash, source IDs, CRS/vertical-datum notes, and NYC Open Data disclaimer.",
+    approvalNote: "Approved under approval:block835-public-realm:20260806:user-approved. Immutable local snapshot only; retain portal metadata, exact bounded query, raw bytes/hash, source IDs, CRS/vertical-datum notes, and NYC Open Data disclaimer. Additionally approved on 2026-08-24 under approval:citywide-public-realm-vector:20260824:user-approved for a WIDER local-only immutable snapshot clipped to the snapped Manhattan ground coverage rectangle (T003). That later approval adds an acquisition envelope only; it does not alter, widen, or reinterpret the Block 835 evidence recorded in approvalEvidence, whose fingerprint stays byte-identical.",
   }),
   approvedEntry({
     id: "nyc.oti-planimetrics-pavement-edge-block835",
@@ -193,13 +260,13 @@ export const sourceRegistry = [
     retention: cityRetention,
     derivativePolicy: openDerivative,
     access: civicLocalAccess,
-    geographicScope: "Block 835 perimeter and four adjacent intersection approaches only; no Manhattan-wide derivative.",
+    geographicScope: "Two approved envelopes, recorded separately rather than merged. (1) Block 835 perimeter and four adjacent intersection approaches, under approval:block835-public-realm:20260806:user-approved. (2) The snapped Manhattan ground coverage rectangle (west -74.0478515625, south 40.67138671875, east -73.89404296875, north 40.89111328125), under approval:citywide-public-realm-vector:20260824:user-approved. Envelope (2) is a rectangle, not a borough boundary: adjacent-borough and New Jersey features inside it are retained honestly, and the rendered scope is governed by the ground ledger downstream.",
     expectedCrs: "EPSG:4326",
     expectedVerticalDatum: "NAVD88 where source-native Z is present; Socrata GeoJSON snapshot is CRS84 2D and retains that absence explicitly. Source capture rules document State Plane NAD83 US feet / NAVD88.",
     approvalEvidence: BLOCK835_PUBLIC_REALM_APPROVAL_EVIDENCE,
-    approvalNote: "Approved under approval:block835-public-realm:20260806:user-approved. Pavement edges constrain estimated curb alignment only; no survey-grade curb elevation is asserted.",
+    approvalNote: "Approved under approval:block835-public-realm:20260806:user-approved. Pavement edges constrain estimated curb alignment only; no survey-grade curb elevation is asserted. Additionally approved on 2026-08-24 under approval:citywide-public-realm-vector:20260824:user-approved for a WIDER local-only immutable snapshot clipped to the snapped Manhattan ground coverage rectangle (T003). That later approval adds an acquisition envelope only; it does not alter, widen, or reinterpret the Block 835 evidence recorded in approvalEvidence, whose fingerprint stays byte-identical.",
   }),
-  pendingEntry({
+  approvedEntry({
     id: "nyc.hydrography",
     provider: "NYC Office of Technology and Innovation (OTI) Planimetrics",
     datasetId: "pjs3-c3z5",
@@ -208,19 +275,20 @@ export const sourceRegistry = [
     licenseClass: "nyc-open-data-terms",
     attribution: "Source: NYC Office of Technology and Innovation (OTI), NYC Planimetric Database: Hydrography; accessed through NYC Open Data (pjs3-c3z5).",
     releaseTimestamp: null,
-    captureTimestamp: null,
+    captureTimestamp: "2026-08-24T00:00:00Z",
     updateTimestamp: "2025-12-11T00:00:00Z",
     cadence: "As needed; portal catalog reports last updated 2025-12-11 for this layer. An older 2024-04-26 vintage and a separate Hydrography Structures layer exist and are not this registration target.",
     retention: cityRetention,
     derivativePolicy: openDerivative,
-    access: pendingAccess,
-    geographicScope: "New York City hydrography polygons; citywide clip to the Manhattan borough envelope is the registered use.",
+    access: citywideVectorAccess,
+    geographicScope: "New York City hydrography polygons, clipped to the snapped Manhattan ground coverage envelope. The envelope is a rectangle, so Hudson/East/Harlem River water bodies extending into adjacent boroughs and New Jersey are inside it; that is expected, and the rendered scope is governed by the ground ledger downstream, not by this clip.",
     expectedCrs: "EPSG:4326",
     expectedVerticalDatum: "Not applicable to 2D water-body polygon semantics. Capture rules: https://github.com/CityOfNewYork/nyc-planimetrics/blob/master/Capture_Rules.md.",
-    approvalEvidence: CITYWIDE_PUBLIC_REALM_APPROVAL_EVIDENCE,
-    approvalNote: "Draft registration only under approval:citywide-public-realm:20260824:pending-user-approval; NOT yet user-approved. Selected in T001 (docs/research/PUBLIC_REALM_LICENSING.md) as the rendered water ground-class source over the older 2024-04-26 vintage and the separate Hydrography Structures layer. Acquisition and any local snapshot remain gated on the T003/T004 user approvals.",
+    approvalEvidence: CITYWIDE_PUBLIC_REALM_VECTOR_APPROVAL_EVIDENCE,
+    reviewedAt: citywideVectorApprovalDate,
+    approvalNote: "Approved under approval:citywide-public-realm-vector:20260824:user-approved for a local-only immutable Manhattan-clipped snapshot (T003). Selected in T001 (docs/research/PUBLIC_REALM_LICENSING.md) as the rendered water ground-class source over the older 2024-04-26 vintage and the separate Hydrography Structures layer. Retain portal metadata, the exact bounded query, raw bytes/hash, source IDs, CRS notes, and the NYC Open Data disclaimer. No runtime provider request, no redistribution, and no public deployment.",
   }),
-  pendingEntry({
+  approvedEntry({
     id: "nyc.dot-pedestrian-plazas",
     provider: "NYC Department of Transportation (DOT)",
     datasetId: "k5k6-6jex",
@@ -229,17 +297,18 @@ export const sourceRegistry = [
     licenseClass: "nyc-open-data-terms",
     attribution: "Source: NYC Department of Transportation (DOT), NYC DOT Pedestrian Plazas (Polygon); accessed through NYC Open Data (k5k6-6jex).",
     releaseTimestamp: null,
-    captureTimestamp: null,
+    captureTimestamp: "2026-08-24T00:00:00Z",
     updateTimestamp: "2025-01-09T00:00:00Z",
     cadence: "Monthly; portal catalog reports last updated 2025-01-09.",
     retention: cityRetention,
     derivativePolicy: openDerivative,
-    access: pendingAccess,
-    geographicScope: "New York City DOT-operated pedestrian plaza multipolygons, including the 6 DOT plazas comprising Times Square (Broadway 41st-47th); citywide clip to the Manhattan borough envelope is the registered use.",
+    access: citywideVectorAccess,
+    geographicScope: "New York City DOT-operated pedestrian plaza multipolygons, including the 6 DOT plazas comprising Times Square (Broadway 41st-47th), clipped to the snapped Manhattan ground coverage envelope. The envelope is a rectangle, so adjacent-borough plazas inside it are retained; the rendered scope is governed by the ground ledger downstream, not by this clip.",
     expectedCrs: "EPSG:4326",
     expectedVerticalDatum: "Not applicable to 2D plaza polygon semantics.",
-    approvalEvidence: CITYWIDE_PUBLIC_REALM_APPROVAL_EVIDENCE,
-    approvalNote: "Draft registration only under approval:citywide-public-realm:20260824:pending-user-approval; NOT yet user-approved. Selected in T001 (docs/research/PUBLIC_REALM_LICENSING.md) over DCP POPS (qeta-4kqg) because only this dataset carries polygon geometry and direct Times Square coverage; POPS is point-based and out of scope. Plaza presence is a DOT-operated designation only, not an assertion of current paving, furniture, or public-access hours. Acquisition and any local snapshot remain gated on the T003/T004 user approvals.",
+    approvalEvidence: CITYWIDE_PUBLIC_REALM_VECTOR_APPROVAL_EVIDENCE,
+    reviewedAt: citywideVectorApprovalDate,
+    approvalNote: "Approved under approval:citywide-public-realm-vector:20260824:user-approved for a local-only immutable Manhattan-clipped snapshot (T003). Selected in T001 (docs/research/PUBLIC_REALM_LICENSING.md) over DCP POPS (qeta-4kqg) because only this dataset carries polygon geometry and direct Times Square coverage; POPS is point-based and out of scope. Plaza presence is a DOT-operated designation only, not an assertion of current paving, furniture, or public-access hours. No runtime provider request, no redistribution, and no public deployment.",
   }),
   pendingEntry({
     id: "nyc.orthoimagery-2024-manhattan",
