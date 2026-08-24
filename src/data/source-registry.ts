@@ -24,6 +24,24 @@ export const BLOCK835_PUBLIC_REALM_APPROVAL_EVIDENCE: SourceApprovalEvidence = {
   exclusions: ["Google products/data/imagery", "OSM/Overpass/third-party extracts", "paid or credentialed services", "runtime external network", "public deployment or conveyance", "Manhattan-wide generation", "current-paint or survey-grade crosswalk/curb claims", "street furniture/landscaping/traffic/lighting/signs/facades"],
 };
 
+/**
+ * Draft approval-evidence record for the T002 citywide public-realm
+ * registration (goal `manhattan-citywide-public-realm`). This is NOT an
+ * approved envelope: acquisition of any dataset referenced below remains
+ * gated on the still-pending T003/T004 user approvals. The `:pending-user-
+ * approval` suffix on `evidenceId` is the deliberate marker distinguishing
+ * this draft from `BLOCK835_PUBLIC_REALM_APPROVAL_EVIDENCE`'s `:user-approved`
+ * form; every source entry that cites this constant is registered with
+ * `pendingEntry(...)` (approval.state === "pending") so no downstream code
+ * can treat it as ingestion- or runtime-ready.
+ */
+export const CITYWIDE_PUBLIC_REALM_APPROVAL_EVIDENCE: SourceApprovalEvidence = {
+  evidenceId: "approval:citywide-public-realm:20260824:pending-user-approval",
+  fingerprintSha256: "754bde755f352e8dd86777550cd6717932b83d58d746e2f2e03d7996e5a56bff",
+  scope: "Draft scope pending T003/T004 approval: local-only immutable Manhattan-clipped snapshots for citywide Roadbed xgwd-7vhd, Sidewalk vfx9-tbb6, and Pavement Edge x9uq-u3qs, plus the NYC Planimetric Database: Hydrography pjs3-c3z5 and NYC DOT Pedestrian Plazas (Polygon) k5k6-6jex, plus 2024 Manhattan orthoimagery clipped to park/water/plaza zones.",
+  exclusions: ["Google products/data/imagery", "OSM/Overpass/third-party extracts", "paid or credentialed services", "runtime external network", "public deployment or conveyance", "current-paint or survey-grade crosswalk/curb claims", "street furniture/landscaping/traffic/lighting/signs/facades"],
+};
+
 const cityTerms = "https://www.nyc.gov/html/datamine/html/data/terms.html?dataSetJs=raw";
 const overtureTerms = "https://overturemaps.org/about/faq/";
 export const MANHATTAN_CIVIC_APPROVAL_EVIDENCE = Object.freeze({
@@ -180,6 +198,74 @@ export const sourceRegistry = [
     expectedVerticalDatum: "NAVD88 where source-native Z is present; Socrata GeoJSON snapshot is CRS84 2D and retains that absence explicitly. Source capture rules document State Plane NAD83 US feet / NAVD88.",
     approvalEvidence: BLOCK835_PUBLIC_REALM_APPROVAL_EVIDENCE,
     approvalNote: "Approved under approval:block835-public-realm:20260806:user-approved. Pavement edges constrain estimated curb alignment only; no survey-grade curb elevation is asserted.",
+  }),
+  pendingEntry({
+    id: "nyc.hydrography",
+    provider: "NYC Office of Technology and Innovation (OTI) Planimetrics",
+    datasetId: "pjs3-c3z5",
+    canonicalUrl: "https://data.cityofnewyork.us/Environment/NYC-Planimetric-Database-Hydrography/pjs3-c3z5",
+    termsUrl: "https://opendata.cityofnewyork.us/overview/",
+    licenseClass: "nyc-open-data-terms",
+    attribution: "Source: NYC Office of Technology and Innovation (OTI), NYC Planimetric Database: Hydrography; accessed through NYC Open Data (pjs3-c3z5).",
+    releaseTimestamp: null,
+    captureTimestamp: null,
+    updateTimestamp: "2025-12-11T00:00:00Z",
+    cadence: "As needed; portal catalog reports last updated 2025-12-11 for this layer. An older 2024-04-26 vintage and a separate Hydrography Structures layer exist and are not this registration target.",
+    retention: cityRetention,
+    derivativePolicy: openDerivative,
+    access: pendingAccess,
+    geographicScope: "New York City hydrography polygons; citywide clip to the Manhattan borough envelope is the registered use.",
+    expectedCrs: "EPSG:4326",
+    expectedVerticalDatum: "Not applicable to 2D water-body polygon semantics. Capture rules: https://github.com/CityOfNewYork/nyc-planimetrics/blob/master/Capture_Rules.md.",
+    approvalEvidence: CITYWIDE_PUBLIC_REALM_APPROVAL_EVIDENCE,
+    approvalNote: "Draft registration only under approval:citywide-public-realm:20260824:pending-user-approval; NOT yet user-approved. Selected in T001 (docs/research/PUBLIC_REALM_LICENSING.md) as the rendered water ground-class source over the older 2024-04-26 vintage and the separate Hydrography Structures layer. Acquisition and any local snapshot remain gated on the T003/T004 user approvals.",
+  }),
+  pendingEntry({
+    id: "nyc.dot-pedestrian-plazas",
+    provider: "NYC Department of Transportation (DOT)",
+    datasetId: "k5k6-6jex",
+    canonicalUrl: "https://data.cityofnewyork.us/Transportation/NYC-DOT-Pedestrian-Plazas-Polygon/k5k6-6jex",
+    termsUrl: "https://opendata.cityofnewyork.us/overview/",
+    licenseClass: "nyc-open-data-terms",
+    attribution: "Source: NYC Department of Transportation (DOT), NYC DOT Pedestrian Plazas (Polygon); accessed through NYC Open Data (k5k6-6jex).",
+    releaseTimestamp: null,
+    captureTimestamp: null,
+    updateTimestamp: "2025-01-09T00:00:00Z",
+    cadence: "Monthly; portal catalog reports last updated 2025-01-09.",
+    retention: cityRetention,
+    derivativePolicy: openDerivative,
+    access: pendingAccess,
+    geographicScope: "New York City DOT-operated pedestrian plaza multipolygons, including the 6 DOT plazas comprising Times Square (Broadway 41st-47th); citywide clip to the Manhattan borough envelope is the registered use.",
+    expectedCrs: "EPSG:4326",
+    expectedVerticalDatum: "Not applicable to 2D plaza polygon semantics.",
+    approvalEvidence: CITYWIDE_PUBLIC_REALM_APPROVAL_EVIDENCE,
+    approvalNote: "Draft registration only under approval:citywide-public-realm:20260824:pending-user-approval; NOT yet user-approved. Selected in T001 (docs/research/PUBLIC_REALM_LICENSING.md) over DCP POPS (qeta-4kqg) because only this dataset carries polygon geometry and direct Times Square coverage; POPS is point-based and out of scope. Plaza presence is a DOT-operated designation only, not an assertion of current paving, furniture, or public-access hours. Acquisition and any local snapshot remain gated on the T003/T004 user approvals.",
+  }),
+  pendingEntry({
+    id: "nyc.orthoimagery-2024-manhattan",
+    provider: "NYS Statewide Digital Orthoimagery Program (distributing NYC OTI aerial imagery)",
+    datasetId: "boro_manhattan_sp24.zip",
+    canonicalUrl: "https://gisdata.ny.gov/ortho/nysdop12/new_york_city/spcs/zips/boro_manhattan_sp24.zip",
+    termsUrl: "https://github.com/CityOfNewYork/nyc-geo-metadata/blob/main/Metadata/Metadata_AerialImagery.md",
+    // The domain LicenseClass enum has no plain "cc-by-4.0" value (only
+    // "cc-by-sa-4.0", which wrongly adds a share-alike obligation this
+    // source does not impose per its own metadata). Recorded as "unknown"
+    // here rather than misstating the license class; the true CC BY 4.0
+    // basis is stated explicitly in attribution/derivativePolicy/approvalNote.
+    licenseClass: "unknown",
+    attribution: "Source: NYC Office of Technology and Innovation (OTI) / NYS Statewide Digital Orthoimagery Program, 2024 6-inch true orthoimagery, Manhattan borough; CC BY 4.0 (not CC BY-SA) per NYC OTI aerial-imagery metadata.",
+    releaseTimestamp: null,
+    captureTimestamp: "2024-03-14T00:00:00Z",
+    updateTimestamp: "2025-06-05T00:00:00Z",
+    cadence: "Static per-vintage borough zip; HEAD-verified 2026-08-24 as HTTP 200, approximately 2.4 GB, Last-Modified 2025-06-05. Capture window 2024-03-14 through 2024-03-24 per NYC OTI metadata.",
+    retention: { rawSnapshots: "conditional", maximumDays: null, caching: "allowed", constraints: "CC BY 4.0 attribution to NYC OTI / NYS Statewide Digital Orthoimagery Program must travel with any derived tile or clip; local-only retention consistent with the project posture; the ~2.4 GB full-borough zip must inform the T004 download/clip envelope." },
+    derivativePolicy: { allowed: "conditional", constraints: "CC BY 4.0 permits derivative use with attribution, but the T004 gate must first inspect the FGDC metadata embedded in the 2024 zip before any ingestion; if that metadata imposes use constraints incompatible with local rendering plus attribution, the NAIP fallback rule applies instead (see docs/research/PUBLIC_REALM_LICENSING.md section 5)." },
+    access: pendingAccess,
+    geographicScope: "Manhattan borough, clipped to park/water/plaza zones for the citywide public-realm wave; full-borough zip covers all of Manhattan.",
+    expectedCrs: "varies",
+    expectedVerticalDatum: "Not applicable to 2D orthoimagery texture; no elevation claim.",
+    approvalEvidence: CITYWIDE_PUBLIC_REALM_APPROVAL_EVIDENCE,
+    approvalNote: "Draft registration only under approval:citywide-public-realm:20260824:pending-user-approval; NOT yet user-approved. License basis is NYC OTI's own aerial-imagery metadata declaring CC BY 4.0 / Access Rights Public (docs/research/PUBLIC_REALM_LICENSING.md section 4); the NYS FGDC metadata for this specific 2024 vintage was not located as a standalone page, so its exact terms remain an honest gap the T004 gate must inspect inside the downloaded zip before ingestion. 2024 was selected over older vintages because it is the confirmed-downloadable, most recent 6-inch full true orthoimagery for Manhattan. Acquisition remains gated on the T003/T004 user approvals, and the NAIP fallback rule governs if that inspection or the download fails.",
   }),
   approvedEntry({
     id: "nyc.building-footprints",
