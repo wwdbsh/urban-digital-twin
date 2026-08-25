@@ -28,7 +28,7 @@
  * while ground never mints the per-cell id in the first place.
  */
 
-import { GROUND_BASE_CLASSES, type GroundClass } from "../../domain/ground";
+import { GROUND_BASE_CLASSES, type GroundClass, type GroundSurfaceClass } from "../../domain/ground";
 import { ringIsSelfTouching } from "../../release/ground-geometry";
 import type { GroundCellArtifact } from "../../runtime/ground-release-runtime";
 
@@ -100,11 +100,21 @@ export interface GroundRenderPolygon {
   holes: GroundRenderRing[];
 }
 
+/**
+ * One part this application declined to draw, and the sentence it says so with.
+ *
+ * The class and reason are typed over the whole surface vocabulary because T010
+ * added a second refusing renderer — the near-tier curb pass, which refuses a
+ * degenerate alignment for the same "refuse, never repair" reason this pass
+ * refuses a self-touching ring. One refusal shape means the details panel keeps
+ * ONE list and a reader is never shown two dialects of the same disclosure.
+ */
 export interface GroundRenderRefusal {
   partId: string;
   canonicalFeatureId: string;
-  groundClass: GroundClass;
-  reason: "non-simple-ring";
+  groundClass: GroundSurfaceClass;
+  reason: "non-simple-ring" | "degenerate-alignment";
+  /** Zero for reasons that do not count rings. */
   selfTouchingRings: number;
   statement: string;
 }

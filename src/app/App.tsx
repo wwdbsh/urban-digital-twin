@@ -63,8 +63,15 @@ import { AggregateRequestBudget, ComposedReleaseAdapter, type ComposedReleaseMet
 import { EXTERIOR_PILOT_RELEASE_ID, createExteriorPilotFaultFetcher, loadExteriorPilotRelease, parseExteriorPilotFault, type CommercialStorefrontPlacement, type LoadedExteriorPilotRelease } from "../runtime/exterior-pilot-release";
 import { BLOCK835_PUBLIC_REALM_RELEASE_ID, createBlock835PublicRealmFaultFetcher, loadBlock835PublicRealmRelease, parseBlock835PublicRealmFault, publicRealmFeatureToFeature, type Block835PublicRealmFeature, type LoadedBlock835PublicRealmRelease } from "../runtime/block835-public-realm-release";
 import { MANHATTAN_GROUND_RELEASE_ID, createGroundFaultFetcher, groundFailureMessage, loadGroundRelease, parseGroundFault, type LoadedGroundRelease } from "../runtime/ground-release-runtime";
-import { GROUND_BASE_CLASSES, type GroundClass, type GroundFeature } from "../domain/ground";
+import { GROUND_BASE_CLASSES, isGroundEmbellishmentClass, type GroundClass, type GroundFeature } from "../domain/ground";
 import { groundRenderStatusLine, type GroundRenderRefusal, type GroundRenderSummary } from "../features/explorer/ground-render-plan";
+import { groundEmbellishmentStatusSegment, type GroundEmbellishmentRenderSummary } from "../features/explorer/ground-embellishment-render-plan";
+import {
+  MANHATTAN_GROUND_EMBELLISHMENT_RELEASE_ID,
+  groundEmbellishmentFailureMessage,
+  loadGroundEmbellishmentRelease,
+  type LoadedGroundEmbellishmentRelease,
+} from "../runtime/ground-embellishment-runtime";
 import { farTierStatusLine, type FarTierStateSummary } from "../runtime/far-tier-serving";
 import { EXTERIOR_RUNTIME_BUDGETS, exteriorOutcomeCacheKeys, exteriorRefusalRawStopCode, exteriorRefusalStatement, exteriorRefusalStopCode, loadExteriorCellRuntime, type ExteriorCellOutcome, type ExteriorCellRuntime, type ExteriorHeadRequest, type ExteriorRefusedBuilding } from "../runtime/exterior-cell-runtime";
 import { EXTERIOR_T1_RELEASE_IDS } from "../release/exterior-t1-variants";
@@ -1659,6 +1666,18 @@ export function App() {
   const [selectedGroundId, setSelectedGroundId] = useState<string | null>(initialGroundFeatureId);
   const [groundLayerVisibility, setGroundLayerVisibility] = useState<GroundLayerVisibility>(DEFAULT_GROUND_LAYER_VISIBILITY);
   const [groundSummary, setGroundSummary] = useState<GroundRenderSummary | null>(null);
+  /**
+   * The near-tier curb canary (T010), in its own state on purpose.
+   *
+   * Nothing about the flat base reads these. An embellishment that failed
+   * verification leaves `groundEmbellishmentOverlay` null and writes its own
+   * note; `groundLoadState`, `groundOverlay` and the flat status line are not
+   * consulted and cannot be changed from here. Fail-closed for the near tier
+   * means "no curbs", never "no ground".
+   */
+  const [groundEmbellishmentOverlay, setGroundEmbellishmentOverlay] = useState<LoadedGroundEmbellishmentRelease | null>(null);
+  const [groundEmbellishmentError, setGroundEmbellishmentError] = useState("");
+  const [groundEmbellishmentSummary, setGroundEmbellishmentSummary] = useState<GroundEmbellishmentRenderSummary | null>(null);
   const [groundRefusals, setGroundRefusals] = useState<ReadonlyMap<string, readonly GroundRenderRefusal[]>>(new Map());
   // Explicit URL/toggle intent only. Whether streaming actually runs, and which
   // release it targets, is resolved from this plus the promotion record and the
@@ -3148,6 +3167,42 @@ export function App() {
     return () => { active = false; controller.abort(); };
   }, [groundRequested]);
 
+  /**
+   * The near-tier curb release, loaded only once the flat base is verified.
+   *
+   * Gated on `groundOverlay` rather than on `groundRequested`: a curb is
+   * additive over a base, so there is no session in which loading 95 curb
+   * manifests would be useful while the base is still unverified or failed.
+   * That ordering also makes the fail-closed direction structural — the base
+   * has already succeeded before this effect can fail.
+   *
+   * The load verifies the same four documents through the same T005 graph
+   * validator and re-derives the same ledger identity; per-cell artifacts stay
+   * lazy and are checksum-verified at the moment the camera activates them.
+   */
+  useEffect(() => {
+    if (!groundOverlay) {
+      setGroundEmbellishmentOverlay(null);
+      setGroundEmbellishmentError("");
+      setGroundEmbellishmentSummary(null);
+      return undefined;
+    }
+    let active = true;
+    const controller = new AbortController();
+    setGroundEmbellishmentError("");
+    void loadGroundEmbellishmentRelease(`/data/${MANHATTAN_GROUND_EMBELLISHMENT_RELEASE_ID}/`, controller.signal).then((loaded) => {
+      if (!active) return;
+      setGroundEmbellishmentOverlay(loaded);
+      setGroundEmbellishmentError("");
+    }).catch((error: unknown) => {
+      if (!active || (error instanceof DOMException && error.name === "AbortError")) return;
+      setGroundEmbellishmentOverlay(null);
+      setGroundEmbellishmentSummary(null);
+      setGroundEmbellishmentError(groundEmbellishmentFailureMessage(error));
+    });
+    return () => { active = false; controller.abort(); };
+  }, [groundOverlay]);
+
   useEffect(() => {
     if (!citywideAdapter || !civicAdapter || citywideLoadState !== "ready" || civicLoadState !== "ready") {
       setComposedAdapter(null);
@@ -3813,10 +3868,14 @@ export function App() {
   // would be a different real place wearing the link's identity.
   useEffect(() => {
     if (!groundRequested || groundLoadState !== "ready" || !groundOverlay || !selectedGroundId) return;
-    if (!groundOverlay.feature(selectedGroundId)) {
-      setDeepLinkMessage(`This shared link points to a ground surface unavailable in release ${MANHATTAN_GROUND_RELEASE_ID}; no substitute was selected.`);
-    }
-  }, [groundLoadState, groundOverlay, groundRequested, selectedGroundId]);
+    if (groundOverlay.feature(selectedGroundId)) return;
+    // A curb is a ground feature of the EMBELLISHMENT release, so a link to one
+    // is only unresolvable once that release has had its turn. Complaining
+    // while it is still loading would call a working link broken for a second.
+    if (groundEmbellishmentOverlay?.feature(selectedGroundId)) return;
+    if (!groundEmbellishmentOverlay && !groundEmbellishmentError) return;
+    setDeepLinkMessage(`This shared link points to a ground surface unavailable in releases ${MANHATTAN_GROUND_RELEASE_ID} and ${MANHATTAN_GROUND_EMBELLISHMENT_RELEASE_ID}; no substitute was selected.`);
+  }, [groundEmbellishmentError, groundEmbellishmentOverlay, groundLoadState, groundOverlay, groundRequested, selectedGroundId]);
 
   const closeInspector = useCallback(() => {
     setInspectorOpen(false);
@@ -3943,10 +4002,32 @@ export function App() {
   // "Active" is the verified state and nothing weaker: requested-but-loading and
   // requested-but-failed both draw no ground.
   const groundActive = groundRequested && groundLoadState === "ready" && groundOverlay !== null;
-  const selectedGroundFeature = groundActive && groundOverlay && selectedGroundId ? groundOverlay.feature(selectedGroundId) ?? null : null;
+  /**
+   * The release that OWNS the selected ground feature.
+   *
+   * A curb and a roadbed are both ground features with the same identity
+   * scheme, and both are selected by the same `ground:` pick, but they are
+   * shipped by different releases with different claim ceilings and different
+   * provenance. Resolving the owner here — flat first, then the near tier —
+   * means the details panel attributes each surface to the release that
+   * actually produced it instead of to whichever one happens to be in scope.
+   */
+  const selectedGroundRelease = !groundActive || !selectedGroundId
+    ? null
+    : groundOverlay?.feature(selectedGroundId)
+      ? groundOverlay
+      : groundEmbellishmentOverlay?.feature(selectedGroundId)
+        ? groundEmbellishmentOverlay
+        : null;
+  const selectedGroundFeature = selectedGroundRelease && selectedGroundId ? selectedGroundRelease.feature(selectedGroundId) ?? null : null;
   const selectedGroundRefusals = selectedGroundId ? groundRefusals.get(selectedGroundId) ?? [] : [];
+  // The near tier appends to the base's reading and never replaces it, so a
+  // curb failure is its own sentence and the base keeps reporting what it drew.
+  const groundEmbellishmentNote = groundEmbellishmentError
+    ? ` · ${groundEmbellishmentError}`
+    : groundEmbellishmentStatusSegment(groundEmbellishmentSummary);
   const groundStatusMessage = groundLoadState === "ready"
-    ? `${groundSummary ? groundRenderStatusLine(groundSummary) : "Ground base verified locally; no cell is in view yet."}${groundVerifyMs === null ? "" : ` · verified in ${groundVerifyMs} ms`}`
+    ? `${groundSummary ? groundRenderStatusLine(groundSummary) : "Ground base verified locally; no cell is in view yet."}${groundEmbellishmentNote}${groundVerifyMs === null ? "" : ` · verified in ${groundVerifyMs} ms`}`
     : groundError;
   const selectedCommercialBuilding = exteriorActive && selectedRuntimeFeature?.kind === "building" && exteriorOverlay ? exteriorOverlay.commercialForBuilding(selectedRuntimeFeature.id) : null;
   const selectedPlaceTruth = dataMode === "fixtures" && selectedRuntimeFeature ? placeTruthByRuntimeFeatureId.get(selectedRuntimeFeature.id) : undefined;
@@ -4466,6 +4547,8 @@ export function App() {
           onGroundFeatureSelected={(feature) => selectGroundFeature(feature)}
           onGroundRenderSummary={setGroundSummary}
           onGroundRefusals={setGroundRefusals}
+          groundEmbellishmentOverlay={groundActive ? groundEmbellishmentOverlay : null}
+          onGroundEmbellishmentRenderSummary={setGroundEmbellishmentSummary}
           exteriorOverlay={exteriorCellOverlays}
           onExteriorUnanchored={setExteriorUnanchoredIds}
           onExteriorCellsRetired={handleExteriorCellsRetired}
@@ -4996,12 +5079,20 @@ export function App() {
             </dl>
           </section>}
 
-          {selectedGroundFeature && groundOverlay && <section className="inspector-section ground-detail" aria-label="Citywide ground provenance" data-ground-feature={selectedGroundFeature.canonicalFeatureId}>
+          {selectedGroundFeature && selectedGroundRelease && <section className="inspector-section ground-detail" aria-label="Citywide ground provenance" data-ground-feature={selectedGroundFeature.canonicalFeatureId}>
             <div className="place-truth-heading">
               <h2>Citywide ground</h2>
-              <span className="truth-badge real-badge">Local · {groundOverlay.releaseId}</span>
+              <span className="truth-badge real-badge">Local · {selectedGroundRelease.releaseId}</span>
             </div>
             <p className="claim-badge" data-visual-evidence-level={selectedGroundFeature.claimLevel}>{selectedGroundFeature.claimLevel === "estimated" ? "Estimated / source-constrained extent" : "Source-backed cartographic extent"}</p>
+            {/* The near tier draws a SOLID, and a reader looking at a solid is
+                owed the specific sentence about which half of it is measured.
+                The horizontal alignment is the source pavement edge verbatim;
+                the vertical rise it is extruded by is authored, and no source
+                in this pipeline measured a curb height. */}
+            {isGroundEmbellishmentClass(selectedGroundFeature.class) && <p className="section-label" data-ground-embellishment-disclosure={selectedGroundFeature.class}>
+              Drawn as 3D near-tier geometry: the horizontal alignment is the source pavement edge verbatim, and the vertical rise it is extruded by is an authored estimate. No source in this pipeline measured this curb&apos;s height, and this is not a survey of current curb construction.
+            </p>}
             <dl>
               <div><dt>Class</dt><dd>{selectedGroundFeature.class}</dd></div>
               <div><dt>Feature ID</dt><dd>{selectedGroundFeature.canonicalFeatureId}</dd></div>
@@ -5016,9 +5107,9 @@ export function App() {
                 : "Unknown / not provided"}</dd></div>
               <div><dt>Captured / updated</dt><dd>{selectedGroundFeature.sourceRefs.map((source) => `captured ${source.capturedAt ?? "unknown"} · source rows updated ${source.updatedAt ?? "unknown"}`).join(" · ") || "Unknown / not provided"}</dd></div>
               <div><dt>Uncertainty</dt><dd>{selectedGroundFeature.uncertainty.temporal} · horizontal ±{selectedGroundFeature.uncertainty.horizontalMeters ?? "unknown"} m · vertical ±{selectedGroundFeature.uncertainty.verticalMeters ?? "unknown"} m</dd></div>
-              <div><dt>Claim ceiling</dt><dd>{groundOverlay.document.claimCeilings[selectedGroundFeature.class] ?? "Unknown / not provided"}</dd></div>
-              <div><dt>Release</dt><dd>{groundOverlay.releaseId} · ledger {groundOverlay.ledger.ledgerId} · generated {groundOverlay.document.generatedAt}</dd></div>
-              <div><dt>Terms / attribution</dt><dd><a href={groundOverlay.document.provenance.termsUrl} target="_blank" rel="noreferrer">NYC Open Data terms</a> · {groundOverlay.document.provenance.attribution}</dd></div>
+              <div><dt>Claim ceiling</dt><dd>{selectedGroundRelease.document.claimCeilings[selectedGroundFeature.class] ?? "Unknown / not provided"}</dd></div>
+              <div><dt>Release</dt><dd>{selectedGroundRelease.releaseId} · ledger {selectedGroundRelease.ledger.ledgerId} · generated {selectedGroundRelease.document.generatedAt}</dd></div>
+              <div><dt>Terms / attribution</dt><dd><a href={selectedGroundRelease.document.provenance.termsUrl} target="_blank" rel="noreferrer">NYC Open Data terms</a> · {selectedGroundRelease.document.provenance.attribution}</dd></div>
             </dl>
             {/* Refusal transparency: a share this renderer declined to draw says
                 so here, with its measurement, rather than leaving a hole the
