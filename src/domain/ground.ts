@@ -28,13 +28,24 @@
  *    "estimated" in prose (`../runtime/block835-public-realm-release.ts`
  *    `claimCeilings`); here it is unrepresentable at the type level and refused
  *    at the validator level, so citywide scale cannot quietly promote it.
- * 4. **Every asset has exactly one always-covering flat tier.** The polygon
- *    base must work standalone at any distance, so each asset declares exactly
- *    one `flat` tier with `maxDistanceMeters === null`. This is deliberately
- *    NOT `AssemblyLod` from the building pipeline: that type carries silhouette
- *    and facade-plan obligations a cartographic ground surface does not have.
- *    Runtime tier SELECTION is a later task's concern; this module only pins
- *    the shape and the coverage invariant.
+ * 4. **Tier coverage is decided by CLASS, and the two rules are opposites.**
+ *    A SURFACE-class asset (`GROUND_BASE_CLASSES`) must declare exactly one
+ *    `flat` tier with `maxDistanceMeters === null`: the polygon base has to work
+ *    standalone at any distance, two unbounded tiers would make the choice
+ *    ambiguous, and zero would make far views empty. An EMBELLISHMENT-class
+ *    asset (`GROUND_EMBELLISHMENT_CLASSES`) must declare the OPPOSITE: at least
+ *    one `near-3d` tier with a finite `maxDistanceMeters`, and NO flat tier at
+ *    all. A curb is additive 3D layered over a base that already covers the
+ *    ground; it is legitimate — required, even — for it to vanish at distance,
+ *    and it must never be able to stand in as the base, because an embellishment
+ *    that survives to every distance is a claim that estimated linework is the
+ *    cartographic record. T009 amended this deliberately: before it, the flat
+ *    rule was universal and an embellishment release was unrepresentable.
+ *
+ *    This is deliberately NOT `AssemblyLod` from the building pipeline: that
+ *    type carries silhouette and facade-plan obligations a cartographic ground
+ *    surface does not have. Runtime tier SELECTION is a later task's concern;
+ *    this module only pins the shape and the coverage invariants.
  *
  * Artifact-reference SAFETY is deliberately not checked here. `src/domain` may
  * not import `../runtime/path-security.ts`, and a second, weaker path check
@@ -340,10 +351,18 @@ export function validateGroundFeaturePart(value: unknown): GroundValidation<Grou
 /**
  * Tier-set invariants, in the one place that may state them.
  *
- * The unbounded flat tier is what makes the polygon base usable standalone: at
- * any distance, with every near-tier embellishment absent, there is still
- * something to draw. Two unbounded tiers would make the choice ambiguous; zero
- * would make far views empty.
+ * TWO rules, selected by class, as stated in decision 4 of this module's header.
+ *
+ * SURFACE classes: exactly one unbounded flat tier. That is what makes the
+ * polygon base usable standalone — at any distance, with every near-tier
+ * embellishment absent, there is still something to draw. Two unbounded tiers
+ * would make the choice ambiguous; zero would make far views empty.
+ *
+ * EMBELLISHMENT classes: at least one near-3d tier with a FINITE distance, and
+ * no flat tier. An embellishment is additive over a base that already covers the
+ * ground, so it may — and should — drop out at distance; giving it a flat tier
+ * would let estimated linework stand in as the cartographic base, which is the
+ * one thing the claim ceiling on these classes exists to prevent.
  */
 export function collectGroundAssetTierIssues(value: unknown, path: string, issues: GroundIssue[]): void {
   if (!record(value)) return issue(issues, path, "Ground asset tier set must be an object.");
@@ -353,6 +372,8 @@ export function collectGroundAssetTierIssues(value: unknown, path: string, issue
   if (!Array.isArray(value.tiers) || value.tiers.length === 0) return issue(issues, `${path}.tiers`, "At least one ground tier is required.");
   const tierIds = new Set<string>();
   let unbounded = 0;
+  let flatTiers = 0;
+  let boundedNearTiers = 0;
   value.tiers.forEach((tier, index) => {
     const tierPath = `${path}.tiers[${index}]`;
     if (!record(tier)) return issue(issues, tierPath, "Ground tier must be an object.");
@@ -361,17 +382,27 @@ export function collectGroundAssetTierIssues(value: unknown, path: string, issue
     else if (tierIds.has(tier.tierId)) issue(issues, `${tierPath}.tierId`, "Tier ids must be unique within an asset.");
     else tierIds.add(tier.tierId);
     if (tier.kind !== "near-3d" && tier.kind !== "flat") issue(issues, `${tierPath}.kind`, "Tier kind must be near-3d or flat.");
+    else if (tier.kind === "flat") flatTiers += 1;
     if (tier.maxDistanceMeters === null) {
       unbounded += 1;
       if (tier.kind !== "flat") issue(issues, `${tierPath}.kind`, "Only the flat cartographic tier may cover every distance.");
     } else if (!(typeof tier.maxDistanceMeters === "number" && Number.isFinite(tier.maxDistanceMeters) && tier.maxDistanceMeters > 0)) {
       issue(issues, `${tierPath}.maxDistanceMeters`, "Tier max distance must be null or a finite positive number of metres.");
-    }
+    } else if (tier.kind === "near-3d") boundedNearTiers += 1;
     if (!nonEmpty(tier.artifactRef)) issue(issues, `${tierPath}.artifactRef`, "Tier artifact reference is required.");
     if (!checksum(tier.checksumSha256)) issue(issues, `${tierPath}.checksumSha256`, "Tier checksum must be lowercase SHA-256.");
   });
+  if (isGroundEmbellishmentClass(value.class)) {
+    if (flatTiers !== 0) {
+      issue(issues, `${path}.tiers`, `An embellishment asset must not declare a flat tier; estimated ${value.class} geometry may never stand in as the always-covering cartographic base. Found ${flatTiers}.`);
+    }
+    if (boundedNearTiers < 1) {
+      issue(issues, `${path}.tiers`, "An embellishment asset requires at least one near-3d tier with a finite maxDistanceMeters; it is additive over the flat base and must fall away at distance.");
+    }
+    return;
+  }
   if (unbounded !== 1) {
-    issue(issues, `${path}.tiers`, `Every ground asset requires exactly one always-covering flat tier (maxDistanceMeters null); found ${unbounded}.`);
+    issue(issues, `${path}.tiers`, `Every ground surface asset requires exactly one always-covering flat tier (maxDistanceMeters null); found ${unbounded}.`);
   }
 }
 

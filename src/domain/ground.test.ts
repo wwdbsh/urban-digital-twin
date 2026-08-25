@@ -104,6 +104,10 @@ function paths(result: { ok: boolean; issues?: { path: string; message: string }
   return (result.issues ?? []).map((entry) => entry.path);
 }
 
+function messages(result: { ok: boolean; issues?: { path: string; message: string }[] }): string[] {
+  return (result.issues ?? []).map((entry) => entry.message);
+}
+
 describe("ground class taxonomy", () => {
   it("keeps base classes and embellishments disjoint and complete", () => {
     expect(GROUND_BASE_CLASSES).toEqual(["roadbed", "sidewalk", "park", "plaza", "water"]);
@@ -284,6 +288,53 @@ describe("ground tier sets", () => {
 
     const badChecksum = validateGroundAssetTiers({ assetId: "a", class: "plaza", tiers: [flatTier({ checksumSha256: "NOT-A-HASH" })] });
     expect(paths(badChecksum)).toContain("$.tiers[0].checksumSha256");
+  });
+});
+
+/**
+ * The T009 amendment, checked in BOTH directions.
+ *
+ * The two rules are opposites, so a single-direction test would pass against a
+ * validator that simply stopped checking embellishments at all. Each case below
+ * asserts the rule it names AND that the other class family still rejects the
+ * same tier set.
+ */
+describe("ground tier sets: embellishment classes invert the flat-tier rule", () => {
+  for (const embellishment of ["curb", "crosswalk"] as const) {
+    it(`accepts a ${embellishment} asset with a finite near-3d tier and no flat tier`, () => {
+      expect(validateGroundAssetTiers({ assetId: `asset:${embellishment}:cell-0`, class: embellishment, tiers: [nearTier()] }).ok).toBe(true);
+    });
+
+    it(`refuses a ${embellishment} asset that also declares a flat tier`, () => {
+      const result = validateGroundAssetTiers({ assetId: `asset:${embellishment}:cell-0`, class: embellishment, tiers: [nearTier(), flatTier()] });
+      expect(result.ok).toBe(false);
+      expect(paths(result)).toContain("$.tiers");
+      expect(messages(result).join(" ")).toMatch(/must not declare a flat tier/u);
+    });
+
+    it(`refuses a ${embellishment} asset whose only tier is a bounded flat one`, () => {
+      const result = validateGroundAssetTiers({
+        assetId: `asset:${embellishment}:cell-0`,
+        class: embellishment,
+        tiers: [flatTier({ maxDistanceMeters: 400 })],
+      });
+      expect(result.ok).toBe(false);
+      expect(messages(result).join(" ")).toMatch(/at least one near-3d tier with a finite maxDistanceMeters/u);
+    });
+  }
+
+  it("still refuses a SURFACE asset that has no flat tier", () => {
+    const result = validateGroundAssetTiers({ assetId: "asset:roadbed:cell-0", class: "roadbed", tiers: [nearTier()] });
+    expect(result.ok).toBe(false);
+    expect(paths(result)).toContain("$.tiers");
+    expect(messages(result).join(" ")).toMatch(/exactly one always-covering flat tier/u);
+  });
+
+  it("accepts the same near-only tier set for a curb and refuses it for every base class", () => {
+    expect(validateGroundAssetTiers({ assetId: "a", class: "curb", tiers: [nearTier()] }).ok).toBe(true);
+    for (const base of GROUND_BASE_CLASSES) {
+      expect(validateGroundAssetTiers({ assetId: "a", class: base, tiers: [nearTier()] }).ok).toBe(false);
+    }
   });
 });
 

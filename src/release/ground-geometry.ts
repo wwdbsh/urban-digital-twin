@@ -52,6 +52,9 @@ export const GROUND_COORDINATE_STEP = 1 / GROUND_COORDINATE_SCALE;
 /** A GeoJSON position. Only the first two ordinates participate; Z is not carried. */
 export type GroundPosition = readonly number[];
 
+/** A GeoJSON LineString: an ordered, OPEN position list. Unlike a ring it does not close. */
+export type GroundLine = readonly GroundPosition[];
+
 /** A closed GeoJSON linear ring: first and last positions are equal. */
 export type GroundRing = readonly GroundPosition[];
 
@@ -201,6 +204,23 @@ export function rectsOverlap(left: GroundRect, right: GroundRect): boolean {
   return left.west < right.east && left.east > right.west && left.south < right.north && left.north > right.south;
 }
 
+/**
+ * True when two axis-aligned rectangles share ANY point, boundaries included.
+ *
+ * The line prefilter needs this and the polygon prefilter must not have it. A
+ * polygon that merely touches a cell's edge contributes no area there, so
+ * `rectsOverlap`'s strict test correctly drops it. A LINE's envelope can be
+ * degenerate — a perfectly north-south pavement edge has `west === east` — and
+ * under the strict test such a feature would match no cell at all and vanish
+ * from the release. Boundary-inclusive prefiltering also matches the
+ * boundary-inclusive line clipper: a piece lying along a shared edge is kept by
+ * both neighbours, and a piece that merely touches at one point clips to zero
+ * length and is dropped downstream.
+ */
+export function rectsTouchOrOverlap(left: GroundRect, right: GroundRect): boolean {
+  return left.west <= right.east && left.east >= right.west && left.south <= right.north && left.north >= right.south;
+}
+
 type Side = "west" | "east" | "south" | "north";
 
 function inside(position: GroundPosition, rect: GroundRect, side: Side): boolean {
@@ -347,6 +367,214 @@ export function ringIsSelfTouching(ring: GroundRing): boolean {
 /** Whether any ring of a polygon is self-touching. Holes count: they are rings. */
 export function polygonIsSelfTouching(polygon: GroundPolygon): boolean {
   return polygon.some((ring) => ringIsSelfTouching(ring));
+}
+
+// ---------------------------------------------------------------------------
+// Linework (T009)
+//
+// Curbs are LINES, and Sutherland-Hodgman is a polygon algorithm: it treats its
+// vertex list as cyclic and would close a curb into a ring. The line clipper
+// below is Liang-Barsky, PORTED from `../ingestion/route-graph-snapshot.ts`
+// (`clipSegment`, lines 66-73) rather than written a third time. That module is
+// deliberately left untouched: it is a shipped ingestion path, and its `Bounds`
+// type is structurally identical to `GroundRect` but privately declared, so the
+// port is a retyping of proven arithmetic, not a new algorithm.
+//
+// ONE behaviour is deliberately NOT ported. `clipLine` there concatenates the
+// surviving pieces of a polyline into a single output line, which draws a
+// connector across whatever fell outside the rectangle. For a routing graph that
+// preserves connectivity; for a curb it would INVENT pavement edge the source
+// never recorded. `clipLineToRect` therefore returns the surviving pieces as
+// separate lines and never bridges a gap.
+// ---------------------------------------------------------------------------
+
+/**
+ * Clips one segment against an axis-aligned rectangle (Liang-Barsky).
+ *
+ * Boundary-inclusive: `p === 0 && q >= 0` keeps a segment that runs exactly
+ * along a clip line, so a curb lying on a shared cell edge is retained by BOTH
+ * neighbouring cells. That is a measured, disclosed duplication, not a defect to
+ * silence — a curb has no interior with which to decide which side owns it, and
+ * dropping it from one side would delete real linework at a cell seam.
+ *
+ * Returns `null` when nothing survives.
+ */
+export function clipSegmentToRect(from: GroundPosition, to: GroundPosition, rect: GroundRect): [number[], number[]] | null {
+  const fromX = from[0]!;
+  const fromY = from[1]!;
+  const deltaX = to[0]! - fromX;
+  const deltaY = to[1]! - fromY;
+  let enter = 0;
+  let exit = 1;
+  const constraints: readonly (readonly [number, number])[] = [
+    [-deltaX, fromX - rect.west],
+    [deltaX, rect.east - fromX],
+    [-deltaY, fromY - rect.south],
+    [deltaY, rect.north - fromY],
+  ];
+  for (const [p, q] of constraints) {
+    if (p === 0) {
+      if (q < 0) return null;
+      continue;
+    }
+    const ratio = q / p;
+    if (p < 0) {
+      if (ratio > exit) return null;
+      if (ratio > enter) enter = ratio;
+    } else {
+      if (ratio < enter) return null;
+      if (ratio < exit) exit = ratio;
+    }
+  }
+  return [
+    [fromX + enter * deltaX, fromY + enter * deltaY],
+    [fromX + exit * deltaX, fromY + exit * deltaY],
+  ];
+}
+
+/**
+ * Clips one open polyline, returning the surviving pieces in source order.
+ *
+ * Consecutive clipped segments are joined only when the previous piece ENDS
+ * exactly where the next begins, which is the case whenever both endpoints were
+ * inside; a line that leaves the rectangle and returns produces two pieces. A
+ * piece that collapses to a single point (a segment grazing a corner) is
+ * dropped: a zero-length curb is not linework.
+ */
+export function clipLineToRect(line: GroundLine, rect: GroundRect): number[][][] {
+  const pieces: number[][][] = [];
+  let current: number[][] | null = null;
+  for (let index = 1; index < line.length; index += 1) {
+    const segment = clipSegmentToRect(line[index - 1]!, line[index]!, rect);
+    if (!segment) {
+      current = null;
+      continue;
+    }
+    const [start, end] = segment;
+    const last = current ? current[current.length - 1]! : null;
+    if (last && last[0] === start[0]! && last[1] === start[1]!) {
+      if (last[0] !== end[0]! || last[1] !== end[1]!) current!.push([end[0]!, end[1]!]);
+      continue;
+    }
+    if (start[0]! === end[0]! && start[1]! === end[1]!) {
+      current = null;
+      continue;
+    }
+    current = [
+      [start[0]!, start[1]!],
+      [end[0]!, end[1]!],
+    ];
+    pieces.push(current);
+  }
+  return pieces.filter((piece) => piece.length >= 2);
+}
+
+/** Clips a MultiLineString, flattening each line's surviving pieces into the result. */
+export function clipMultiLineStringToRect(lines: readonly GroundLine[], rect: GroundRect): number[][][] {
+  const out: number[][][] = [];
+  for (const line of lines) for (const piece of clipLineToRect(line, rect)) out.push(piece);
+  return out;
+}
+
+/**
+ * Quantizes an open line, dropping vertices that rounding made identical to
+ * their predecessor.
+ *
+ * Same rule as `quantizeRing`, minus the closing vertex: two positions that
+ * round to the same 1.1 cm cell are the same shipped vertex. Returns `[]` when
+ * fewer than two distinct vertices survive, because a one-point line is not
+ * linework and recording it would claim a curb with no extent.
+ */
+export function quantizeLine(line: GroundLine): number[][] {
+  const out: number[][] = [];
+  for (const position of line) {
+    const quantized = quantizePosition(position);
+    const previous = out[out.length - 1];
+    if (previous && previous[0] === quantized[0] && previous[1] === quantized[1]) continue;
+    out.push(quantized);
+  }
+  return out.length < 2 ? [] : out;
+}
+
+/** Quantizes a MultiLineString, dropping lines that collapse below two vertices. */
+export function quantizeMultiLineString(lines: readonly GroundLine[]): number[][][] {
+  const out: number[][][] = [];
+  for (const line of lines) {
+    const quantized = quantizeLine(line);
+    if (quantized.length > 0) out.push(quantized);
+  }
+  return out;
+}
+
+/** Axis-aligned envelope of a MultiLineString, or null when it has no positions. */
+export function multiLineStringBounds(lines: readonly GroundLine[]): GroundRect | null {
+  let west = Infinity;
+  let south = Infinity;
+  let east = -Infinity;
+  let north = -Infinity;
+  for (const line of lines) {
+    for (const position of line) {
+      const longitude = position[0]!;
+      const latitude = position[1]!;
+      if (longitude < west) west = longitude;
+      if (longitude > east) east = longitude;
+      if (latitude < south) south = latitude;
+      if (latitude > north) north = latitude;
+    }
+  }
+  return Number.isFinite(west) && Number.isFinite(south) ? { west, south, east, north } : null;
+}
+
+/**
+ * L1 (taxicab) length in degrees. Adds only; no square root.
+ *
+ * This is NOT a distance and no metre is claimed by it. It exists for one
+ * purpose: the clip-conservation RATIO, where the per-cell pieces of a line must
+ * sum back to the source line's length inside the coverage rectangle. L1 is the
+ * right tool for that and Euclidean length is the wrong one — clipping splits a
+ * segment at a point ON the segment, along which x and y are each monotone, so
+ * |dx| and |dy| are exactly additive across the split, while `Math.sqrt` is
+ * implementation-approximated in ECMA-262 and would put an engine-dependent
+ * number into a recorded measurement. `../release/ground-geometry.ts` records no
+ * transcendental result anywhere, and this keeps that true.
+ */
+export function lineL1Length(line: GroundLine): number {
+  let total = 0;
+  for (let index = 1; index < line.length; index += 1) {
+    const deltaX = line[index]![0]! - line[index - 1]![0]!;
+    const deltaY = line[index]![1]! - line[index - 1]![1]!;
+    total += (deltaX < 0 ? -deltaX : deltaX) + (deltaY < 0 ? -deltaY : deltaY);
+  }
+  return total;
+}
+
+/** L1 length of a MultiLineString, in degrees. See `lineL1Length`. */
+export function multiLineStringL1Length(lines: readonly GroundLine[]): number {
+  let total = 0;
+  for (const line of lines) total += lineL1Length(line);
+  return total;
+}
+
+/**
+ * Whether every position of a MultiLineString lies exactly on one edge of the
+ * rectangle.
+ *
+ * Such a piece is retained by both cells that share the edge (see
+ * `clipSegmentToRect`). Counting them is how the duplication stays a measured
+ * number instead of an unnoticed one.
+ */
+export function multiLineStringLiesOnRectEdge(lines: readonly GroundLine[], rect: GroundRect): boolean {
+  let any = false;
+  for (const line of lines) {
+    if (line.length === 0) continue;
+    any = true;
+    const x = line[0]![0]!;
+    const y = line[0]![1]!;
+    const onVerticalEdge = (x === rect.west || x === rect.east) && line.every((position) => position[0]! === x);
+    const onHorizontalEdge = (y === rect.south || y === rect.north) && line.every((position) => position[1]! === y);
+    if (!onVerticalEdge && !onHorizontalEdge) return false;
+  }
+  return any;
 }
 
 /**

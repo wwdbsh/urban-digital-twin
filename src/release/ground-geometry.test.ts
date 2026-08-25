@@ -3,16 +3,26 @@ import { describe, expect, it } from "vitest";
 import {
   GROUND_COORDINATE_SCALE,
   GROUND_COORDINATE_STEP,
+  clipLineToRect,
+  clipMultiLineStringToRect,
   clipMultiPolygonToRect,
   clipPolygonToRect,
   clipRingToRect,
+  clipSegmentToRect,
+  lineL1Length,
+  multiLineStringBounds,
+  multiLineStringL1Length,
+  multiLineStringLiesOnRectEdge,
   multiPolygonBounds,
   multiPolygonNetArea,
   polygonNetArea,
   quantizeCoordinate,
+  quantizeLine,
+  quantizeMultiLineString,
   quantizeMultiPolygon,
   quantizeRing,
   rectsOverlap,
+  rectsTouchOrOverlap,
   ringArea,
   ringSignedArea,
   ringSimplicityCensus,
@@ -264,5 +274,194 @@ describe("ring simplicity census", () => {
     const census = ringSimplicityCensus([[square(0, 0, 1)]]);
     ringSimplicityCensus([[square(3, 3, 1)]], census);
     expect(census.rings).toBe(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Linework (T009)
+// ---------------------------------------------------------------------------
+
+describe("segment clipping (Liang-Barsky)", () => {
+  it("keeps a segment that lies wholly inside", () => {
+    expect(clipSegmentToRect([1, 1], [9, 9], CELL)).toEqual([
+      [1, 1],
+      [9, 9],
+    ]);
+  });
+
+  it("trims a segment that leaves the rectangle, landing exactly on the clip line", () => {
+    const clipped = clipSegmentToRect([5, 5], [15, 5], CELL);
+    expect(clipped).toEqual([
+      [5, 5],
+      [10, 5],
+    ]);
+  });
+
+  it("rejects a segment that misses the rectangle entirely", () => {
+    expect(clipSegmentToRect([11, 1], [12, 9], CELL)).toBeNull();
+    expect(clipSegmentToRect([-5, -5], [-1, -1], CELL)).toBeNull();
+  });
+
+  it("keeps a segment running exactly along an edge, in both cells that share it", () => {
+    const left: GroundRect = { west: 0, south: 0, east: 10, north: 10 };
+    const right: GroundRect = { west: 10, south: 0, east: 20, north: 10 };
+    expect(clipSegmentToRect([10, 2], [10, 8], left)).toEqual([
+      [10, 2],
+      [10, 8],
+    ]);
+    expect(clipSegmentToRect([10, 2], [10, 8], right)).toEqual([
+      [10, 2],
+      [10, 8],
+    ]);
+    expect(multiLineStringLiesOnRectEdge([[[10, 2], [10, 8]]], left)).toBe(true);
+    expect(multiLineStringLiesOnRectEdge([[[9, 2], [9, 8]]], left)).toBe(false);
+  });
+
+  it("agrees with the ingestion clipper it was ported from, on a spread of segments", () => {
+    // `../ingestion/route-graph-snapshot.ts` clipSegment, restated here as the
+    // reference implementation the port must reproduce. If this ever disagrees,
+    // one of the two has drifted and the drift is visible rather than silent.
+    const reference = (a: number[], b: number[], rect: GroundRect): number[][] | null => {
+      let t0 = 0;
+      let t1 = 1;
+      const dx = b[0]! - a[0]!;
+      const dy = b[1]! - a[1]!;
+      for (const [p, q] of [
+        [-dx, a[0]! - rect.west],
+        [dx, rect.east - a[0]!],
+        [-dy, a[1]! - rect.south],
+        [dy, rect.north - a[1]!],
+      ] as const) {
+        if (p === 0 && q < 0) return null;
+        if (p === 0) continue;
+        const ratio = q / p;
+        if (p < 0) {
+          if (ratio > t1) return null;
+          if (ratio > t0) t0 = ratio;
+        } else {
+          if (ratio < t0) return null;
+          if (ratio < t1) t1 = ratio;
+        }
+      }
+      return [
+        [a[0]! + t0 * dx, a[1]! + t0 * dy],
+        [a[0]! + t1 * dx, a[1]! + t1 * dy],
+      ];
+    };
+    const points = [-3, 0, 0.5, 4, 10, 13];
+    for (const ax of points) for (const ay of points) for (const bx of points) for (const by of points) {
+      expect(clipSegmentToRect([ax, ay], [bx, by], CELL)).toEqual(reference([ax, ay], [bx, by], CELL));
+    }
+  });
+});
+
+describe("line clipping", () => {
+  it("returns disjoint pieces instead of bridging the gap the ingestion clipper bridges", () => {
+    // Out, in, out, in: two surviving pieces. A concatenating clipper would emit
+    // one line with a connector across the excursion — pavement edge the source
+    // never recorded.
+    const line = [
+      [-5, 5],
+      [3, 5],
+      [-5, 6],
+      [4, 6],
+    ];
+    const pieces = clipLineToRect(line, CELL);
+    expect(pieces).toEqual([
+      [
+        [0, 5],
+        [3, 5],
+        [0, 5.375],
+      ],
+      [
+        [0, 6],
+        [4, 6],
+      ],
+    ]);
+    // The gap between (0, 5.375) and (0, 6) is where a concatenating clipper
+    // would have drawn a connector along the western edge.
+    expect(pieces[0]![pieces[0]!.length - 1]).not.toEqual(pieces[1]![0]);
+  });
+
+  it("keeps an interior polyline as one piece with its own vertices", () => {
+    const line = [
+      [1, 1],
+      [2, 3],
+      [4, 2],
+    ];
+    expect(clipLineToRect(line, CELL)).toEqual([line]);
+  });
+
+  it("drops a segment that only grazes a corner", () => {
+    expect(clipLineToRect([[10, 20], [20, 10]], CELL)).toEqual([]);
+    expect(clipLineToRect([[0, 20], [20, 0]], CELL)).toEqual([]);
+  });
+
+  it("splits a MultiLineString across two cells and conserves L1 length exactly", () => {
+    const left: GroundRect = { west: 0, south: 0, east: 10, north: 10 };
+    const right: GroundRect = { west: 10, south: 0, east: 20, north: 10 };
+    const source = [
+      [
+        [2, 2],
+        [18, 6],
+      ],
+    ];
+    const inLeft = clipMultiLineStringToRect(source, left);
+    const inRight = clipMultiLineStringToRect(source, right);
+    expect(inLeft).toHaveLength(1);
+    expect(inRight).toHaveLength(1);
+    expect(multiLineStringL1Length(inLeft) + multiLineStringL1Length(inRight)).toBe(multiLineStringL1Length(source));
+    // The one-line form agrees with the multi-line one, and adds nothing.
+    expect(lineL1Length(source[0]!)).toBe(multiLineStringL1Length(source));
+    expect(lineL1Length([[0, 0]])).toBe(0);
+    expect(multiLineStringBounds(source)).toEqual({ west: 2, south: 2, east: 18, north: 6 });
+  });
+});
+
+describe("rectangle prefilters", () => {
+  it("keeps a degenerate line envelope that the strict polygon prefilter drops", () => {
+    const vertical: GroundRect = { west: 10, east: 10, south: 2, north: 8 };
+    expect(rectsOverlap(vertical, CELL)).toBe(false);
+    expect(rectsTouchOrOverlap(vertical, CELL)).toBe(true);
+    expect(rectsTouchOrOverlap(vertical, { west: 10, south: 0, east: 20, north: 10 })).toBe(true);
+  });
+
+  it("still separates rectangles that share nothing", () => {
+    expect(rectsTouchOrOverlap({ west: 11, east: 12, south: 0, north: 1 }, CELL)).toBe(false);
+  });
+});
+
+describe("line quantization", () => {
+  it("rounds to the shipped precision and collapses vertices rounding made identical", () => {
+    const line = [
+      [-73.98818526997675, 40.74906126413475],
+      [-73.988185269999, 40.749061264999],
+      [-73.98811321759088, 40.74903155532888],
+    ];
+    expect(quantizeLine(line)).toEqual([
+      [-73.9881853, 40.7490613],
+      [-73.9881132, 40.7490316],
+    ]);
+  });
+
+  it("returns nothing when fewer than two distinct vertices survive", () => {
+    expect(quantizeLine([[1, 1]])).toEqual([]);
+    expect(quantizeLine([
+      [1.00000000001, 1],
+      [1.00000000002, 1],
+    ])).toEqual([]);
+    expect(quantizeMultiLineString([[[1, 1]], [[0, 0], [1, 1]]])).toEqual([[[0, 0], [1, 1]]]);
+  });
+
+  it("moves no vertex further than half a quantization step", () => {
+    const line = [
+      [-73.98818526997675, 40.74906126413475],
+      [-73.98811321759088, 40.74903155532888],
+    ];
+    const quantized = quantizeLine(line);
+    quantized.forEach((position, index) => {
+      expect(Math.abs(position[0]! - line[index]![0]!)).toBeLessThanOrEqual(GROUND_COORDINATE_STEP / 2);
+      expect(Math.abs(position[1]! - line[index]![1]!)).toBeLessThanOrEqual(GROUND_COORDINATE_STEP / 2);
+    });
   });
 });

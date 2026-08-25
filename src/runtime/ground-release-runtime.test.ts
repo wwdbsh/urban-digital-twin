@@ -8,6 +8,7 @@ import {
   MANHATTAN_GROUND_EXTENT,
   buildGroundOwnershipLedger,
   groundAssetContentSha256,
+  validateGroundReleaseStructure,
   type GroundOwnershipLedger,
   type GroundReleaseDocument,
 } from "../release/ground-release";
@@ -213,6 +214,38 @@ describe("ground release runtime", () => {
     const before = requested.length;
     await loaded.loadCellClass(state.cellId, "roadbed");
     expect(requested.length).toBe(before);
+  });
+
+  /**
+   * T009 regression: the T007 flat-class guard is untouched.
+   *
+   * T009 amended the domain tier contract so an EMBELLISHMENT asset is
+   * representable — near tiers only, no flat tier — and shipped that shape in a
+   * separate release. This loader serves the FLAT release and must keep refusing
+   * an embellishment asset, so the amendment cannot quietly widen what T007
+   * draws. The curb asset below is valid under the amended contract, which is
+   * exactly what makes the refusal meaningful: it is the loader saying no, not
+   * the schema.
+   */
+  it("still refuses a non-base class asset, even one that is valid under the amended tier contract", async () => {
+    const state = await fixture();
+    const cell = state.ledger.cells.find((candidate) => candidate.cellId === state.cellId)!;
+    const tiers = [{
+      tierId: `${cell.cellId}:curb:near-3d`,
+      kind: "near-3d" as const,
+      maxDistanceMeters: 400,
+      artifactRef: `artifacts/${cell.cellId}/curb.json`,
+      checksumSha256: domainSeparatedSha256("test", "curb-artifact"),
+    }];
+    const document: GroundReleaseDocument = {
+      ...state.document,
+      assets: [...state.document.assets, { assetId: `ground-asset:${cell.cellId}:curb`, cellId: cell.cellId, class: "curb", tiers, contentSha256: groundAssetContentSha256(tiers) }],
+      claimCeilings: { ...state.document.claimCeilings, curb: "Estimated curb alignment; not a survey of current curb geometry." },
+    };
+    // The amended contract accepts this document; the loader must not.
+    expect(validateGroundReleaseStructure(document).ok).toBe(true);
+    const { fetcher } = fetcherFor({ ...state, document });
+    await expect(loadGroundRelease(BASE_PATH, undefined, fetcher)).rejects.toThrow(/non-base class curb; this release ships flat classes only/u);
   });
 
   it("fails closed when an artifact's bytes do not match the manifest checksum, and caches nothing", async () => {
