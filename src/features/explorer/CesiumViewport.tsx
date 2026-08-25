@@ -699,6 +699,20 @@ export function groundFeatureForPickId(pickedId: string | null | undefined, pick
   return canonicalFeatureId === null ? null : pickMap.get(canonicalFeatureId) ?? null;
 }
 
+/**
+ * Whether the synthetic grid imagery is the visible ground (T008).
+ *
+ * Exported as a one-line predicate because the DEMOTION is the claim worth
+ * pinning: the grid is shown in exactly the sessions that have no verified
+ * ground overlay, and hidden in exactly the sessions that do. The effect that
+ * flips `ImageryLayer.show` cannot be exercised in jsdom — CesiumJS is not
+ * rendered there — so the rule is tested here and the layer toggle itself rests
+ * on visual confirmation.
+ */
+export function syntheticGridVisible(groundBaseActive: boolean): boolean {
+  return !groundBaseActive;
+}
+
 export const STAGE3_STOREFRONT_PROOF_QUERY = "storefront-picks";
 export const STAGE3_STOREFRONT_PROJECTIONS_ATTRIBUTE = "data-stage3-storefront-projections";
 export const STAGE3_RENDER_PROOF_ATTRIBUTE = "data-stage3-render-proof";
@@ -2119,6 +2133,8 @@ export function CesiumViewport({
    */
   const groundPickMapRef = useRef(new Map<string, GroundFeature>());
   const groundCollectionRef = useRef<PrimitiveCollection | null>(null);
+  /** The synthetic grid imagery layer, constructed once and shown/hidden. */
+  const gridImageryLayerRef = useRef<ImageryLayer | null>(null);
   /** `${cellId}/${class}` to the primitive currently drawing it. */
   const groundPrimitivesRef = useRef(new Map<string, Primitive>());
   const groundRefusalsRef = useRef(new Map<string, GroundRenderRefusal[]>());
@@ -2372,13 +2388,25 @@ export function CesiumViewport({
     // for the ground release.
     const groundCollection = viewer.scene.primitives.add(new PrimitiveCollection());
     groundCollectionRef.current = groundCollection;
-    viewer.imageryLayers.add(new ImageryLayer(new GridImageryProvider({
+    // THE SYNTHETIC GRID IS DEMOTED, NOT DELETED (T008).
+    //
+    // It is still constructed exactly once per viewer, and it is still what a
+    // session sees while the ground release is loading, if that release fails
+    // verification, or if the session opted out. What changed is that it is
+    // HIDDEN once a verified ground overlay is active, so the default healthy
+    // session's visible ground is the cartographic base rather than a grid that
+    // describes nothing. `show` is toggled — the provider is never rebuilt —
+    // because re-creating an imagery provider on a state change would re-tile
+    // the globe for a visibility decision.
+    const gridImageryLayer = new ImageryLayer(new GridImageryProvider({
       cells: 16,
       color: Color.fromCssColorString("#5b737d").withAlpha(0.45),
       glowColor: Color.TRANSPARENT,
       glowWidth: 0,
       backgroundColor: Color.fromCssColorString("#18252d"),
-    })));
+    }));
+    viewer.imageryLayers.add(gridImageryLayer);
+    gridImageryLayerRef.current = gridImageryLayer;
 
     viewer.selectedEntityChanged.addEventListener((entity) => {
       if (!entity || typeof entity.id !== "string") return;
@@ -2503,6 +2531,7 @@ export function CesiumViewport({
       if (cameraSettledEmitterRef.current) cameraSettledEmitterRef.current = null;
       if (denseCollectionRef.current === denseCollection) denseCollectionRef.current = null;
       if (groundCollectionRef.current === groundCollection) groundCollectionRef.current = null;
+      if (gridImageryLayerRef.current === gridImageryLayer) gridImageryLayerRef.current = null;
       groundPrimitivesRef.current.clear();
       groundPickMapRef.current.clear();
       groundRefusalsRef.current.clear();
@@ -3162,6 +3191,26 @@ export function CesiumViewport({
     }
     return undefined;
   }, [exteriorOverlay, viewerReadyGeneration, denseFeatures, adapter]);
+
+  /**
+   * The grid's visibility is a function of the ground base and nothing else.
+   *
+   * `groundOverlay` is non-null only when the app has resolved the release to
+   * "requested AND verified AND loaded" (`groundActive` in App.tsx), so idle,
+   * loading, failed and opted-out sessions all keep the grid. There is no state
+   * in which neither ground is drawn: the globe's own `baseColor` matches the
+   * grid's background, so even the seam between "verified" and "first cell
+   * drawn" is a dark surface rather than a void.
+   */
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    const layer = gridImageryLayerRef.current;
+    if (!viewer || !layer) return;
+    const show = syntheticGridVisible(groundOverlay !== null);
+    if (layer.show === show) return;
+    layer.show = show;
+    viewer.scene.requestRender();
+  }, [groundOverlay, viewerReadyGeneration]);
 
   /**
    * The ground canary's entire scene contribution (T007).

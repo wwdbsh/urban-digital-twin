@@ -675,19 +675,72 @@ export function appendBlock835PublicRealmUrl(baseUrl: string, requested: boolean
 }
 
 /**
- * Preserve the explicit citywide-ground canary across canonical URL writes.
+ * THE GROUND ROLLBACK SWITCH (T008).
+ *
+ * One constant, read in exactly three places — the boot parse, the popstate
+ * parse, and the URL writer — so reverting the cartographic ground base to the
+ * synthetic grid is a one-token edit, exactly as ADR 0045 established for
+ * `EXTERIOR_SCHEDULER_DEFAULT_ON` and ADR 0046-era `FAR_TIER_DEFAULT_ON`.
+ *
+ * WHAT THE FLIP CHANGES: an ordinary session now loads and verifies
+ * `manhattan-ground-20260824` without being asked, and the synthetic
+ * `GridImageryProvider` layer is HIDDEN — not removed — once that release is
+ * verified. What it does NOT change is the failure direction: a session whose
+ * ground release fails verification, or that opted out, still gets the grid and
+ * the existing explicit-failure line. There is no state in which the ground is
+ * both absent and unexplained.
+ *
+ * WHAT A ROLLBACK TO `false` RESTORES: everything. The parser falls back to
+ * "false unless the URL names the release", the writer goes back to writing the
+ * release id on opt-in and deleting the parameter otherwise, and the grid layer
+ * is visible in every session because no session has a verified ground overlay.
+ * `ground-canary.test.tsx` is run in both polarities and the rehearsal is
+ * recorded in ADR 0059; unlike the scheduler flip there are no residency
+ * ceilings or pins left behind, because this flip raises no budget.
+ */
+export const GROUND_PARAM = "ground" as const;
+export const GROUND_OFF_VALUE = "off" as const;
+export const GROUND_DEFAULT_ON = true;
+
+/** The URL states whatever the default is NOT, so the default stays silent. */
+export function groundOptOutValue(): string {
+  return GROUND_DEFAULT_ON ? GROUND_OFF_VALUE : MANHATTAN_GROUND_RELEASE_ID;
+}
+
+/**
+ * Whether a session wants the cartographic ground base.
+ *
+ * Naming the release explicitly is always honoured as a request, in either
+ * polarity, so every `?ground=manhattan-ground-20260824` link minted while the
+ * ground was an opt-in canary still means exactly what it meant. `?ground=off`
+ * is the opt-out. Any other spelling — including a stale link to some other
+ * ground release id — resolves to the DEFAULT rather than to a release this
+ * build cannot verify, the same fail-direction as an unpinned `exteriorCells`.
+ */
+export function parseGroundRequested(href: string): boolean {
+  const value = new URL(href, "http://localhost/").searchParams.get(GROUND_PARAM);
+  if (value === MANHATTAN_GROUND_RELEASE_ID) return true;
+  if (value === GROUND_OFF_VALUE) return false;
+  return GROUND_DEFAULT_ON;
+}
+
+/**
+ * Preserve the citywide-ground intent across canonical URL writes.
  *
  * Written exactly like the Block 835 overlay above, and for the same reason: a
- * settled-camera `replaceState` rewrites the whole URL, so an additive overlay
+ * settled-camera `replaceState` rewrites the whole URL, so an overlay parameter
  * that is not re-appended here is silently dropped by the first camera move.
- * The ground release is NOT a default — absent the parameter this function
- * deletes it, so an ordinary session's URL is byte-identical to what it was
- * before this feature existed.
+ *
+ * The parameter states the OPT-OUT from whatever `GROUND_DEFAULT_ON` currently
+ * is and stays silent otherwise, which is the convention `farTierOptOutValue`
+ * and `exteriorSchedulerOptOutValue` already follow. A default session
+ * therefore carries no ground token in either polarity, so flipping the default
+ * does not churn every shared link.
  */
 export function appendGroundUrl(baseUrl: string, requested: boolean, featureId: string | null): string {
   const url = new URL(baseUrl, typeof window === "undefined" ? "http://localhost/" : window.location.href);
-  if (requested) url.searchParams.set("ground", MANHATTAN_GROUND_RELEASE_ID);
-  else url.searchParams.delete("ground");
+  if (requested === GROUND_DEFAULT_ON) url.searchParams.delete(GROUND_PARAM);
+  else url.searchParams.set(GROUND_PARAM, groundOptOutValue());
   if (requested && featureId) url.searchParams.set("groundFeature", featureId);
   else url.searchParams.delete("groundFeature");
   return url.toString();
@@ -1534,9 +1587,10 @@ export function App() {
   const initialNavigation = typeof window === "undefined" ? { featureId: null, query: "", cameraMode: "overview" as CameraMode, pose: null, poseInvalid: false } : parseNavigationUrl(window.location.href);
   const initialPublicRealmRequested = typeof window !== "undefined" && new URL(window.location.href).searchParams.get("publicRealm") === BLOCK835_PUBLIC_REALM_RELEASE_ID;
   const initialPublicRealmFeatureId = typeof window !== "undefined" ? new URL(window.location.href).searchParams.get("publicRealmFeature") : null;
-  // The ground canary is EXPLICIT and never a default: the synthetic grid stays
-  // the ground of every session that does not name this release.
-  const initialGroundRequested = typeof window !== "undefined" && new URL(window.location.href).searchParams.get("ground") === MANHATTAN_GROUND_RELEASE_ID;
+  // T008: the verified cartographic ground is the DEFAULT base. A session that
+  // opts out with `?ground=off`, or whose release fails verification, keeps the
+  // synthetic grid — see `GROUND_DEFAULT_ON`.
+  const initialGroundRequested = typeof window === "undefined" ? GROUND_DEFAULT_ON : parseGroundRequested(window.location.href);
   const initialGroundFeatureId = typeof window !== "undefined" && initialGroundRequested ? new URL(window.location.href).searchParams.get("groundFeature") : null;
   const initialExteriorStreaming: ExteriorStreamingUrlState = typeof window === "undefined"
     ? { override: null, explicitReleaseId: null, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: false, detailRadiusMeters: null, farTier: FAR_TIER_DEFAULT_ON }
@@ -1597,7 +1651,11 @@ export function App() {
   const [groundRequested, setGroundRequested] = useState(initialGroundRequested);
   const [groundOverlay, setGroundOverlay] = useState<LoadedGroundRelease | null>(null);
   const [groundLoadState, setGroundLoadState] = useState<"idle" | "loading" | "ready" | "failed">(initialGroundRequested ? "loading" : "idle");
-  const [groundError, setGroundError] = useState(initialGroundRequested ? "Citywide ground canary is loading and verifying the local release…" : "");
+  const [groundError, setGroundError] = useState(initialGroundRequested ? "Citywide ground base is loading and verifying the local release…" : "");
+  // Boot cost, measured rather than asserted: load + full verification, in
+  // milliseconds, published in the status line so the default flip carries its
+  // own evidence instead of a claim. Null until a load has completed.
+  const [groundVerifyMs, setGroundVerifyMs] = useState<number | null>(null);
   const [selectedGroundId, setSelectedGroundId] = useState<string | null>(initialGroundFeatureId);
   const [groundLayerVisibility, setGroundLayerVisibility] = useState<GroundLayerVisibility>(DEFAULT_GROUND_LAYER_VISIBILITY);
   const [groundSummary, setGroundSummary] = useState<GroundRenderSummary | null>(null);
@@ -3033,7 +3091,8 @@ export function App() {
   }, [publicRealmRequested]);
 
   /**
-   * The citywide ground canary, loaded only when the URL names it.
+   * The citywide cartographic ground, loaded by DEFAULT since T008 and skipped
+   * only by an explicit `?ground=off`.
    *
    * Structured exactly like the Block 835 effect above. The load verifies the
    * release document, the ownership ledger, the feature/part graph and the
@@ -3041,6 +3100,11 @@ export function App() {
    * per-cell artifact is then checksum-verified at the moment it is drawn. Any
    * failure leaves `groundLoadState` at "failed" with the specific reason and
    * the base scene — synthetic grid included — exactly as it was.
+   *
+   * It fires on mount, so its verification cost is boot cost. That cost is
+   * MEASURED here rather than deferred: this task did not build idle-deferral
+   * infrastructure, and ADR 0059 records the measurement and the deferral option
+   * as an open risk rather than pretending the cost is zero.
    */
   useEffect(() => {
     if (!groundRequested) {
@@ -3049,22 +3113,26 @@ export function App() {
       setGroundError("");
       setGroundSummary(null);
       setGroundRefusals(new Map());
+      setGroundVerifyMs(null);
       setSelectedGroundId(null);
       selectedGroundIdRef.current = null;
       return undefined;
     }
     let active = true;
+    const loadStartedAt = typeof performance === "undefined" ? Date.now() : performance.now();
     const controller = new AbortController();
     const groundFault = import.meta.env.DEV && typeof window !== "undefined"
       ? parseGroundFault(new URL(window.location.href).searchParams.get("groundFault"), true)
       : null;
     const groundFetcher = groundFault ? createGroundFaultFetcher(groundFault) : undefined;
     setGroundLoadState("loading");
-    setGroundError("Citywide ground canary is loading and verifying the local release…");
+    setGroundVerifyMs(null);
+    setGroundError("Citywide ground base is loading and verifying the local release…");
     void loadGroundRelease(`/data/${MANHATTAN_GROUND_RELEASE_ID}/`, controller.signal, groundFetcher).then((loaded) => {
       if (!active) return;
       setGroundOverlay(loaded);
       setGroundLoadState("ready");
+      setGroundVerifyMs(Math.round((typeof performance === "undefined" ? Date.now() : performance.now()) - loadStartedAt));
       setGroundError("");
     }).catch((error: unknown) => {
       if (!active || (error instanceof DOMException && error.name === "AbortError")) return;
@@ -3072,6 +3140,7 @@ export function App() {
       setGroundLoadState("failed");
       setGroundSummary(null);
       setGroundRefusals(new Map());
+      setGroundVerifyMs(null);
       setSelectedGroundId(null);
       selectedGroundIdRef.current = null;
       setGroundError(groundFailureMessage(error));
@@ -3474,7 +3543,7 @@ export function App() {
       const url = new URL(window.location.href);
       const requestedPublicRealm = url.searchParams.get("publicRealm") === BLOCK835_PUBLIC_REALM_RELEASE_ID;
       const requestedPublicRealmFeature = requestedPublicRealm ? url.searchParams.get("publicRealmFeature") : null;
-      const requestedGround = url.searchParams.get("ground") === MANHATTAN_GROUND_RELEASE_ID;
+      const requestedGround = parseGroundRequested(window.location.href);
       const requestedGroundFeature = requestedGround ? url.searchParams.get("groundFeature") : null;
       // Exterior streaming intent is part of history state. Before the Block 835
       // promotion it was read once at mount and never restored, so Back/Forward
@@ -3877,9 +3946,7 @@ export function App() {
   const selectedGroundFeature = groundActive && groundOverlay && selectedGroundId ? groundOverlay.feature(selectedGroundId) ?? null : null;
   const selectedGroundRefusals = selectedGroundId ? groundRefusals.get(selectedGroundId) ?? [] : [];
   const groundStatusMessage = groundLoadState === "ready"
-    ? groundSummary
-      ? groundRenderStatusLine(groundSummary)
-      : "Ground canary verified locally; no cell is in view yet."
+    ? `${groundSummary ? groundRenderStatusLine(groundSummary) : "Ground base verified locally; no cell is in view yet."}${groundVerifyMs === null ? "" : ` · verified in ${groundVerifyMs} ms`}`
     : groundError;
   const selectedCommercialBuilding = exteriorActive && selectedRuntimeFeature?.kind === "building" && exteriorOverlay ? exteriorOverlay.commercialForBuilding(selectedRuntimeFeature.id) : null;
   const selectedPlaceTruth = dataMode === "fixtures" && selectedRuntimeFeature ? placeTruthByRuntimeFeatureId.get(selectedRuntimeFeature.id) : undefined;
@@ -4155,6 +4222,18 @@ export function App() {
   const captureCitywideBrowserBaseline = () => {
     if (typeof window === "undefined" || citywideMode) return;
     setCitywideBrowserBaseline(readCitywideBrowserMeasurement());
+  };
+
+  /**
+   * Re-arm the default ground base after an opt-out, in this session.
+   *
+   * It only restores intent: the load effect re-runs, re-verifies the release
+   * from scratch, and the grid stays until that verification succeeds.
+   */
+  const enableGround = () => {
+    groundRequestedRef.current = true;
+    setGroundRequested(true);
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrlForApp({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current, ...getOverlayUrlFields() }, window.location.href));
   };
 
   const disableGround = () => {
@@ -4474,11 +4553,12 @@ export function App() {
           {publicRealmActive && <span className="runtime-note-overlay" role="status">NYC OTI Planimetrics local snapshot · curb profile and crosswalk striping are estimated, source-constrained, and not survey/current-paint truth.</span>}
           {publicRealmRequested && !publicRealmActive && <span className="runtime-note-overlay" role="status">{publicRealmLoadState === "loading" ? "Block 835 public realm · loading local release…" : publicRealmStatusMessage || "Block 835 public realm unavailable; the existing base/exterior state was left unchanged."}</span>}
           {publicRealmRequested && <button type="button" onClick={disablePublicRealm}>Disable public realm</button>}
-          {/* THE GROUND CANARY'S ONE LINE. Present only in a session that named
-              the release, and it always states what is DRAWN rather than what
-              the release contains: cells drawn, polygons drawn, parts refused
-              for non-simple rings, cells that failed verification, and cells in
-              view that the residency ceiling has not admitted yet. */}
+          {/* THE GROUND BASE'S ONE LINE. Present in every session that has not
+              opted out — which since T008 is the default — and it always states
+              what is DRAWN rather than what the release contains: cells drawn,
+              polygons drawn, parts refused for non-simple rings, cells that
+              failed verification, cells in view that the residency ceiling has
+              not admitted yet, and the measured verification cost. */}
           {groundRequested && <span
             className="runtime-note-overlay"
             role="status"
@@ -4488,9 +4568,13 @@ export function App() {
             data-ground-visible-cells={groundSummary?.visibleCells ?? 0}
             data-ground-skipped-parts={groundSummary?.skippedParts ?? 0}
             data-ground-failed-cells={groundSummary?.failedCells ?? 0}
-          >{groundLoadState === "loading" ? "Citywide ground canary · verifying the local release…" : groundStatusMessage || "Citywide ground canary unavailable; the synthetic grid remains the ground."}</span>}
+            data-ground-verify-ms={groundVerifyMs ?? ""}
+          >{groundLoadState === "loading" ? "Citywide ground base · verifying the local release…" : groundStatusMessage || "Citywide ground base unavailable; the synthetic grid remains the ground."}</span>}
           {groundActive && <span className="runtime-note-overlay" role="status">Flat cartographic base from NYC OTI Planimetrics, NYC DOT plazas and NYC Parks properties · source extents, not a survey of current paving, access, or shoreline.</span>}
-          {groundRequested && <button type="button" onClick={disableGround}>Disable ground canary</button>}
+          {/* The opt-out must not be a one-way door: with the ground on by
+              default, a session that disables it needs a way back that is not
+              "hand-edit the URL". */}
+          <button type="button" aria-pressed={groundRequested} onClick={groundRequested ? disableGround : enableGround}>{groundRequested ? "Disable ground base" : "Enable ground base"}</button>
           <div className="exterior-streaming-controls" role="group" aria-label="Exterior streaming and render profile">
             <button type="button" aria-pressed={exteriorStreamingRequested} onClick={toggleExteriorStreaming}>{exteriorStreamingRequested ? "Disable exterior streaming" : "Enable exterior streaming"}</button>
             {EXTERIOR_RENDER_PROFILES.map((profile) => (

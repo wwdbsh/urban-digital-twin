@@ -21,6 +21,12 @@ const citywideMocks = vi.hoisted(() => ({ loadCitywideRelease: vi.fn() }));
 vi.mock("../features/explorer/CesiumViewport", async (importOriginal) => {
   const React = await import("react");
   const actual = await importOriginal() as Record<string, unknown>;
+  // The grid-visibility rule is taken from the REAL module, not restated here:
+  // the mock publishes what the actual predicate answers for the overlay prop
+  // the app handed it. The `ImageryLayer.show` write it drives is not
+  // observable in jsdom and is covered by CesiumViewport.test.ts plus visual
+  // confirmation.
+  const gridVisible = actual.syntheticGridVisible as (groundBaseActive: boolean) => boolean;
   type MockProps = {
     groundOverlay?: LoadedGroundRelease | null;
     groundLayerVisibility?: Partial<Record<GroundClass, boolean>>;
@@ -46,6 +52,7 @@ vi.mock("../features/explorer/CesiumViewport", async (importOriginal) => {
       {
         className: "viewport",
         "data-ground-overlay": groundOverlay ? groundOverlay.releaseId : "",
+        "data-grid-visible": String(gridVisible(groundOverlay != null)),
         "data-ground-classes": Object.entries(groundLayerVisibility ?? {}).filter(([, visible]) => visible).map(([groundClass]) => groundClass).sort().join(","),
       },
       React.createElement("button", { type: "button", onClick: () => { const feature = groundOverlay?.feature("udt:manhattan:park:M010"); if (feature) onGroundFeatureSelected?.(feature); } }, "Mock ground pick"),
@@ -69,7 +76,7 @@ vi.mock("../runtime/citywide-release-runtime", async (importOriginal) => {
   return { ...actual, loadCitywideRelease: citywideMocks.loadCitywideRelease };
 });
 
-import { App, appendGroundUrl } from "./App";
+import { App, GROUND_DEFAULT_ON, GROUND_OFF_VALUE, appendGroundUrl, groundOptOutValue, parseGroundRequested } from "./App";
 import { MANHATTAN_GROUND_RELEASE_ID } from "../runtime/ground-release-runtime";
 
 const parkFeature: GroundFeature = {
@@ -135,6 +142,7 @@ function groundOverlayFixture(): LoadedGroundRelease {
 
 const initialTestUrl = window.location.href;
 const groundUrl = `${new URL(initialTestUrl).origin}/?ground=${MANHATTAN_GROUND_RELEASE_ID}`;
+const groundOffUrl = `${new URL(initialTestUrl).origin}/?ground=${GROUND_OFF_VALUE}`;
 
 beforeEach(() => {
   groundMocks.loadGroundRelease.mockReset();
@@ -148,20 +156,63 @@ beforeEach(() => {
 afterEach(() => { cleanup(); window.history.replaceState({}, "", initialTestUrl); });
 
 const groundStatus = () => document.querySelector<HTMLElement>("[data-ground-release]");
+const gridVisible = () => document.querySelector("[data-grid-visible]")?.getAttribute("data-grid-visible");
 const openLayers = () => fireEvent.click(document.querySelector<HTMLElement>(".layer-controls .overlay-launcher")!);
 
-describe("citywide ground canary", () => {
-  it("is absent from a default session: no request, no status, no toggles, no URL parameter", async () => {
+describe("citywide ground base", () => {
+  /**
+   * T008's whole claim, in one test: a session that asks for nothing gets the
+   * verified cartographic ground, the grid stops being the visible ground, and
+   * the URL still says nothing — the default is silent in either polarity.
+   */
+  it("is the default ground: loaded without any parameter, and the grid is hidden once it verifies", async () => {
+    expect(GROUND_DEFAULT_ON).toBe(true);
     window.history.replaceState({}, "", initialTestUrl);
+    render(<App />);
+    await waitFor(() => expect(groundStatus()?.getAttribute("data-ground-state")).toBe("ready"));
+    expect(groundMocks.loadGroundRelease).toHaveBeenCalledWith(`/data/${MANHATTAN_GROUND_RELEASE_ID}/`, expect.anything(), undefined);
+    expect(document.querySelector("[data-ground-overlay]")?.getAttribute("data-ground-overlay")).toBe(MANHATTAN_GROUND_RELEASE_ID);
+    expect(gridVisible()).toBe("false");
+    openLayers();
+    expect(document.querySelectorAll("[data-ground-layer]")).toHaveLength(5);
+    expect(window.location.search).not.toContain("ground=");
+    expect(appendGroundUrl(`${new URL(initialTestUrl).origin}/?featureId=x`, true, null)).toBe(`${new URL(initialTestUrl).origin}/?featureId=x`);
+  });
+
+  it("publishes the measured verification cost rather than claiming the flip is free", async () => {
+    window.history.replaceState({}, "", initialTestUrl);
+    render(<App />);
+    await waitFor(() => expect(groundStatus()?.getAttribute("data-ground-state")).toBe("ready"));
+    const measured = groundStatus()!.getAttribute("data-ground-verify-ms");
+    expect(measured).toMatch(/^\d+$/);
+    expect(groundStatus()!.textContent).toContain(`verified in ${measured} ms`);
+  });
+
+  it("opts out on ?ground=off: no load, no status, and the grid is the ground again", async () => {
+    window.history.replaceState({}, "", groundOffUrl);
     render(<App />);
     await waitFor(() => expect(document.querySelector(".viewport")).toBeInTheDocument());
     expect(groundMocks.loadGroundRelease).not.toHaveBeenCalled();
     expect(groundStatus()).toBeNull();
     expect(document.querySelector("[data-ground-overlay]")?.getAttribute("data-ground-overlay")).toBe("");
+    expect(gridVisible()).toBe("true");
     openLayers();
     expect(document.querySelectorAll("[data-ground-layer]")).toHaveLength(0);
-    expect(window.location.search).not.toContain("ground=");
-    expect(appendGroundUrl(`${new URL(initialTestUrl).origin}/?featureId=x`, false, null)).toBe(`${new URL(initialTestUrl).origin}/?featureId=x`);
+  });
+
+  it("states the opt-out and stays silent about the default, in whichever polarity is shipped", () => {
+    const base = `${new URL(initialTestUrl).origin}/?featureId=x`;
+    expect(groundOptOutValue()).toBe(GROUND_DEFAULT_ON ? GROUND_OFF_VALUE : MANHATTAN_GROUND_RELEASE_ID);
+    expect(appendGroundUrl(base, GROUND_DEFAULT_ON, null)).toBe(base);
+    const optedOut = appendGroundUrl(base, !GROUND_DEFAULT_ON, null);
+    expect(new URL(optedOut).searchParams.get("ground")).toBe(groundOptOutValue());
+    expect(parseGroundRequested(optedOut)).toBe(!GROUND_DEFAULT_ON);
+    expect(parseGroundRequested(appendGroundUrl(optedOut, GROUND_DEFAULT_ON, null))).toBe(GROUND_DEFAULT_ON);
+    // Naming the release is always an explicit request; an unknown spelling
+    // resolves to the default rather than to something this build cannot verify.
+    expect(parseGroundRequested(`${base}&ground=${MANHATTAN_GROUND_RELEASE_ID}`)).toBe(true);
+    expect(parseGroundRequested(`${base}&ground=manhattan-ground-19990101`)).toBe(GROUND_DEFAULT_ON);
+    expect(parseGroundRequested(base)).toBe(GROUND_DEFAULT_ON);
   });
 
   it("loads, verifies, and reports what it drew when the URL names the release", async () => {
@@ -198,6 +249,10 @@ describe("citywide ground canary", () => {
     expect(groundStatus()!.textContent).toContain("checksum mismatch");
     expect(groundStatus()!.textContent).toContain("the existing base scene was left unchanged");
     expect(document.querySelector("[data-ground-overlay]")?.getAttribute("data-ground-overlay")).toBe("");
+    // The failure direction the flip must preserve: no verified ground means
+    // the grid is still drawn, beside a banner that says why. Never a void.
+    expect(gridVisible()).toBe("true");
+    expect(groundStatus()!.getAttribute("data-ground-verify-ms")).toBe("");
     openLayers();
     expect(document.querySelectorAll("[data-ground-layer]")).toHaveLength(0);
   });
@@ -224,13 +279,20 @@ describe("citywide ground canary", () => {
     expect(window.location.search).toContain(`groundFeature=${encodeURIComponent("udt:manhattan:park:M010")}`);
   });
 
-  it("removes the overlay, the toggles and the URL parameter when the canary is disabled", async () => {
+  it("restores the grid and writes the opt-out to the URL when the ground base is disabled, and takes it back", async () => {
     window.history.replaceState({}, "", groundUrl);
     render(<App />);
     await waitFor(() => expect(groundStatus()?.getAttribute("data-ground-state")).toBe("ready"));
-    fireEvent.click(screen.getByRole("button", { name: "Disable ground canary" }));
+    fireEvent.click(screen.getByRole("button", { name: "Disable ground base" }));
     await waitFor(() => expect(groundStatus()).toBeNull());
     expect(document.querySelector("[data-ground-overlay]")?.getAttribute("data-ground-overlay")).toBe("");
+    expect(gridVisible()).toBe("true");
+    expect(new URL(window.location.href).searchParams.get("ground")).toBe(GROUND_OFF_VALUE);
+    // A default-on opt-out that could not be undone in the session would be a
+    // one-way door, so the same control re-arms the release.
+    fireEvent.click(screen.getByRole("button", { name: "Enable ground base" }));
+    await waitFor(() => expect(groundStatus()?.getAttribute("data-ground-state")).toBe("ready"));
+    expect(gridVisible()).toBe("false");
     expect(window.location.search).not.toContain("ground=");
   });
 });
