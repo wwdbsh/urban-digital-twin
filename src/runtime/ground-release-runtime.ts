@@ -358,7 +358,16 @@ export class GroundArtifactCache<T extends { byteSize: number } = LoadedGroundCe
   private clock = 0;
   private evictions = 0;
   private totalBytes = 0;
-  constructor(private readonly maxBytes: number = GROUND_RUNTIME_BUDGETS.maxCachedBytes) {
+  /**
+   * `onEvict` exists for the T013 imagery cache, whose values hold an object
+   * URL over verified bytes: an entry dropped without releasing that handle
+   * leaks one per drape a long pan leaves behind. It is optional and the flat
+   * and near-tier callers pass nothing, so their behaviour is unchanged.
+   */
+  constructor(
+    private readonly maxBytes: number = GROUND_RUNTIME_BUDGETS.maxCachedBytes,
+    private readonly onEvict?: (key: string, value: T) => void,
+  ) {
     if (!Number.isSafeInteger(maxBytes) || maxBytes < 1) throw new Error("Ground cache byte ceiling must be a positive integer.");
   }
   get(key: string): T | undefined {
@@ -370,7 +379,10 @@ export class GroundArtifactCache<T extends { byteSize: number } = LoadedGroundCe
   has(key: string): boolean { return this.entries.has(key); }
   set(key: string, value: T): void {
     const existing = this.entries.get(key);
-    if (existing) this.totalBytes -= existing.value.byteSize;
+    if (existing) {
+      this.totalBytes -= existing.value.byteSize;
+      if (existing.value !== value) this.onEvict?.(key, existing.value);
+    }
     this.entries.set(key, { value, used: ++this.clock });
     this.totalBytes += value.byteSize;
   }
@@ -389,8 +401,10 @@ export class GroundArtifactCache<T extends { byteSize: number } = LoadedGroundCe
         if (entry.used < victimUsed) { victim = key; victimUsed = entry.used; }
       }
       if (victim === null) break;
-      this.totalBytes -= this.entries.get(victim)!.value.byteSize;
+      const dropped = this.entries.get(victim)!.value;
+      this.totalBytes -= dropped.byteSize;
       this.entries.delete(victim);
+      this.onEvict?.(victim, dropped);
       this.evictions += 1;
       evicted += 1;
     }

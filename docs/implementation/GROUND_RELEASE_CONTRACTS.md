@@ -287,3 +287,107 @@ coverage gap. It is NOT a budget refusal: no wave breached.
   in five waves rather than one. The census bounds what CAN be resident (4 cells,
   largest 1.98 MB) but is not a rendering measurement; browser validation of a
   camera roaming the promoted rows remains outstanding.
+
+## T013 — zone orthoimagery in the default view (2026-08-26, Issue #142)
+
+`ZONE_IMAGERY_DEFAULT_ON = true`. A default session that already has a verified
+ground base loads `manhattan-ground-zone-imagery-20260826` and draws each
+textured park, plaza and water zone with its 2024 orthoimagery instead of a flat
+colour. **Imagery rides the ground default recorded in ADR 0059 and cannot turn
+itself on without one**: the loader is gated on a loaded base release, so no
+separate ADR is minted — the addendum in `0059` records the flip.
+
+### What the drape actually is
+
+The T012 contract is that each artifact is a RECTANGULAR texture covering its
+ownership cell's full WGS84 rectangle, that nothing is masked at build time, and
+that the zone polygon is the display mask. The renderer implements exactly that
+and nothing more:
+
+- The drawn geometry is the flat pass's own geometry — same rings, same holes,
+  same `ground:` pick ids, same batch, same collection. Picking is therefore
+  unchanged by construction; there is no second pick path to keep in step.
+- The only addition is an explicit `PolygonGeometry.textureCoordinates`
+  hierarchy computed by `zoneImageryRingTextureCoordinates`:
+  `s = (lon - west) / (east - west)`, `t = (lat - south) / (north - south)` over
+  the **cell** rectangle. Cesium's default polygon st normalizes to the polygon's
+  own bounding box, which would squeeze a cell-sized photograph into whatever
+  fraction of the cell the zone occupies.
+- The appearance is a `MaterialAppearance` with a `Material.fromType("Image")`
+  over the verified bytes, `flat: true`. An undraped zone keeps
+  `PerInstanceColorAppearance` and its `GROUND_CLASS_COLORS` fill.
+- Values are clamped to [0, 1] so a clipped vertex that rounds a step outside its
+  cell samples the edge pixel rather than wrapping to the far side.
+
+### Fail-closed, in three grades
+
+| Failure | Consequence |
+| --- | --- |
+| Release document malformed, not local-only, or **compatibility pin** mismatch against the loaded ground release | whole imagery layer refused |
+| `zone-imagery.json` SHA-256 ≠ the digest `release.json` pins | whole imagery layer refused — the index is hashed as bytes **before** it is parsed |
+| One texture's bytes ≠ the digest the verified index declares | that one drape refused and named; every other drape and every polygon untouched |
+
+In every grade the flat polygon base and the near-tier curbs are untouched:
+`ground-zone-imagery-runtime.ts` never reads or writes the flat loader's cache,
+primitives or state, and the flat loader's asset-class guard is byte-identical to
+what T007 shipped.
+
+**The compatibility pin** is the mirrored assets array: the imagery release ships
+the base release's 162 park/plaza/water assets verbatim and no artifact of its
+own for them. `assertZoneImageryCompatibility` requires an exact match on asset
+id, cell, class, `contentSha256` and the whole tier list, plus the same
+`ownershipLedgerId`. A regenerated base release therefore drops the whole layer
+rather than draping 2024 pixels over polygons the build never saw.
+
+### Attribution, on screen and accessible
+
+Three surfaces, and the first two need no click:
+
+1. **Status line segment** — `· imagery 2024: N zones draped across M cells`,
+   appended to the flat ground's own reading exactly as the curb segment is.
+2. **Persistent attribution line** — a `role="status"` note carrying vintage,
+   capture window, both source agencies and the CC BY 4.0 licence in one
+   sentence, present whenever ≥1 drape is visible and gone when the last one
+   leaves view. A CC BY credit reachable only behind a click would put the
+   obligation on the reader.
+3. **Details panel** — selecting a draped zone adds capture year, capture window,
+   attribution, terms, 1.2 m/px resolution, the ~1 px NAD83/WGS84 registration
+   disclosure, and the release id with the index digest. A zone that is **not**
+   currently draped shows none of it.
+
+### Measured (node-side, `tsx`, warm page cache)
+
+| Quantity | Value |
+| --- | --- |
+| Index gate: fetch + SHA-256 + full validation of `zone-imagery.json` | **2 ms**, 71,258 bytes, 87 entries / 75 refusals |
+| Typical visible set (mid-zoom over Central Park, production selector) | 15 cells → **31 textured zones** |
+| Those 31 textures: fetch + per-texture SHA-256 + admission | **30 ms**, **23,444,838 bytes** |
+| Resident after that camera | 31 entries / 23.4 MB against the 48 MiB ceiling |
+
+Budget accounting: the texture cache is a separate `GroundArtifactCache` with the
+**same** `GROUND_RUNTIME_BUDGETS.maxCachedBytes` ceiling (48 MiB) and a per-texture
+ceiling of `CITYWIDE_BUDGETS.geometryShardBytes` (2 MiB; the largest shipped
+texture is 998,502 B). It is retained from the flat pass's own visible-key set at
+the same call site, so the two caches can never disagree about what is on screen,
+and both resident numbers are published rather than implied.
+
+### Rollback
+
+**One token.** `ZONE_IMAGERY_DEFAULT_ON = false` in `src/app/App.tsx`. Every zone
+draws its flat colour, no texture is requested, and the status segment,
+attribution line and details block all disappear because each is gated on a live
+drape. No release byte, no budget and no other module changes.
+`zone-imagery-canary.test.tsx` rehearses the opt-out as a session.
+
+### Verification run for this record
+
+- `npx vitest run` on `ground-zone-imagery-runtime.test.ts` (10),
+  `ground-zone-imagery-render-plan.test.ts` (10),
+  `zone-imagery-canary.test.tsx` (10), `ground-canary.test.tsx` (16) — all pass.
+- `pnpm typecheck`, `npx eslint` on the changed files, `pnpm build`, and
+  `pnpm citywide:validate` (all three phases) pass.
+- **Not measured here**: rendered-verified drape registration, frame time and GPU
+  memory with 31 textures resident, and whether the ~1 px misregistration is
+  visible at close range. The `textureCoordinates` path is not exercised in
+  jsdom — CesiumJS does not render there — so the st arithmetic is unit-tested
+  and the Cesium plumbing rests on browser validation, which remains outstanding.

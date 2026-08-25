@@ -19,6 +19,8 @@ import {
   PolygonHierarchy,
   PolygonGeometry,
   GeometryInstance,
+  Material,
+  MaterialAppearance,
   PerInstanceColorAppearance,
   Primitive,
   PointPrimitiveCollection,
@@ -54,6 +56,8 @@ import {
 } from "./ground-render-plan";
 import { activeGroundEmbellishmentCells, type LoadedGroundEmbellishmentRelease } from "../../runtime/ground-embellishment-runtime";
 import { planGroundEmbellishmentCellRender, type GroundEmbellishmentRenderSummary } from "./ground-embellishment-render-plan";
+import type { LoadedGroundZoneImageryRelease, LoadedZoneTexture } from "../../runtime/ground-zone-imagery-runtime";
+import { zoneImageryPolygonTextureCoordinates, type GroundZoneImageryRenderSummary, type ZoneImageryTextureCoordinates } from "./ground-zone-imagery-render-plan";
 import type { ExteriorCellOutcome, ExteriorCellRenderPlan } from "../../runtime/exterior-cell-runtime";
 import type { ExteriorRenderProfile } from "../../runtime/exterior-render-profiles";
 import { verifiedExteriorModelResource, type VerifiedExteriorResource } from "./exterior-verified-resource";
@@ -130,6 +134,16 @@ interface CesiumViewportProps {
    */
   groundEmbellishmentOverlay?: LoadedGroundEmbellishmentRelease | null;
   onGroundEmbellishmentRenderSummary?: (summary: GroundEmbellishmentRenderSummary | null) => void;
+  /**
+   * The verified zone orthoimagery release (T013), or null. Non-null only when
+   * the flat base is already active, for the same reason a curb is: a drape is
+   * a texture ON a verified polygon, and there is nothing to drape without one.
+   * Absent — or refused — every zone simply keeps its flat colour fill.
+   */
+  groundZoneImagery?: LoadedGroundZoneImageryRelease | null;
+  onGroundZoneImageryRenderSummary?: (summary: GroundZoneImageryRenderSummary | null) => void;
+  /** Canonical feature ids currently drawn with a verified texture. */
+  onGroundZoneImageryDrapedFeatures?: (canonicalFeatureIds: ReadonlySet<string>) => void;
   /**
    * The exterior wave(s) to render. A build may promote more than one, so this
    * accepts an ordered set; a single overlay stays accepted unchanged.
@@ -725,6 +739,27 @@ export function groundFeatureForPickId(pickedId: string | null | undefined, pick
  */
 export function syntheticGridVisible(groundBaseActive: boolean): boolean {
   return !groundBaseActive;
+}
+
+/**
+ * Turns the plan module's interleaved st arrays into the `PolygonHierarchy` of
+ * `Cartesian2` that `PolygonGeometry.textureCoordinates` expects.
+ *
+ * The arithmetic stays in `ground-zone-imagery-render-plan.ts`, which knows
+ * nothing about Cesium and is therefore testable without one; this function is
+ * only the packing step, so there is no geographic decision to get wrong here.
+ */
+function textureCoordinateHierarchy(coordinates: ZoneImageryTextureCoordinates): PolygonHierarchy {
+  // Cesium's own d.ts types `PolygonHierarchy.positions` as `Cartesian3[]` while
+  // documenting `PolygonGeometry.textureCoordinates` as "a PolygonHierarchy of
+  // Cartesian2 points". The runtime reads only x and y from these, so the cast
+  // is over an upstream typing gap, not over a decision made here.
+  const ring = (interleaved: readonly number[]): Cartesian3[] => {
+    const points: Cartesian2[] = [];
+    for (let index = 0; index + 1 < interleaved.length; index += 2) points.push(new Cartesian2(interleaved[index]!, interleaved[index + 1]!));
+    return points as unknown as Cartesian3[];
+  };
+  return new PolygonHierarchy(ring(coordinates.outer), coordinates.holes.map((hole) => new PolygonHierarchy(ring(hole))));
 }
 
 export const STAGE3_STOREFRONT_PROOF_QUERY = "storefront-picks";
@@ -2082,6 +2117,9 @@ export function CesiumViewport({
   onGroundRefusals,
   groundEmbellishmentOverlay = null,
   onGroundEmbellishmentRenderSummary,
+  groundZoneImagery = null,
+  onGroundZoneImageryRenderSummary,
+  onGroundZoneImageryDrapedFeatures,
   exteriorOverlay = null,
   onExteriorUnanchored,
   onExteriorCellsRetired,
@@ -2100,6 +2138,8 @@ export function CesiumViewport({
   const onGroundRenderSummaryRef = useRef(onGroundRenderSummary);
   const onGroundRefusalsRef = useRef(onGroundRefusals);
   const onGroundEmbellishmentRenderSummaryRef = useRef(onGroundEmbellishmentRenderSummary);
+  const onGroundZoneImageryRenderSummaryRef = useRef(onGroundZoneImageryRenderSummary);
+  const onGroundZoneImageryDrapedFeaturesRef = useRef(onGroundZoneImageryDrapedFeatures);
   const onStage3RenderProofRef = useRef(onStage3RenderProof);
   const onCameraChangedRef = useRef(onCameraChanged);
   const onDenseMetricsRef = useRef(onDenseMetrics);
@@ -2135,6 +2175,8 @@ export function CesiumViewport({
   onGroundRenderSummaryRef.current = onGroundRenderSummary;
   onGroundRefusalsRef.current = onGroundRefusals;
   onGroundEmbellishmentRenderSummaryRef.current = onGroundEmbellishmentRenderSummary;
+  onGroundZoneImageryRenderSummaryRef.current = onGroundZoneImageryRenderSummary;
+  onGroundZoneImageryDrapedFeaturesRef.current = onGroundZoneImageryDrapedFeatures;
   onStage3RenderProofRef.current = onStage3RenderProof;
   onCameraChangedRef.current = onCameraChanged;
   onDenseMetricsRef.current = onDenseMetrics;
@@ -2182,8 +2224,20 @@ export function CesiumViewport({
   /** Cells whose artifact failed verification this session, and why. */
   const groundFailuresRef = useRef(new Map<string, string>());
   /** What each drawn `${cellId}/${class}` contributed, for the status line. */
-  const groundDrawnRef = useRef(new Map<string, { polygons: number; refusals: number }>());
+  const groundDrawnRef = useRef(new Map<string, { polygons: number; refusals: number; textured: boolean; imageryReleaseId: string | null }>());
   const groundRenderGenerationRef = useRef(0);
+  /**
+   * The drape's bookkeeping (T013).
+   *
+   * It owns no collection and no primitive: a drape is not a second surface, it
+   * is the SAME (cell, class) batch drawn with an image material instead of a
+   * colour, so it lives in `groundPrimitivesRef` under the same key and is
+   * removed by the same reconciliation. What is tracked separately is only what
+   * a status line and a details panel need — which zones failed their texture,
+   * and which canonical features are currently photographed.
+   */
+  const groundZoneImageryFailuresRef = useRef(new Map<string, string>());
+  const groundZoneImageryDrapedFeaturesRef = useRef(new Set<string>());
   /**
    * The near tier's own collection and bookkeeping (T010).
    *
@@ -3313,9 +3367,13 @@ export function CesiumViewport({
         groundPickMapRef.current.clear();
         groundRefusalsRef.current.clear();
         groundFailuresRef.current.clear();
+        groundZoneImageryFailuresRef.current.clear();
+        groundZoneImageryDrapedFeaturesRef.current.clear();
         viewer.scene.requestRender();
       }
       onGroundRenderSummaryRef.current?.(null);
+      onGroundZoneImageryRenderSummaryRef.current?.(null);
+      onGroundZoneImageryDrapedFeaturesRef.current?.(new Set());
       publishGroundRefusals();
       return undefined;
     }
@@ -3335,15 +3393,29 @@ export function CesiumViewport({
       .filter((groundClass) => classes.includes(groundClass) && groundOverlay.hasArtifact(cellId, groundClass))
       .map((groundClass) => ({ cellId, groundClass, key: groundCacheKey(cellId, groundClass) })));
     const wantedKeys = new Set(wanted.map((entry) => entry.key));
+    // A batch is redrawn when the imagery release behind it CHANGES, including
+    // to and from absent. Without this the drape would only ever appear on
+    // cells the camera had not already drawn: the loop below skips keys it
+    // already owns, so a batch built before the index verified would keep its
+    // flat fill for the rest of the session.
+    const imageryReleaseId = groundZoneImagery?.releaseId ?? null;
     for (const [key, primitive] of [...owned]) {
-      if (wantedKeys.has(key)) continue;
+      if (wantedKeys.has(key) && (groundDrawnRef.current.get(key)?.imageryReleaseId ?? null) === imageryReleaseId) continue;
       collection.remove(primitive);
       owned.delete(key);
       groundDrawnRef.current.delete(key);
     }
     // Recency eviction is applied to the CACHE only after the scene has been
-    // reconciled, so an artifact still being drawn is never a victim.
+    // reconciled, so an artifact still being drawn is never a victim. The
+    // texture cache is retained from the SAME key set at the same moment, so
+    // the two caches can never disagree about what is on screen — that shared
+    // call site is how texture bytes join the ground's residency accounting
+    // rather than living under a ceiling nobody reconciles.
     groundOverlay.retain(wantedKeys);
+    groundZoneImagery?.retain(wantedKeys);
+    for (const key of [...groundZoneImageryFailuresRef.current.keys()]) {
+      if (!wantedKeys.has(key)) groundZoneImageryFailuresRef.current.delete(key);
+    }
 
     let lastPublishedAt = 0;
     const publish = (force: boolean) => {
@@ -3352,7 +3424,15 @@ export function CesiumViewport({
       lastPublishedAt = now;
       let polygons = 0;
       let skippedParts = 0;
-      for (const entry of groundDrawnRef.current.values()) { polygons += entry.polygons; skippedParts += entry.refusals; }
+      let drapedZones = 0;
+      const drapedCells = new Set<string>();
+      for (const [key, entry] of groundDrawnRef.current) {
+        polygons += entry.polygons;
+        skippedParts += entry.refusals;
+        if (!entry.textured) continue;
+        drapedZones += 1;
+        drapedCells.add(key.slice(0, key.lastIndexOf("/")));
+      }
       const residency = groundOverlay.residency();
       onGroundRenderSummaryRef.current?.({
         drawnCells: new Set([...groundDrawnRef.current.keys()].map((key) => key.slice(0, key.lastIndexOf("/")))).size,
@@ -3362,6 +3442,26 @@ export function CesiumViewport({
         failedCells: groundFailuresRef.current.size,
         residentBytes: residency.bytes,
       });
+      if (groundZoneImagery) {
+        // Undraped zones are counted over the VISIBLE zone-class set, not over
+        // the release, so the number is what this camera is looking at rather
+        // than a remembered total.
+        const visibleZones = wanted.filter((candidate) => groundZoneImagery.entry(candidate.cellId, candidate.groundClass) !== undefined
+          || groundZoneImagery.refusal(candidate.cellId, candidate.groundClass) !== undefined);
+        onGroundZoneImageryRenderSummaryRef.current?.({
+          drapedZones,
+          drapedCells: drapedCells.size,
+          undrapedZones: Math.max(0, visibleZones.length - drapedZones - groundZoneImageryFailuresRef.current.size),
+          failedZones: groundZoneImageryFailuresRef.current.size,
+          textureBytes: groundZoneImagery.residency().bytes,
+          captureYear: groundZoneImagery.captureYear,
+          releaseId: groundZoneImagery.releaseId,
+        });
+        onGroundZoneImageryDrapedFeaturesRef.current?.(new Set(groundZoneImageryDrapedFeaturesRef.current));
+      } else {
+        onGroundZoneImageryRenderSummaryRef.current?.(null);
+        onGroundZoneImageryDrapedFeaturesRef.current?.(new Set());
+      }
       publishGroundRefusals();
     };
     publish(true);
@@ -3377,6 +3477,30 @@ export function CesiumViewport({
           if (stale()) return;
           const plan = planGroundCellRender(loaded.artifact);
           const color = Color.fromCssColorString(plan.cssColor);
+          /**
+           * The drape decision, made ONE zone at a time (T013).
+           *
+           * A texture is fetched and verified only if the verified index ships
+           * one for this exact (cell, class); the failure of that fetch or that
+           * digest is caught HERE, inside the per-zone try, so it can do nothing
+           * except leave `texture` null and record a named refusal. Everything
+           * after this point draws the same polygons either way.
+           */
+          let texture: LoadedZoneTexture | null = null;
+          if (groundZoneImagery?.hasTexture(entry.cellId, entry.groundClass)) {
+            try {
+              texture = await groundZoneImagery.loadTexture(entry.cellId, entry.groundClass);
+              if (stale()) return;
+              groundZoneImageryFailuresRef.current.delete(entry.key);
+            } catch (textureError) {
+              if (stale()) return;
+              texture = null;
+              groundZoneImageryFailuresRef.current.set(entry.key, textureError instanceof Error ? textureError.message : String(textureError));
+            }
+          }
+          // Const alias so the drape decision is fixed before the geometry
+          // closures below read it, rather than re-read per polygon.
+          const drape = texture;
           const instances = plan.polygons.map((polygon) => new GeometryInstance({
             geometry: new PolygonGeometry({
               polygonHierarchy: new PolygonHierarchy(
@@ -3384,7 +3508,16 @@ export function CesiumViewport({
                 polygon.holes.map((hole) => new PolygonHierarchy(Cartesian3.fromDegreesArray(hole.positions))),
               ),
               height: plan.heightMeters,
-              vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
+              // The polygon is the mask and the CELL rectangle is the texture's
+              // frame, so the st hierarchy is supplied explicitly rather than
+              // left to Cesium's polygon-bbox default, which would stretch a
+              // cell-sized photograph onto the zone's own bounding box.
+              ...(drape
+                ? {
+                  vertexFormat: MaterialAppearance.MaterialSupport.BASIC.vertexFormat,
+                  textureCoordinates: textureCoordinateHierarchy(zoneImageryPolygonTextureCoordinates(polygon, drape.entry.bounds)),
+                }
+                : { vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT }),
             }),
             id: polygon.pickId,
             attributes: { color: ColorGeometryInstanceAttribute.fromColor(color) },
@@ -3405,14 +3538,28 @@ export function CesiumViewport({
           if (instances.length > 0) {
             const primitive = collection.add(new Primitive({
               geometryInstances: instances,
-              appearance: new PerInstanceColorAppearance({ flat: true, translucent: false, closed: false }),
+              // Same batch, same pick ids, same geometry — only the appearance
+              // differs. `flat: true` keeps the drape unlit, so what a reader
+              // sees is the photographed radiance and not a shading model's
+              // opinion about it.
+              appearance: drape
+                ? new MaterialAppearance({
+                  materialSupport: MaterialAppearance.MaterialSupport.BASIC,
+                  material: Material.fromType("Image", { image: drape.imageSource }),
+                  flat: true,
+                  translucent: false,
+                  closed: false,
+                })
+                : new PerInstanceColorAppearance({ flat: true, translucent: false, closed: false }),
               asynchronous: true,
               allowPicking: true,
               releaseGeometryInstances: true,
             })) as Primitive;
             owned.set(entry.key, primitive);
           }
-          groundDrawnRef.current.set(entry.key, { polygons: plan.polygons.length, refusals: plan.refusals.length });
+          const textured = drape !== null && instances.length > 0;
+          if (textured) for (const canonicalFeatureId of plan.drawnFeatureIds) groundZoneImageryDrapedFeaturesRef.current.add(canonicalFeatureId);
+          groundDrawnRef.current.set(entry.key, { polygons: plan.polygons.length, refusals: plan.refusals.length, textured, imageryReleaseId });
           groundFailuresRef.current.delete(entry.key);
           viewer.scene.requestRender();
         } catch (error) {
@@ -3424,7 +3571,7 @@ export function CesiumViewport({
       if (!stale()) publish(true);
     })();
     return () => { cancelled = true; };
-  }, [groundOverlay, groundLayerVisibility, publishGroundRefusals, viewportFootprint, viewerReadyGeneration]);
+  }, [groundOverlay, groundZoneImagery, groundLayerVisibility, publishGroundRefusals, viewportFootprint, viewerReadyGeneration]);
 
   /**
    * The near-tier curb canary's entire scene contribution (T010).

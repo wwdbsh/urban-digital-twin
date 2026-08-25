@@ -431,6 +431,7 @@ carries an append-only correction to `0032`'s citywide UV share).
 | far | baked HLOD tiles, one per ownership cell | **883 tiles — every ledger cell**, `FAR_TIER_DEFAULT_ON = true` |
 | fallback | procedural tan massing | wherever no tier above it draws |
 | ground | the cartographic base — roadbed, sidewalk, park, plaza, water | **`manhattan-ground-20260824`**, `GROUND_DEFAULT_ON = true` (2026-08-24) |
+| zone imagery | 2024 orthoimagery draped on park, plaza and water polygons | **`manhattan-ground-zone-imagery-20260826`**, `ZONE_IMAGERY_DEFAULT_ON = true` (2026-08-26) |
 
 The wave table above this section names the `-v3`/`-p1` releases that were the
 default until the two-LOD promotion. **They are no longer what ships**; the six
@@ -461,6 +462,41 @@ a failed verification leaves the grid plus the explicit failure line.
   artifacts are verified lazily as they are drawn, under the T007 streaming caps
   (24 cells / 48 MiB). Nothing defers that boot cost yet — see
   [`0059`](docs/decisions/0059-cartographic-ground-default-flip.md).
+
+### The photographs on the ground (default since 2026-08-26)
+
+**Parks, plazas and water are drawn with real 2024 orthoimagery, not a flat
+colour.** A default session that already has a verified ground base then loads
+and verifies `manhattan-ground-zone-imagery-20260826` and drapes a per-cell
+JPEG over each textured zone. The polygon is the mask — pixels outside the zone
+are never drawn — and every other class keeps its cartographic fill.
+
+- **Vintage and credit are on screen, unclicked.** While any drape is visible
+  the status region carries `Orthoimagery 2024 (captured 2024-03-14/2024-03-24)
+  · Source: NYC Office of Technology and Innovation (OTI) / NYS Statewide
+  Digital Orthoimagery Program … Licensed CC BY 4.0.`, and the ground status
+  line names the vintage as `imagery 2024: N zones draped across M cells`.
+  Selecting a draped zone adds capture year, capture window, attribution,
+  resolution, the ~1 px registration disclosure and the release id to the
+  details panel.
+- **87 zones are textured; 75 are refused, on purpose.** A cell the source
+  imagery only partly covers is refused rather than part-synthesized, and those
+  zones draw as flat polygons with the refusal recorded in the index.
+- **Opt out with `?zoneImagery=off`**, or with the *Disable orthoimagery*
+  control, which also re-arms it. The parameter states the opt-out and stays
+  silent about the default.
+- **It fails closed toward the polygons, in three grades**: a bad release
+  document or a compatibility-pin mismatch against the ground release, or an
+  index whose SHA-256 does not match, removes the **entire** imagery layer; a
+  single texture whose bytes do not match removes **that one drape**. In every
+  case parks, plazas and water still draw as verified flat polygons and the
+  ground status line is untouched.
+- **It is a photograph, not a survey.** Delivered at 1.2 m/px, downsampled from
+  the source's 0.152 m; it depicts the March 2024 capture window and nothing
+  later. See
+  [`0059`](docs/decisions/0059-cartographic-ground-default-flip.md) — the
+  imagery rides the ground default recorded there — and the T013 record in
+  [`GROUND_RELEASE_CONTRACTS.md`](docs/implementation/GROUND_RELEASE_CONTRACTS.md).
 
 ### The honest limits, stated where a reader will find them
 
