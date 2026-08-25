@@ -712,6 +712,43 @@ button {
   box-shadow: 0 0 0 2px rgb(197 108 255 / 20%);
 }
 
+/* The ground dots are the FILL each class draws with, so the control reads as a
+   legend rather than as an arbitrary palette. Keep them in step with
+   GROUND_CLASS_COLORS in features/explorer/ground-render-plan.ts. */
+.layer-options button.is-visible .layer-dot-ground-roadbed {
+  background: #28313a;
+  box-shadow: 0 0 0 2px rgb(40 49 58 / 40%);
+}
+
+.layer-options button.is-visible .layer-dot-ground-sidewalk {
+  background: #3d4952;
+  box-shadow: 0 0 0 2px rgb(61 73 82 / 40%);
+}
+
+.layer-options button.is-visible .layer-dot-ground-park {
+  background: #2c4634;
+  box-shadow: 0 0 0 2px rgb(44 70 52 / 40%);
+}
+
+.layer-options button.is-visible .layer-dot-ground-plaza {
+  background: #4a453c;
+  box-shadow: 0 0 0 2px rgb(74 69 60 / 40%);
+}
+
+.layer-options button.is-visible .layer-dot-ground-water {
+  background: #16303f;
+  box-shadow: 0 0 0 2px rgb(22 48 63 / 40%);
+}
+
+.ground-refusals ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+
+.ground-refusals li {
+  margin-bottom: 4px;
+}
+
 .category-controls {
   position: absolute;
   right: calc(var(--details-right-inset) + 18px);

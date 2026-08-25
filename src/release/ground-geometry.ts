@@ -324,6 +324,32 @@ export function quantizeMultiPolygon(polygons: readonly GroundPolygon[]): number
 }
 
 /**
+ * Whether a closed ring visits any position twice, other than its closing
+ * vertex.
+ *
+ * The single authority for "self-touching", extracted from
+ * `ringSimplicityCensus` so a consumer that must ACT on the condition — the
+ * T007 renderer refuses to draw such a ring rather than repairing it — decides
+ * it by exactly the same test the census counts it by. A second copy of this
+ * comparison would let the measured number and the refused set drift apart.
+ */
+export function ringIsSelfTouching(ring: GroundRing): boolean {
+  const open = ring.slice(0, ring.length - 1);
+  const seen = new Set<string>();
+  for (const position of open) {
+    const key = `${position[0]!},${position[1]!}`;
+    if (seen.has(key)) return true;
+    seen.add(key);
+  }
+  return false;
+}
+
+/** Whether any ring of a polygon is self-touching. Holes count: they are rings. */
+export function polygonIsSelfTouching(polygon: GroundPolygon): boolean {
+  return polygon.some((ring) => ringIsSelfTouching(ring));
+}
+
+/**
  * Counts the degeneracies a rectangle clip is known to introduce.
  *
  * This is instrumentation, not a gate. Sutherland-Hodgman on a concave ring can
@@ -338,14 +364,7 @@ export function ringSimplicityCensus(polygons: readonly GroundPolygon[], into?: 
       census.rings += 1;
       if (ringSignedArea(ring) === 0) census.zeroAreaRings += 1;
       const open = ring.slice(0, ring.length - 1);
-      const seen = new Set<string>();
-      let repeated = false;
-      for (const position of open) {
-        const key = `${position[0]!},${position[1]!}`;
-        if (seen.has(key)) repeated = true;
-        else seen.add(key);
-      }
-      if (repeated) census.selfTouchingRings += 1;
+      if (ringIsSelfTouching(ring)) census.selfTouchingRings += 1;
       for (let index = 0; index < open.length; index += 1) {
         const previous = open[(index + open.length - 1) % open.length]!;
         const current = open[index]!;

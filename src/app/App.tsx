@@ -43,8 +43,11 @@ import { generateSyntheticTileHarness, SYNTHETIC_TILE_ANCHORS, type SyntheticTil
 import { RuntimeTileStream, type TileCameraState, type TileStreamMetrics } from "../runtime/tile-stream";
 import { DEFAULT_CAMERA_POSE, loadSavedNavigation, navigationUrl, normalizeCameraPose, parseNavigationUrl, persistSavedNavigation, saveJourney, savePlace, stepIndex, journeyStepCount, VISITOR_NAVIGATION_SCHEMA_VERSION, type CameraMode, type CameraPose, type NavigationDataMode, type SavedNavigationState } from "../domain/visitor-navigation";
 import {
+  DEFAULT_GROUND_LAYER_VISIBILITY,
   DEFAULT_LAYER_VISIBILITY,
   LAYER_LABELS,
+  groundLayerId,
+  type GroundLayerVisibility,
   type LayerVisibility,
   type RuntimeLayerId,
 } from "../runtime/layers";
@@ -59,6 +62,9 @@ import { TRAVEL_CONTEXT_BUDGETS, TRAVEL_CONTEXT_RELEASE_ID, TRAVEL_CONTEXT_TILE_
 import { AggregateRequestBudget, ComposedReleaseAdapter, type ComposedReleaseMetrics } from "../runtime/composed-release-runtime";
 import { EXTERIOR_PILOT_RELEASE_ID, createExteriorPilotFaultFetcher, loadExteriorPilotRelease, parseExteriorPilotFault, type CommercialStorefrontPlacement, type LoadedExteriorPilotRelease } from "../runtime/exterior-pilot-release";
 import { BLOCK835_PUBLIC_REALM_RELEASE_ID, createBlock835PublicRealmFaultFetcher, loadBlock835PublicRealmRelease, parseBlock835PublicRealmFault, publicRealmFeatureToFeature, type Block835PublicRealmFeature, type LoadedBlock835PublicRealmRelease } from "../runtime/block835-public-realm-release";
+import { MANHATTAN_GROUND_RELEASE_ID, createGroundFaultFetcher, groundFailureMessage, loadGroundRelease, parseGroundFault, type LoadedGroundRelease } from "../runtime/ground-release-runtime";
+import { GROUND_BASE_CLASSES, type GroundClass, type GroundFeature } from "../domain/ground";
+import { groundRenderStatusLine, type GroundRenderRefusal, type GroundRenderSummary } from "../features/explorer/ground-render-plan";
 import { farTierStatusLine, type FarTierStateSummary } from "../runtime/far-tier-serving";
 import { EXTERIOR_RUNTIME_BUDGETS, exteriorOutcomeCacheKeys, exteriorRefusalRawStopCode, exteriorRefusalStatement, exteriorRefusalStopCode, loadExteriorCellRuntime, type ExteriorCellOutcome, type ExteriorCellRuntime, type ExteriorHeadRequest, type ExteriorRefusedBuilding } from "../runtime/exterior-cell-runtime";
 import { EXTERIOR_T1_RELEASE_IDS } from "../release/exterior-t1-variants";
@@ -665,6 +671,25 @@ export function appendBlock835PublicRealmUrl(baseUrl: string, requested: boolean
   else url.searchParams.delete("publicRealm");
   if (requested && featureId) url.searchParams.set("publicRealmFeature", featureId);
   else url.searchParams.delete("publicRealmFeature");
+  return url.toString();
+}
+
+/**
+ * Preserve the explicit citywide-ground canary across canonical URL writes.
+ *
+ * Written exactly like the Block 835 overlay above, and for the same reason: a
+ * settled-camera `replaceState` rewrites the whole URL, so an additive overlay
+ * that is not re-appended here is silently dropped by the first camera move.
+ * The ground release is NOT a default — absent the parameter this function
+ * deletes it, so an ordinary session's URL is byte-identical to what it was
+ * before this feature existed.
+ */
+export function appendGroundUrl(baseUrl: string, requested: boolean, featureId: string | null): string {
+  const url = new URL(baseUrl, typeof window === "undefined" ? "http://localhost/" : window.location.href);
+  if (requested) url.searchParams.set("ground", MANHATTAN_GROUND_RELEASE_ID);
+  else url.searchParams.delete("ground");
+  if (requested && featureId) url.searchParams.set("groundFeature", featureId);
+  else url.searchParams.delete("groundFeature");
   return url.toString();
 }
 
@@ -1509,6 +1534,10 @@ export function App() {
   const initialNavigation = typeof window === "undefined" ? { featureId: null, query: "", cameraMode: "overview" as CameraMode, pose: null, poseInvalid: false } : parseNavigationUrl(window.location.href);
   const initialPublicRealmRequested = typeof window !== "undefined" && new URL(window.location.href).searchParams.get("publicRealm") === BLOCK835_PUBLIC_REALM_RELEASE_ID;
   const initialPublicRealmFeatureId = typeof window !== "undefined" ? new URL(window.location.href).searchParams.get("publicRealmFeature") : null;
+  // The ground canary is EXPLICIT and never a default: the synthetic grid stays
+  // the ground of every session that does not name this release.
+  const initialGroundRequested = typeof window !== "undefined" && new URL(window.location.href).searchParams.get("ground") === MANHATTAN_GROUND_RELEASE_ID;
+  const initialGroundFeatureId = typeof window !== "undefined" && initialGroundRequested ? new URL(window.location.href).searchParams.get("groundFeature") : null;
   const initialExteriorStreaming: ExteriorStreamingUrlState = typeof window === "undefined"
     ? { override: null, explicitReleaseId: null, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: false, detailRadiusMeters: null, farTier: FAR_TIER_DEFAULT_ON }
     : parseExteriorStreamingUrl(window.location.href);
@@ -1565,6 +1594,14 @@ export function App() {
   const [publicRealmLoadState, setPublicRealmLoadState] = useState<"idle" | "loading" | "ready" | "failed">(initialPublicRealmRequested ? "loading" : "idle");
   const [publicRealmMessage, setPublicRealmMessage] = useState(initialPublicRealmRequested ? "Block 835 public-realm overlay is loading from the local release…" : "");
   const [selectedPublicRealmId, setSelectedPublicRealmId] = useState<string | null>(initialPublicRealmFeatureId);
+  const [groundRequested, setGroundRequested] = useState(initialGroundRequested);
+  const [groundOverlay, setGroundOverlay] = useState<LoadedGroundRelease | null>(null);
+  const [groundLoadState, setGroundLoadState] = useState<"idle" | "loading" | "ready" | "failed">(initialGroundRequested ? "loading" : "idle");
+  const [groundError, setGroundError] = useState(initialGroundRequested ? "Citywide ground canary is loading and verifying the local release…" : "");
+  const [selectedGroundId, setSelectedGroundId] = useState<string | null>(initialGroundFeatureId);
+  const [groundLayerVisibility, setGroundLayerVisibility] = useState<GroundLayerVisibility>(DEFAULT_GROUND_LAYER_VISIBILITY);
+  const [groundSummary, setGroundSummary] = useState<GroundRenderSummary | null>(null);
+  const [groundRefusals, setGroundRefusals] = useState<ReadonlyMap<string, readonly GroundRenderRefusal[]>>(new Map());
   // Explicit URL/toggle intent only. Whether streaming actually runs, and which
   // release it targets, is resolved from this plus the promotion record and the
   // live base release, so a promoted default cannot be half-applied.
@@ -1690,6 +1727,8 @@ export function App() {
   const selectedStorefrontIdRef = useRef(selectedStorefrontId);
   const publicRealmRequestedRef = useRef(publicRealmRequested);
   const selectedPublicRealmIdRef = useRef(selectedPublicRealmId);
+  const groundRequestedRef = useRef(groundRequested);
+  const selectedGroundIdRef = useRef(selectedGroundId);
   const exteriorStreamingRequestedRef = useRef(false);
   const exteriorStreamingOverrideRef = useRef(exteriorStreamingOverride);
   const exteriorExplicitReleaseIdRef = useRef(exteriorExplicitReleaseId);
@@ -1761,6 +1800,8 @@ export function App() {
   selectedStorefrontIdRef.current = selectedStorefrontId;
   publicRealmRequestedRef.current = publicRealmRequested;
   selectedPublicRealmIdRef.current = selectedPublicRealmId;
+  groundRequestedRef.current = groundRequested;
+  selectedGroundIdRef.current = selectedGroundId;
   exteriorStreamingOverrideRef.current = exteriorStreamingOverride;
   exteriorExplicitReleaseIdRef.current = exteriorExplicitReleaseId;
   exteriorProfileRef.current = exteriorProfile;
@@ -1769,7 +1810,11 @@ export function App() {
   exteriorDetailRadiusMetersRef.current = exteriorDetailRadiusMeters;
   const getOverlayUrlFields = useCallback(() => navigationOverlayFields(exteriorRequestedRef.current, selectedStorefrontIdRef.current), []);
   const navigationUrlForApp = useCallback((value: Parameters<typeof navigationUrl>[0], base: string) => appendExteriorProfileUrl(
-    appendBlock835PublicRealmUrl(navigationUrl(value, base), publicRealmRequestedRef.current, selectedPublicRealmIdRef.current),
+    appendGroundUrl(
+      appendBlock835PublicRealmUrl(navigationUrl(value, base), publicRealmRequestedRef.current, selectedPublicRealmIdRef.current),
+      groundRequestedRef.current,
+      selectedGroundIdRef.current,
+    ),
     { override: exteriorStreamingOverrideRef.current, releaseId: exteriorCellReleaseIdRef.current, streaming: exteriorStreamingRequestedRef.current, profile: exteriorProfileRef.current, canarySnapshotId: exteriorCanarySnapshotIdRef.current, scheduler: exteriorSchedulerRequestedRef.current, detailRadiusMeters: exteriorDetailRadiusMetersRef.current, farTier: farTierRequestedRef.current },
   ), []);
   const updateSelectedStorefront = useCallback((storefrontId: string | null) => {
@@ -2979,6 +3024,53 @@ export function App() {
     return () => { active = false; controller.abort(); };
   }, [publicRealmRequested]);
 
+  /**
+   * The citywide ground canary, loaded only when the URL names it.
+   *
+   * Structured exactly like the Block 835 effect above. The load verifies the
+   * release document, the ownership ledger, the feature/part graph and the
+   * ledger's own re-derived identity BEFORE any geometry is requested; each
+   * per-cell artifact is then checksum-verified at the moment it is drawn. Any
+   * failure leaves `groundLoadState` at "failed" with the specific reason and
+   * the base scene — synthetic grid included — exactly as it was.
+   */
+  useEffect(() => {
+    if (!groundRequested) {
+      setGroundOverlay(null);
+      setGroundLoadState("idle");
+      setGroundError("");
+      setGroundSummary(null);
+      setGroundRefusals(new Map());
+      setSelectedGroundId(null);
+      selectedGroundIdRef.current = null;
+      return undefined;
+    }
+    let active = true;
+    const controller = new AbortController();
+    const groundFault = import.meta.env.DEV && typeof window !== "undefined"
+      ? parseGroundFault(new URL(window.location.href).searchParams.get("groundFault"), true)
+      : null;
+    const groundFetcher = groundFault ? createGroundFaultFetcher(groundFault) : undefined;
+    setGroundLoadState("loading");
+    setGroundError("Citywide ground canary is loading and verifying the local release…");
+    void loadGroundRelease(`/data/${MANHATTAN_GROUND_RELEASE_ID}/`, controller.signal, groundFetcher).then((loaded) => {
+      if (!active) return;
+      setGroundOverlay(loaded);
+      setGroundLoadState("ready");
+      setGroundError("");
+    }).catch((error: unknown) => {
+      if (!active || (error instanceof DOMException && error.name === "AbortError")) return;
+      setGroundOverlay(null);
+      setGroundLoadState("failed");
+      setGroundSummary(null);
+      setGroundRefusals(new Map());
+      setSelectedGroundId(null);
+      selectedGroundIdRef.current = null;
+      setGroundError(groundFailureMessage(error));
+    });
+    return () => { active = false; controller.abort(); };
+  }, [groundRequested]);
+
   useEffect(() => {
     if (!citywideAdapter || !civicAdapter || citywideLoadState !== "ready" || civicLoadState !== "ready") {
       setComposedAdapter(null);
@@ -3256,6 +3348,38 @@ export function App() {
     }
   }, [getOverlayUrlFields, navigationUrlForApp, publicRealmOverlay, selectFeature]);
 
+  /**
+   * Selecting a ground surface is ADDITIVE: it opens the ground provenance
+   * section and leaves whatever building or place was selected exactly where it
+   * was.
+   *
+   * It deliberately does not route through `selectFeature`. A ground feature
+   * record carries identity, provenance and uncertainty but no representative
+   * coordinate — the geometry lives in the per-cell artifacts — so projecting it
+   * into a catalog `Feature` would mean inventing a marker position, and a park
+   * that already exists in the catalog would then have two selectable
+   * identities, which is precisely what the ground contracts forbid.
+   */
+  const selectGroundFeature = useCallback((feature: GroundFeature, options: { syncUrl?: boolean } = {}) => {
+    selectedGroundIdRef.current = feature.canonicalFeatureId;
+    setSelectedGroundId(feature.canonicalFeatureId);
+    setInspectorOpen(true);
+    if (options.syncUrl !== false && typeof window !== "undefined") {
+      window.history.pushState({}, "", navigationUrlForApp({
+        featureId: activeSelectionRef.current,
+        query: queryRef.current,
+        cameraMode: cameraModeRef.current,
+        pose: cameraPoseRef.current,
+        poseInvalid: false,
+        dataMode: dataModeRef.current,
+        releaseId: releaseIdRef.current,
+        visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer),
+        facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current,
+        ...getOverlayUrlFields(),
+      }, window.location.href));
+    }
+  }, [getOverlayUrlFields, navigationUrlForApp]);
+
   const selectStorefront = useCallback((placement: CommercialStorefrontPlacement) => {
     const request: StorefrontResolutionState = {
       requestId: storefrontResolutionRequestRef.current + 1,
@@ -3342,6 +3466,8 @@ export function App() {
       const url = new URL(window.location.href);
       const requestedPublicRealm = url.searchParams.get("publicRealm") === BLOCK835_PUBLIC_REALM_RELEASE_ID;
       const requestedPublicRealmFeature = requestedPublicRealm ? url.searchParams.get("publicRealmFeature") : null;
+      const requestedGround = url.searchParams.get("ground") === MANHATTAN_GROUND_RELEASE_ID;
+      const requestedGroundFeature = requestedGround ? url.searchParams.get("groundFeature") : null;
       // Exterior streaming intent is part of history state. Before the Block 835
       // promotion it was read once at mount and never restored, so Back/Forward
       // silently kept whatever the session last had; now every entry restores
@@ -3358,10 +3484,14 @@ export function App() {
       exteriorRequestedRef.current = requestedExterior;
       publicRealmRequestedRef.current = requestedPublicRealm;
       selectedPublicRealmIdRef.current = requestedPublicRealmFeature;
+      groundRequestedRef.current = requestedGround;
+      selectedGroundIdRef.current = requestedGroundFeature;
       updateSelectedStorefront(state.storefrontId ?? null);
       setExteriorRequested(requestedExterior);
       setPublicRealmRequested(requestedPublicRealm);
       setSelectedPublicRealmId(requestedPublicRealmFeature);
+      setGroundRequested(requestedGround);
+      setSelectedGroundId(requestedGroundFeature);
       setQuery(state.query);
       setCameraMode(state.cameraMode); setPoseInvalid(state.poseInvalid);
       if (state.visibleLayers) {
@@ -3601,6 +3731,16 @@ export function App() {
     else setDeepLinkMessage(`This shared link points to a public-realm feature unavailable in release ${BLOCK835_PUBLIC_REALM_RELEASE_ID}; no substitute was selected.`);
   }, [publicRealmLoadState, publicRealmOverlay, publicRealmRequested, selectPublicRealm, selectedPublicRealmId]);
 
+  // A shared ground link resolves against the verified release, or says so. It
+  // never falls back to a nearby surface: substituting one park for another
+  // would be a different real place wearing the link's identity.
+  useEffect(() => {
+    if (!groundRequested || groundLoadState !== "ready" || !groundOverlay || !selectedGroundId) return;
+    if (!groundOverlay.feature(selectedGroundId)) {
+      setDeepLinkMessage(`This shared link points to a ground surface unavailable in release ${MANHATTAN_GROUND_RELEASE_ID}; no substitute was selected.`);
+    }
+  }, [groundLoadState, groundOverlay, groundRequested, selectedGroundId]);
+
   const closeInspector = useCallback(() => {
     setInspectorOpen(false);
     window.setTimeout(() => {
@@ -3723,6 +3863,16 @@ export function App() {
 
   const selectedRuntimeFeature = activeAdapter.getFeature(selectedFeature.id);
   const selectedPublicRealmFeature = publicRealmActive && publicRealmOverlay && selectedPublicRealmId ? publicRealmOverlay.feature(selectedPublicRealmId) ?? null : null;
+  // "Active" is the verified state and nothing weaker: requested-but-loading and
+  // requested-but-failed both draw no ground.
+  const groundActive = groundRequested && groundLoadState === "ready" && groundOverlay !== null;
+  const selectedGroundFeature = groundActive && groundOverlay && selectedGroundId ? groundOverlay.feature(selectedGroundId) ?? null : null;
+  const selectedGroundRefusals = selectedGroundId ? groundRefusals.get(selectedGroundId) ?? [] : [];
+  const groundStatusMessage = groundLoadState === "ready"
+    ? groundSummary
+      ? groundRenderStatusLine(groundSummary)
+      : "Ground canary verified locally; no cell is in view yet."
+    : groundError;
   const selectedCommercialBuilding = exteriorActive && selectedRuntimeFeature?.kind === "building" && exteriorOverlay ? exteriorOverlay.commercialForBuilding(selectedRuntimeFeature.id) : null;
   const selectedPlaceTruth = dataMode === "fixtures" && selectedRuntimeFeature ? placeTruthByRuntimeFeatureId.get(selectedRuntimeFeature.id) : undefined;
   const selectedRealPlace = useMemo<RealPlaceView | null>(() => {
@@ -3982,6 +4132,24 @@ export function App() {
     setCitywideBrowserBaseline(readCitywideBrowserMeasurement());
   };
 
+  const disableGround = () => {
+    groundRequestedRef.current = false;
+    selectedGroundIdRef.current = null;
+    setGroundRequested(false);
+    setSelectedGroundId(null);
+    setGroundOverlay(null);
+    setGroundLoadState("idle");
+    setGroundError("");
+    setGroundSummary(null);
+    setGroundRefusals(new Map());
+    setGroundLayerVisibility(DEFAULT_GROUND_LAYER_VISIBILITY);
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrlForApp({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current, ...getOverlayUrlFields() }, window.location.href));
+  };
+
+  const toggleGroundLayer = (groundClass: GroundClass) => {
+    setGroundLayerVisibility((current) => ({ ...current, [groundClass]: !current[groundClass] }));
+  };
+
   const disablePublicRealm = () => {
     const wasPublicRealmSelection = activeSelectionRef.current?.startsWith("public-realm:") ?? false;
     publicRealmRequestedRef.current = false;
@@ -4189,6 +4357,11 @@ export function App() {
           onStorefrontSelected={selectStorefront}
           publicRealmOverlay={publicRealmActive && publicRealmOverlay ? publicRealmOverlay : null}
           onPublicRealmSelected={(feature) => selectPublicRealm(feature)}
+          groundOverlay={groundActive ? groundOverlay : null}
+          groundLayerVisibility={groundLayerVisibility}
+          onGroundFeatureSelected={(feature) => selectGroundFeature(feature)}
+          onGroundRenderSummary={setGroundSummary}
+          onGroundRefusals={setGroundRefusals}
           exteriorOverlay={exteriorCellOverlays}
           onExteriorUnanchored={setExteriorUnanchoredIds}
           onExteriorCellsRetired={handleExteriorCellsRetired}
@@ -4274,6 +4447,23 @@ export function App() {
           {publicRealmActive && <span className="runtime-note-overlay" role="status">NYC OTI Planimetrics local snapshot · curb profile and crosswalk striping are estimated, source-constrained, and not survey/current-paint truth.</span>}
           {publicRealmRequested && !publicRealmActive && <span className="runtime-note-overlay" role="status">{publicRealmLoadState === "loading" ? "Block 835 public realm · loading local release…" : publicRealmStatusMessage || "Block 835 public realm unavailable; the existing base/exterior state was left unchanged."}</span>}
           {publicRealmRequested && <button type="button" onClick={disablePublicRealm}>Disable public realm</button>}
+          {/* THE GROUND CANARY'S ONE LINE. Present only in a session that named
+              the release, and it always states what is DRAWN rather than what
+              the release contains: cells drawn, polygons drawn, parts refused
+              for non-simple rings, cells that failed verification, and cells in
+              view that the residency ceiling has not admitted yet. */}
+          {groundRequested && <span
+            className="runtime-note-overlay"
+            role="status"
+            data-ground-release={MANHATTAN_GROUND_RELEASE_ID}
+            data-ground-state={groundLoadState}
+            data-ground-drawn-cells={groundSummary?.drawnCells ?? 0}
+            data-ground-visible-cells={groundSummary?.visibleCells ?? 0}
+            data-ground-skipped-parts={groundSummary?.skippedParts ?? 0}
+            data-ground-failed-cells={groundSummary?.failedCells ?? 0}
+          >{groundLoadState === "loading" ? "Citywide ground canary · verifying the local release…" : groundStatusMessage || "Citywide ground canary unavailable; the synthetic grid remains the ground."}</span>}
+          {groundActive && <span className="runtime-note-overlay" role="status">Flat cartographic base from NYC OTI Planimetrics, NYC DOT plazas and NYC Parks properties · source extents, not a survey of current paving, access, or shoreline.</span>}
+          {groundRequested && <button type="button" onClick={disableGround}>Disable ground canary</button>}
           <div className="exterior-streaming-controls" role="group" aria-label="Exterior streaming and render profile">
             <button type="button" aria-pressed={exteriorStreamingRequested} onClick={toggleExteriorStreaming}>{exteriorStreamingRequested ? "Disable exterior streaming" : "Enable exterior streaming"}</button>
             {EXTERIOR_RENDER_PROFILES.map((profile) => (
@@ -4539,6 +4729,23 @@ export function App() {
                 {LAYER_LABELS[layer]}
               </button>
             ))}
+            {/* The five ground classes appear only once the release is VERIFIED.
+                A toggle for a layer that cannot draw would be a control that
+                does nothing, and in a fail-closed session it would suggest the
+                ground is merely hidden rather than refused. */}
+            {groundLoadState === "ready" && GROUND_BASE_CLASSES.map((groundClass) => (
+              <button
+                aria-pressed={groundLayerVisibility[groundClass]}
+                className={groundLayerVisibility[groundClass] ? "is-visible" : ""}
+                data-ground-layer={groundLayerId(groundClass)}
+                key={groundLayerId(groundClass)}
+                onClick={() => toggleGroundLayer(groundClass)}
+                type="button"
+              >
+                <span className={`layer-dot layer-dot-${groundLayerId(groundClass)}`} />
+                {LAYER_LABELS[groundLayerId(groundClass)]}
+              </button>
+            ))}
           </div>}
         </div>
         {availableCategories.length > 0 && <div className="category-controls category-controls-poi" aria-label="POI categories" role="group">
@@ -4676,6 +4883,39 @@ export function App() {
               <div><dt>Terms / attribution</dt><dd><a href={publicRealmOverlay.document.provenance.termsUrl} target="_blank" rel="noreferrer">NYC Open Data terms</a> · {publicRealmOverlay.document.provenance.attribution}</dd></div>
               <div><dt>Disclaimer</dt><dd>{publicRealmOverlay.document.provenance.disclaimer}</dd></div>
             </dl>
+          </section>}
+
+          {selectedGroundFeature && groundOverlay && <section className="inspector-section ground-detail" aria-label="Citywide ground provenance" data-ground-feature={selectedGroundFeature.canonicalFeatureId}>
+            <div className="place-truth-heading">
+              <h2>Citywide ground</h2>
+              <span className="truth-badge real-badge">Local · {groundOverlay.releaseId}</span>
+            </div>
+            <p className="claim-badge" data-visual-evidence-level={selectedGroundFeature.claimLevel}>{selectedGroundFeature.claimLevel === "estimated" ? "Estimated / source-constrained extent" : "Source-backed cartographic extent"}</p>
+            <dl>
+              <div><dt>Class</dt><dd>{selectedGroundFeature.class}</dd></div>
+              <div><dt>Feature ID</dt><dd>{selectedGroundFeature.canonicalFeatureId}</dd></div>
+              {/* Identity origin is shown because it is the anti-duplication
+                  guarantee made visible: a park says whose id it is REUSING, so
+                  a user can see there is no second selectable Central Park. */}
+              <div><dt>Identity</dt><dd>{selectedGroundFeature.identityOrigin.kind === "referenced-existing"
+                ? `Reuses the existing catalog identity ${selectedGroundFeature.identityOrigin.existingFeatureId}; no second selectable record is minted for this surface.`
+                : "Ground-owned identity, minted in the udt:ground namespace so it cannot collide with a catalog record."}</dd></div>
+              <div><dt>Sources</dt><dd>{selectedGroundFeature.sourceRefs.length > 0
+                ? selectedGroundFeature.sourceRefs.map((source) => `${source.provider} · ${source.datasetId} · record ${source.sourceRecordId}`).join(" · ")
+                : "Unknown / not provided"}</dd></div>
+              <div><dt>Captured / updated</dt><dd>{selectedGroundFeature.sourceRefs.map((source) => `captured ${source.capturedAt ?? "unknown"} · source rows updated ${source.updatedAt ?? "unknown"}`).join(" · ") || "Unknown / not provided"}</dd></div>
+              <div><dt>Uncertainty</dt><dd>{selectedGroundFeature.uncertainty.temporal} · horizontal ±{selectedGroundFeature.uncertainty.horizontalMeters ?? "unknown"} m · vertical ±{selectedGroundFeature.uncertainty.verticalMeters ?? "unknown"} m</dd></div>
+              <div><dt>Claim ceiling</dt><dd>{groundOverlay.document.claimCeilings[selectedGroundFeature.class] ?? "Unknown / not provided"}</dd></div>
+              <div><dt>Release</dt><dd>{groundOverlay.releaseId} · ledger {groundOverlay.ledger.ledgerId} · generated {groundOverlay.document.generatedAt}</dd></div>
+              <div><dt>Terms / attribution</dt><dd><a href={groundOverlay.document.provenance.termsUrl} target="_blank" rel="noreferrer">NYC Open Data terms</a> · {groundOverlay.document.provenance.attribution}</dd></div>
+            </dl>
+            {/* Refusal transparency: a share this renderer declined to draw says
+                so here, with its measurement, rather than leaving a hole the
+                panel does not mention. */}
+            {selectedGroundRefusals.length > 0 && <div className="ground-refusals" data-ground-refusal-count={selectedGroundRefusals.length}>
+              <p className="section-label">{selectedGroundRefusals.length} share{selectedGroundRefusals.length === 1 ? "" : "s"} of this surface {selectedGroundRefusals.length === 1 ? "is" : "are"} not drawn:</p>
+              <ul>{selectedGroundRefusals.map((refusal) => <li key={refusal.partId}>{refusal.statement}</li>)}</ul>
+            </div>}
           </section>}
 
           {exteriorUnavailableStatementList.map((statement) => <section key={statement} className="inspector-section exterior-streaming-detail" aria-label="Exterior streaming provenance" data-exterior-unavailable>

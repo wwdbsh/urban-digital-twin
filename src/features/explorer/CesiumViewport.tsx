@@ -41,6 +41,16 @@ import type { CameraPose } from "../../domain/visitor-navigation";
 import type { CityAssetResolver } from "../../runtime/city-asset-manifest";
 import { EXTERIOR_PILOT_RELEASE_ID, type CommercialStorefrontPlacement, type LoadedExteriorPilotRelease } from "../../runtime/exterior-pilot-release";
 import { publicRealmFeatureToFeature, type Block835PublicRealmFeature, type LoadedBlock835PublicRealmRelease } from "../../runtime/block835-public-realm-release";
+import type { GroundClass, GroundFeature } from "../../domain/ground";
+import { groundCacheKey, visibleGroundCellIds, type LoadedGroundRelease } from "../../runtime/ground-release-runtime";
+import {
+  GROUND_CLASS_DRAW_ORDER,
+  groundClassesForVisibility,
+  parseGroundPickId,
+  planGroundCellRender,
+  type GroundRenderRefusal,
+  type GroundRenderSummary,
+} from "./ground-render-plan";
 import type { ExteriorCellOutcome, ExteriorCellRenderPlan } from "../../runtime/exterior-cell-runtime";
 import type { ExteriorRenderProfile } from "../../runtime/exterior-render-profiles";
 import { verifiedExteriorModelResource, type VerifiedExteriorResource } from "./exterior-verified-resource";
@@ -88,6 +98,17 @@ interface CesiumViewportProps {
   onStorefrontSelected?: (placement: CommercialStorefrontPlacement) => void;
   publicRealmOverlay?: LoadedBlock835PublicRealmRelease | null;
   onPublicRealmSelected?: (feature: Block835PublicRealmFeature) => void;
+  /**
+   * The verified citywide ground release (T007), or null in every session that
+   * did not explicitly ask for it. Absent, this component builds no ground
+   * collection, registers no ground pick id, and issues no ground request.
+   */
+  groundOverlay?: LoadedGroundRelease | null;
+  groundLayerVisibility?: Partial<Record<GroundClass, boolean>>;
+  onGroundFeatureSelected?: (feature: GroundFeature) => void;
+  onGroundRenderSummary?: (summary: GroundRenderSummary | null) => void;
+  /** Refusal statements for the parts this pass declined to draw, by canonical feature id. */
+  onGroundRefusals?: (refusals: ReadonlyMap<string, readonly GroundRenderRefusal[]>) => void;
   /**
    * The exterior wave(s) to render. A build may promote more than one, so this
    * accepts an ordered set; a single overlay stays accepted unchanged.
@@ -655,6 +676,20 @@ export function drillPickedEntityId(picked: { id?: unknown } | null | undefined)
     return typeof entityId === "string" ? entityId : null;
   }
   return null;
+}
+
+/**
+ * The ground feature behind a picked id, or null for every id that is not a
+ * ground pick.
+ *
+ * Exported because "a ground pick never intercepts a building pick" is a
+ * property of this function's ANSWER, not of the click handler's shape: it
+ * returns null for any id lacking the `ground:` prefix, so a building entity id
+ * can never resolve to a ground surface however the pick list is ordered.
+ */
+export function groundFeatureForPickId(pickedId: string | null | undefined, pickMap: ReadonlyMap<string, GroundFeature>): GroundFeature | null {
+  const canonicalFeatureId = parseGroundPickId(pickedId);
+  return canonicalFeatureId === null ? null : pickMap.get(canonicalFeatureId) ?? null;
 }
 
 export const STAGE3_STOREFRONT_PROOF_QUERY = "storefront-picks";
@@ -2004,6 +2039,11 @@ export function CesiumViewport({
   onStorefrontSelected,
   publicRealmOverlay = null,
   onPublicRealmSelected,
+  groundOverlay = null,
+  groundLayerVisibility,
+  onGroundFeatureSelected,
+  onGroundRenderSummary,
+  onGroundRefusals,
   exteriorOverlay = null,
   onExteriorUnanchored,
   onExteriorCellsRetired,
@@ -2018,6 +2058,9 @@ export function CesiumViewport({
   const onFeatureOverlapRef = useRef(onFeatureOverlap);
   const onStorefrontSelectedRef = useRef(onStorefrontSelected);
   const onPublicRealmSelectedRef = useRef(onPublicRealmSelected);
+  const onGroundFeatureSelectedRef = useRef(onGroundFeatureSelected);
+  const onGroundRenderSummaryRef = useRef(onGroundRenderSummary);
+  const onGroundRefusalsRef = useRef(onGroundRefusals);
   const onStage3RenderProofRef = useRef(onStage3RenderProof);
   const onCameraChangedRef = useRef(onCameraChanged);
   const onDenseMetricsRef = useRef(onDenseMetrics);
@@ -2026,6 +2069,9 @@ export function CesiumViewport({
   onFeatureOverlapRef.current = onFeatureOverlap;
   onStorefrontSelectedRef.current = onStorefrontSelected;
   onPublicRealmSelectedRef.current = onPublicRealmSelected;
+  onGroundFeatureSelectedRef.current = onGroundFeatureSelected;
+  onGroundRenderSummaryRef.current = onGroundRenderSummary;
+  onGroundRefusalsRef.current = onGroundRefusals;
   onStage3RenderProofRef.current = onStage3RenderProof;
   onCameraChangedRef.current = onCameraChanged;
   onDenseMetricsRef.current = onDenseMetrics;
@@ -2057,6 +2103,20 @@ export function CesiumViewport({
   const ownedEntityIdsRef = useRef(new Set<string>());
   const storefrontPickMapRef = useRef(new Map<string, CommercialStorefrontPlacement>());
   const publicRealmPickMapRef = useRef(new Map<string, Block835PublicRealmFeature>());
+  /**
+   * Ground pick ids to canonical ground features. Keyed by the CANONICAL id, so
+   * a feature split across cells has one entry however many shares are drawn.
+   */
+  const groundPickMapRef = useRef(new Map<string, GroundFeature>());
+  const groundCollectionRef = useRef<PrimitiveCollection | null>(null);
+  /** `${cellId}/${class}` to the primitive currently drawing it. */
+  const groundPrimitivesRef = useRef(new Map<string, Primitive>());
+  const groundRefusalsRef = useRef(new Map<string, GroundRenderRefusal[]>());
+  /** Cells whose artifact failed verification this session, and why. */
+  const groundFailuresRef = useRef(new Map<string, string>());
+  /** What each drawn `${cellId}/${class}` contributed, for the status line. */
+  const groundDrawnRef = useRef(new Map<string, { polygons: number; refusals: number }>());
+  const groundRenderGenerationRef = useRef(0);
   const exteriorPickMapRef = useRef(new Map<string, string>());
   const exteriorCellCollectionsRef = useRef(new Map<string, ExteriorOwnedCellCollection>());
   const exteriorUnanchoredRef = useRef<string>("");
@@ -2295,6 +2355,12 @@ export function CesiumViewport({
     controller.lookEventTypes = controls.lookEventTypes;
     const denseCollection = viewer.scene.primitives.add(new PrimitiveCollection());
     denseCollectionRef.current = denseCollection;
+    // The ground canary owns its OWN collection, added before the dense one so
+    // the cartographic base is under the massing in draw order as well as in
+    // height. It stays empty — and costs nothing — in a session that never asks
+    // for the ground release.
+    const groundCollection = viewer.scene.primitives.add(new PrimitiveCollection());
+    groundCollectionRef.current = groundCollection;
     viewer.imageryLayers.add(new ImageryLayer(new GridImageryProvider({
       cells: 16,
       color: Color.fromCssColorString("#5b737d").withAlpha(0.45),
@@ -2312,6 +2378,10 @@ export function CesiumViewport({
       else {
         const publicRealmFeature = publicRealmPickMapRef.current.get(entity.id);
         if (publicRealmFeature) onPublicRealmSelectedRef.current?.(publicRealmFeature);
+        else {
+          const groundFeature = groundFeatureForPickId(entity.id, groundPickMapRef.current);
+          if (groundFeature) onGroundFeatureSelectedRef.current?.(groundFeature);
+        }
       }
     });
     // ROUTE D (T003). Every pick in this application goes through this bracket,
@@ -2359,6 +2429,19 @@ export function CesiumViewport({
         onPublicRealmSelectedRef.current?.(publicRealmFeatures[0]!);
         return;
       }
+      // Ground is consulted LAST, after buildings, storefronts and the public
+      // realm have all declined the pick. The cartographic base covers the whole
+      // island, so consulting it any earlier would let it swallow every click on
+      // the massing standing on it.
+      const groundFeatures = [...new Map(picks.map((picked) => {
+        const groundPickedId = drillPickedEntityId(picked);
+        const groundFeature = groundPickedId ? groundFeatureForPickId(groundPickedId, groundPickMapRef.current) : undefined;
+        return groundFeature ? [groundFeature.canonicalFeatureId, groundFeature] as const : ["", undefined] as const;
+      }).filter((entry): entry is readonly [string, GroundFeature] => Boolean(entry[0] && entry[1]))).values()];
+      if (groundFeatures.length > 0) {
+        onGroundFeatureSelectedRef.current?.(groundFeatures[0]!);
+        return;
+      }
       const picked = pickBracket.pick(movement.position) as { id?: unknown } | undefined;
       const pickedId = drillPickedEntityId(picked);
       const feature = featureForPickedId(pickedId === null ? null : canonicalExteriorPickId(pickedId, exteriorPickMapRef.current), denseFeatureMapRef.current, adapterRef.current) ?? pickedFeatures[0];
@@ -2366,6 +2449,10 @@ export function CesiumViewport({
       else if (pickedId) {
         const publicRealmFeature = publicRealmPickMapRef.current.get(pickedId);
         if (publicRealmFeature) onPublicRealmSelectedRef.current?.(publicRealmFeature);
+        else {
+          const groundFeature = groundFeatureForPickId(pickedId, groundPickMapRef.current);
+          if (groundFeature) onGroundFeatureSelectedRef.current?.(groundFeature);
+        }
       }
     }, ScreenSpaceEventType.LEFT_CLICK);
     viewerRef.current = viewer;
@@ -2391,6 +2478,13 @@ export function CesiumViewport({
       viewer.camera.moveEnd.removeEventListener(onCameraMoveEnd);
       if (cameraSettledEmitterRef.current) cameraSettledEmitterRef.current = null;
       if (denseCollectionRef.current === denseCollection) denseCollectionRef.current = null;
+      if (groundCollectionRef.current === groundCollection) groundCollectionRef.current = null;
+      groundPrimitivesRef.current.clear();
+      groundPickMapRef.current.clear();
+      groundRefusalsRef.current.clear();
+      groundFailuresRef.current.clear();
+      groundDrawnRef.current.clear();
+      groundRenderGenerationRef.current += 1;
       activeDenseLayerRef.current = null;
       pendingDenseLayerRef.current = null;
       pendingDenseBuildRef.current?.cancel();
@@ -3044,6 +3138,152 @@ export function CesiumViewport({
     }
     return undefined;
   }, [exteriorOverlay, viewerReadyGeneration, denseFeatures, adapter]);
+
+  /**
+   * The ground canary's entire scene contribution (T007).
+   *
+   * Structured as one batched primitive per (cell, class) in a dedicated
+   * collection, for the same reason the dense pass batches: 47,779 parts as
+   * entities would be 47,779 draw commands. Geometry creation is asynchronous,
+   * so tessellation happens off the main thread and a pan does not stall the
+   * frame.
+   *
+   * It re-runs on the SETTLED camera. `viewportFootprint` is published by
+   * `moveEnd` (see `emitSettledCamera`), which is this application's existing
+   * camera debounce; adding a timer here would add a second, competing one.
+   *
+   * Nothing partially verified is ever added: `loadCellClass` resolves only
+   * after the artifact's bytes match the checksum the manifest declares AND its
+   * parts are the parts the ownership ledger says the cell owns. A rejection
+   * removes nothing already drawn — it fails that one (cell, class) closed and
+   * names it in the status line.
+   */
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    const collection = groundCollectionRef.current;
+    if (!viewer || !collection) return undefined;
+    const generation = ++groundRenderGenerationRef.current;
+    const owned = groundPrimitivesRef.current;
+    if (!groundOverlay) {
+      if (owned.size > 0) {
+        for (const primitive of owned.values()) collection.remove(primitive);
+        owned.clear();
+        groundDrawnRef.current.clear();
+        groundPickMapRef.current.clear();
+        groundRefusalsRef.current.clear();
+        groundFailuresRef.current.clear();
+        viewer.scene.requestRender();
+      }
+      onGroundRenderSummaryRef.current?.(null);
+      onGroundRefusalsRef.current?.(new Map());
+      return undefined;
+    }
+
+    const classes = groundClassesForVisibility(groundLayerVisibility ?? {}, groundOverlay.shippedClasses);
+    const bounds = viewportFootprint?.bounds;
+    const visibleCells = bounds
+      ? visibleGroundCellIds({
+        bounds,
+        center: viewportFootprint?.groundCenter,
+        coverage: groundOverlay.coverage,
+        tileLevel: groundOverlay.partitionTileLevel,
+        cellIdForTileKey: (tileKey) => groundOverlay.cellIdForTileKey(tileKey),
+      })
+      : [];
+    const wanted = visibleCells.flatMap((cellId) => GROUND_CLASS_DRAW_ORDER
+      .filter((groundClass) => classes.includes(groundClass) && groundOverlay.hasArtifact(cellId, groundClass))
+      .map((groundClass) => ({ cellId, groundClass, key: groundCacheKey(cellId, groundClass) })));
+    const wantedKeys = new Set(wanted.map((entry) => entry.key));
+    for (const [key, primitive] of [...owned]) {
+      if (wantedKeys.has(key)) continue;
+      collection.remove(primitive);
+      owned.delete(key);
+      groundDrawnRef.current.delete(key);
+    }
+    // Recency eviction is applied to the CACHE only after the scene has been
+    // reconciled, so an artifact still being drawn is never a victim.
+    groundOverlay.retain(wantedKeys);
+
+    let lastPublishedAt = 0;
+    const publish = (force: boolean) => {
+      const now = Date.now();
+      if (!force && now - lastPublishedAt < 250) return;
+      lastPublishedAt = now;
+      let polygons = 0;
+      let skippedParts = 0;
+      for (const entry of groundDrawnRef.current.values()) { polygons += entry.polygons; skippedParts += entry.refusals; }
+      const residency = groundOverlay.residency();
+      onGroundRenderSummaryRef.current?.({
+        drawnCells: new Set([...groundDrawnRef.current.keys()].map((key) => key.slice(0, key.lastIndexOf("/")))).size,
+        visibleCells: visibleCells.length,
+        drawnPolygons: polygons,
+        skippedParts,
+        failedCells: groundFailuresRef.current.size,
+        residentBytes: residency.bytes,
+      });
+      onGroundRefusalsRef.current?.(new Map(groundRefusalsRef.current));
+    };
+    publish(true);
+
+    let cancelled = false;
+    const stale = () => cancelled || generation !== groundRenderGenerationRef.current;
+    void (async () => {
+      for (const entry of wanted) {
+        if (stale()) return;
+        if (owned.has(entry.key)) continue;
+        try {
+          const loaded = await groundOverlay.loadCellClass(entry.cellId, entry.groundClass);
+          if (stale()) return;
+          const plan = planGroundCellRender(loaded.artifact);
+          const color = Color.fromCssColorString(plan.cssColor);
+          const instances = plan.polygons.map((polygon) => new GeometryInstance({
+            geometry: new PolygonGeometry({
+              polygonHierarchy: new PolygonHierarchy(
+                Cartesian3.fromDegreesArray(polygon.outer.positions),
+                polygon.holes.map((hole) => new PolygonHierarchy(Cartesian3.fromDegreesArray(hole.positions))),
+              ),
+              height: plan.heightMeters,
+              vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
+            }),
+            id: polygon.pickId,
+            attributes: { color: ColorGeometryInstanceAttribute.fromColor(color) },
+          }));
+          for (const canonicalFeatureId of plan.drawnFeatureIds) {
+            const feature = groundOverlay.feature(canonicalFeatureId);
+            // Retained rather than deleted on removal: pick ids only ever come
+            // from live primitives, so an entry for an undrawn feature is
+            // unreachable, while deleting it would break a selection made a
+            // moment before the camera moved.
+            if (feature) groundPickMapRef.current.set(canonicalFeatureId, feature);
+          }
+          for (const refusal of plan.refusals) {
+            const existing = groundRefusalsRef.current.get(refusal.canonicalFeatureId) ?? [];
+            if (!existing.some((entryRefusal) => entryRefusal.partId === refusal.partId)) existing.push(refusal);
+            groundRefusalsRef.current.set(refusal.canonicalFeatureId, existing);
+          }
+          if (instances.length > 0) {
+            const primitive = collection.add(new Primitive({
+              geometryInstances: instances,
+              appearance: new PerInstanceColorAppearance({ flat: true, translucent: false, closed: false }),
+              asynchronous: true,
+              allowPicking: true,
+              releaseGeometryInstances: true,
+            })) as Primitive;
+            owned.set(entry.key, primitive);
+          }
+          groundDrawnRef.current.set(entry.key, { polygons: plan.polygons.length, refusals: plan.refusals.length });
+          groundFailuresRef.current.delete(entry.key);
+          viewer.scene.requestRender();
+        } catch (error) {
+          if (stale() || (error instanceof DOMException && error.name === "AbortError")) return;
+          groundFailuresRef.current.set(entry.key, error instanceof Error ? error.message : String(error));
+        }
+        publish(false);
+      }
+      if (!stale()) publish(true);
+    })();
+    return () => { cancelled = true; };
+  }, [groundOverlay, groundLayerVisibility, viewportFootprint, viewerReadyGeneration]);
 
   // Selection feedback for exterior geometry lives in its own effect on
   // purpose. Folding `selectedFeatureId` into the effect above would rebuild the

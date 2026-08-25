@@ -92,6 +92,33 @@ builds byte-identical across 356 files); validated by
 - **Known gap**: `generatedAt` tampering is NOT caught (T005 schema has no
   self-digest field) — future schema task.
 
+## T007 runtime canary record
+
+The flat ground renders behind the explicit `ground=manhattan-ground-20260824`
+URL flag (default byte-for-byte unchanged without it): fail-closed loader
+(`src/runtime/ground-release-runtime.ts`) with runtime SHA-256 of every
+artifact plus re-derivation of the unhashed ledger/identity manifests;
+visibility-driven per-cell per-class streaming under borrowed
+`CITYWIDE_BUDGETS` caps (24 visible cells / 48 MiB / 4 requests) with a
+visibility-protected LRU; per-class `PrimitiveCollection` batches; the 66
+non-simple rings are skipped with a counted refusal, never repaired; ground
+picks resolve to `ground:<canonicalFeatureId>` (cell/tier-independent) and
+surface class, claim level, referenced park identity, and release provenance
+in the details panel. SHA-256 falls back to the repository's pure-JS digest
+when `crypto.subtle` is absent (plain-http LAN serving is a legitimate
+local-first context; discovered when an insecure context refused all 161
+fetched artifacts for a reason unrelated to integrity).
+
+Browser verification (2026-08-24, dev server): street grid + sidewalks +
+parks + Hudson water rendered (readings: "6 cells drawn · 2055 polygons",
+"24 cells drawn · 14738 polygons" at region view with the cell cap binding);
+park pick → `groundFeature=udt:manhattan:park:M022` deep link with
+referenced identity in details; `groundFault=artifact-checksum` → "0 cells
+drawn … 3 cell artifacts refused (verification failed)" with zero partial
+geometry. Camera-pose capture was hampered by pre-existing Issue #46
+(presets intermittently write roll=180; URL pose not applied at boot) —
+unrelated to the ground overlay and left to its own backlog item.
+
 ## Known limitations (recorded, not hidden)
 
 - The Manhattan ground extent (`-74.03/40.68/-73.90/40.89`, outward-snapped

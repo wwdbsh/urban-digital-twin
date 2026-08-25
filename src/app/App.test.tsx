@@ -574,7 +574,9 @@ describe("App overlay and selection regressions", () => {
 
     fireEvent.keyDown(window, { key: "Escape" });
     await waitFor(() => expect(screen.queryByRole("complementary", { name: "Selected feature details" })).not.toBeInTheDocument());
-    expect(trigger).toHaveFocus();
+    // Focus restore happens in a setTimeout(0); assert asynchronously so
+    // parallel-suite load cannot race the restore (pre-existing flake).
+    await waitFor(() => expect(trigger).toHaveFocus());
   });
 
   it("keeps locationless picks in details without incrementing the focus transaction", async () => {

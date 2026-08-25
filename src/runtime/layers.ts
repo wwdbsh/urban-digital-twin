@@ -1,7 +1,25 @@
+import { GROUND_BASE_CLASSES, type GroundClass } from "../domain/ground.ts";
 import type { Feature, FeatureKind } from "../domain/schema.ts";
 import { tileKeyForFeature, tileKeyString } from "./spatial.ts";
 
-export type RuntimeLayerId = "buildings" | "pois" | "areas" | "stations" | "entrances" | "routes" | "statistical-areas" | "parks" | "landmarks";
+/**
+ * The five citywide-ground layer ids (T007).
+ *
+ * Derived from `GROUND_BASE_CLASSES` rather than written out, so a class added
+ * to the ground contract cannot silently miss its toggle. They are members of
+ * `RuntimeLayerId` because they are user-facing runtime layers with labels and
+ * toggles — but they are deliberately ABSENT from `DEFAULT_LAYER_VISIBILITY`,
+ * see the note on that constant.
+ */
+export const GROUND_LAYER_IDS = GROUND_BASE_CLASSES.map((groundClass) => `ground-${groundClass}` as const);
+
+export type GroundLayerId = `ground-${GroundClass}`;
+
+export function groundLayerId(groundClass: GroundClass): GroundLayerId {
+  return `ground-${groundClass}`;
+}
+
+export type RuntimeLayerId = "buildings" | "pois" | "areas" | "stations" | "entrances" | "routes" | "statistical-areas" | "parks" | "landmarks" | GroundLayerId;
 
 export interface LayerManifest {
   schemaVersion: "1.0";
@@ -23,6 +41,17 @@ export interface LayerManifest {
  * shared visibility map when a complete runtime state is needed. */
 export type LayerVisibility = Partial<Record<RuntimeLayerId, boolean>>;
 
+/**
+ * The default visibility of the CATALOG layers, and only those.
+ *
+ * The five `ground-*` layers are intentionally not here. This object is the key
+ * set that seeds `layerVisibility` state, that `parseNavigationUrl` restores
+ * against, and that is serialized into every canonical `layers=` URL — so a
+ * ground key present here would appear in every ordinary session's URL and in
+ * every adapter's `supportedVisibleLayers` probe, in sessions that never asked
+ * for the ground release. Ground visibility is seeded from
+ * `DEFAULT_GROUND_LAYER_VISIBILITY` by the ground canary only.
+ */
 export const DEFAULT_LAYER_VISIBILITY: LayerVisibility = {
   buildings: true,
   pois: true,
@@ -45,7 +74,19 @@ export const LAYER_LABELS: Record<RuntimeLayerId, string> = {
   "statistical-areas": "Statistical areas",
   parks: "Parks",
   landmarks: "Landmark records",
+  "ground-roadbed": "Ground · roadbed",
+  "ground-sidewalk": "Ground · sidewalk",
+  "ground-park": "Ground · park",
+  "ground-plaza": "Ground · plaza",
+  "ground-water": "Ground · water",
 };
+
+/** Ground layer visibility, applied only while the ground canary is active. */
+export type GroundLayerVisibility = Record<GroundClass, boolean>;
+
+export const DEFAULT_GROUND_LAYER_VISIBILITY: GroundLayerVisibility = Object.fromEntries(
+  GROUND_BASE_CLASSES.map((groundClass) => [groundClass, true]),
+) as GroundLayerVisibility;
 
 export function layerForFeature(feature: Feature): RuntimeLayerId | null {
   if (feature.kind === "building") return "buildings";
