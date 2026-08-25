@@ -30,10 +30,11 @@
  *    flat base is a separate release, loaded by a separate loader, in separate
  *    state, and nothing in this module can reach it. That is the whole
  *    architectural reason for the split, not merely a convention.
- * 2. **Serving is gated to a canary wave.** `GROUND_EMBELLISHMENT_CANARY_WAVES`
+ * 2. **Serving is gated to a named wave set.** `GROUND_EMBELLISHMENT_CANARY_WAVES`
  *    names the wave ids; the level-14 tile rows come from `EXTERIOR_WAVE_PLAN`,
  *    which is the coverage contract the building waves already run on. T011
- *    widens this to every wave by changing the constant, and nothing else.
+ *    widened it from one wave to every row-owning wave by changing that constant
+ *    and nothing else, and per-wave rollback is deleting one entry from it.
  * 3. **Activation is by measured distance against the TIER's own ceiling.**
  *    The 400 m in this release is read off `tier.maxDistanceMeters` per asset,
  *    never from a constant in this file — the same discipline
@@ -81,13 +82,38 @@ export const MANHATTAN_GROUND_EMBELLISHMENT_RELEASE_ID = "manhattan-ground-embel
 export const GROUND_EMBELLISHMENT_ARTIFACT_SCHEMA_VERSION = "manhattan-ground-embellishment-artifact-1";
 
 /**
- * The canary's scope: which building waves may serve near-tier embellishments.
+ * The promoted scope: which building waves may serve near-tier embellishments.
  *
- * One wave this cycle. The list is the ONLY thing that has to change for T011
- * to serve the island — every consumer below derives its rows from whatever is
- * named here, and nothing anywhere hardcodes "midtown".
+ * T010 shipped this as one wave, `midtown-core`, and predicted that widening it
+ * would be the only edit T011 needed. It was: every consumer below derives its
+ * rows from whatever is named here, and nothing anywhere hardcodes a wave name.
+ *
+ * **Rollback is per wave, and it is this list.** Deleting one entry deactivates
+ * exactly that wave's level-14 rows — the cells stop being offered to the
+ * renderer and `loadCellClass` refuses them by name — while every other wave
+ * keeps serving. No release byte, no budget and no other module changes, which
+ * is what makes a single-wave revert a one-line operation rather than a
+ * redeployment. `ground-embellishment-runtime.test.ts` proves that property
+ * rather than asserting it here.
+ *
+ * **`block-835` is deliberately absent, and its curbs are not.** It is the one
+ * wave in `EXTERIOR_WAVE_PLAN` with `tileRowRange: null`: it is a declared set
+ * of buildings carved out of a tile, not an owner of level-14 rows, so it
+ * cannot scope a row-based ground gate at all — `groundEmbellishmentCanaryTileRows`
+ * refuses it rather than quietly contributing nothing. The ground under that
+ * block sits in rows 4481-4482, which `midtown-core` promotes, so the curbs
+ * there are served; what is absent is a redundant second name for rows another
+ * wave already owns. The remaining five waves are every row-owning wave in the
+ * plan, which `ground-embellishment-wave-promotion.test.ts` asserts against the
+ * plan so this list cannot drift away from it.
  */
-export const GROUND_EMBELLISHMENT_CANARY_WAVES: readonly ExteriorWaveId[] = ["midtown-core"];
+export const GROUND_EMBELLISHMENT_CANARY_WAVES: readonly ExteriorWaveId[] = [
+  "midtown-core",
+  "lower-manhattan",
+  "southern-remainder",
+  "central-upper-manhattan",
+  "northern-manhattan",
+];
 
 /**
  * The most level-14 cells a single ground point can be within 400 m of: four.

@@ -132,6 +132,9 @@ import {
   groundEmbellishmentCanaryTileRows,
   isGroundEmbellishmentCanaryCell,
 } from "../runtime/ground-embellishment-runtime";
+import { EXTERIOR_WAVE_PLAN, type ExteriorWaveId } from "../release/exterior-wave-ledger";
+import { groundCellTileKey } from "../release/ground-release";
+import { tileBounds } from "../runtime/spatial";
 
 const parkFeature: GroundFeature = {
   canonicalFeatureId: "udt:manhattan:park:M010",
@@ -195,12 +198,26 @@ function groundOverlayFixture(): LoadedGroundRelease {
 }
 
 /**
- * A curb in the Midtown-core wave, and one outside it.
+ * One curb cell per promoted wave, and one outside every wave.
  *
- * The out-of-wave cell is present in the LEDGER but must never appear in
- * `servingCells`, which is what the default-session regression below asserts.
+ * T011 promoted all five row-owning waves, so the interesting boundary is no
+ * longer Midtown against the rest of Manhattan: it is the island against row
+ * 4489, which the ground partition reaches by outward-snapping the declared
+ * extent and which no building wave owns. The out-of-wave cell is present in
+ * the LEDGER and ships an artifact, and must never appear in `servingCells`.
+ *
+ * The Midtown cell stays FIRST because the mocked viewport stands its camera on
+ * the first serving cell; the near tier's activation ring is unchanged by
+ * promotion, so a wider promoted set must not widen what one camera activates.
  */
 const MIDTOWN_CELL_ID = "ground-cell-000051-14-4824-4482";
+const PROMOTED_WAVE_CELL_IDS = [
+  MIDTOWN_CELL_ID,
+  "ground-cell-000030-14-4824-4485",
+  "ground-cell-000037-14-4824-4484",
+  "ground-cell-000070-14-4825-4479",
+  "ground-cell-000090-14-4826-4471",
+];
 const OUT_OF_WAVE_CELL_ID = "ground-cell-000001-14-4823-4489";
 
 const curbFeature: GroundFeature = {
@@ -227,8 +244,27 @@ const curbFeature: GroundFeature = {
   identityOrigin: { kind: "ground-owned" },
 };
 
-function embellishmentOverlayFixture(): LoadedGroundEmbellishmentRelease {
-  const bounds = { west: -73.9892578125, south: 40.74829101562, east: -73.96728515625, north: 40.7592773437 };
+/**
+ * The overlay the app is handed, scoped by the PRODUCTION wave predicate.
+ *
+ * `waves` defaults to the promoted set, so the default-session tests below
+ * assert the scope decision production actually makes. Passing a reduced set is
+ * how the rollback rehearsal asks what deleting one name from
+ * `GROUND_EMBELLISHMENT_CANARY_WAVES` would do to a real session.
+ */
+function embellishmentOverlayFixture(waves: readonly ExteriorWaveId[] = GROUND_EMBELLISHMENT_CANARY_WAVES): LoadedGroundEmbellishmentRelease {
+  const rows = groundEmbellishmentCanaryTileRows(waves);
+  // The out-of-wave cell is offered to the same filter as the rest and is
+  // dropped by it, rather than being omitted by the fixture's own choice.
+  const servingCells = [...PROMOTED_WAVE_CELL_IDS, OUT_OF_WAVE_CELL_ID]
+    .filter((cellId) => isGroundEmbellishmentCanaryCell(cellId, rows))
+    .map((cellId, index) => ({
+      cellId,
+      groundClass: "curb" as const,
+      bounds: tileBounds(groundCellTileKey(cellId)),
+      maxDistanceMeters: 400,
+      order: index,
+    }));
   return {
     releaseId: MANHATTAN_GROUND_EMBELLISHMENT_RELEASE_ID,
     document: {
@@ -253,11 +289,8 @@ function embellishmentOverlayFixture(): LoadedGroundEmbellishmentRelease {
     shippedClasses: ["curb"],
     partitionTileLevel: 14,
     coverage: { west: -74.05, south: 40.67, east: -73.89, north: 40.89 },
-    canaryTileRows: groundEmbellishmentCanaryTileRows(),
-    // Only the in-wave cell is served. The loader is what performs this
-    // filtering in production; the fixture reproduces its OUTPUT so the session
-    // test can assert what the app is handed.
-    servingCells: [{ cellId: MIDTOWN_CELL_ID, groundClass: "curb", bounds, maxDistanceMeters: 400, order: 51 }],
+    canaryTileRows: rows,
+    servingCells,
     feature: (canonicalFeatureId) => (canonicalFeatureId === CURB_FEATURE_ID ? curbFeature : undefined),
     cell: () => undefined,
     loadCellClass: () => Promise.reject(new Error("not used in this test")),
@@ -451,21 +484,49 @@ describe("near-tier curb canary (T010)", () => {
   });
 
   /**
-   * The canary boundary, asserted on the data the app is actually handed.
+   * The promoted boundary, asserted on the data the app is actually handed.
    *
-   * A cell outside the Midtown-core rows is in the ledger and ships an artifact,
-   * and it is still never offered to the renderer.
+   * T011 widened the promoted set to every row-owning wave, so a default
+   * session is offered cells from all five — and a cell in row 4489, which is
+   * in the ledger and ships an artifact, is still never offered to the
+   * renderer. Coverage is what changed; the boundary is still a boundary.
    */
-  it("offers only Midtown-core cells to the renderer, and nothing outside the wave", async () => {
+  it("offers cells from every promoted wave to the renderer, and nothing outside coverage", async () => {
     window.history.replaceState({}, "", initialTestUrl);
     render(<App />);
     await waitFor(() => expect(embellishmentOverlay()).toBe(MANHATTAN_GROUND_EMBELLISHMENT_RELEASE_ID));
     const served = document.querySelector("[data-ground-embellishment-cells]")!.getAttribute("data-ground-embellishment-cells")!.split(",");
-    expect(served).toEqual([MIDTOWN_CELL_ID]);
+    expect(served).toEqual(PROMOTED_WAVE_CELL_IDS);
     const rows = groundEmbellishmentCanaryTileRows();
-    expect(GROUND_EMBELLISHMENT_CANARY_WAVES).toEqual(["midtown-core"]);
+    expect([...GROUND_EMBELLISHMENT_CANARY_WAVES])
+      .toEqual(EXTERIOR_WAVE_PLAN.filter((wave) => wave.tileRowRange !== null).map((wave) => wave.waveId));
     for (const cellId of served) expect(isGroundEmbellishmentCanaryCell(cellId, rows)).toBe(true);
+    expect(served).not.toContain(OUT_OF_WAVE_CELL_ID);
     expect(isGroundEmbellishmentCanaryCell(OUT_OF_WAVE_CELL_ID, rows)).toBe(false);
+  });
+
+  /**
+   * Per-wave rollback, rehearsed as a session rather than as a set operation.
+   *
+   * Deleting one name from `GROUND_EMBELLISHMENT_CANARY_WAVES` must take that
+   * wave's cells out of the renderer's hands and leave every other wave's cells
+   * exactly where they were — including the flat base, which never notices.
+   */
+  it("deactivates exactly one wave's cells when that wave is rolled back", async () => {
+    const rolledBack: ExteriorWaveId = "northern-manhattan";
+    const northernCellId = "ground-cell-000090-14-4826-4471";
+    embellishmentMocks.loadGroundEmbellishmentRelease.mockResolvedValue(
+      embellishmentOverlayFixture(GROUND_EMBELLISHMENT_CANARY_WAVES.filter((waveId) => waveId !== rolledBack)),
+    );
+    window.history.replaceState({}, "", initialTestUrl);
+    render(<App />);
+    await waitFor(() => expect(embellishmentOverlay()).toBe(MANHATTAN_GROUND_EMBELLISHMENT_RELEASE_ID));
+    const served = document.querySelector("[data-ground-embellishment-cells]")!.getAttribute("data-ground-embellishment-cells")!.split(",");
+    expect(served).toEqual(PROMOTED_WAVE_CELL_IDS.filter((cellId) => cellId !== northernCellId));
+    expect(served).not.toContain(northernCellId);
+    // The rest of the island is untouched, and so is the base beneath it.
+    expect(document.querySelector("[data-ground-overlay]")?.getAttribute("data-ground-overlay")).toBe(MANHATTAN_GROUND_RELEASE_ID);
+    expect(groundStatus()!.textContent).toContain("near-tier curbs within 400 m");
   });
 
   /**

@@ -16,4 +16,6 @@ declare module "node:child_process" {
 declare module "node:process" {
   export const execPath: string;
   export function cwd(): string;
+  /** Read-only in this codebase: the one flag that regenerates a committed evidence report. */
+  export const env: Readonly<Record<string, string | undefined>>;
 }

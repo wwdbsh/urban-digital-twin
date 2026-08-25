@@ -49,6 +49,7 @@
     "citywide:validate": "node --experimental-strip-types scripts/validate-manhattan-citywide-release.mjs && node --experimental-strip-types scripts/validate-manhattan-ground-release.mjs && node --experimental-strip-types scripts/validate-manhattan-zone-imagery.mjs",
     "ground:build": "node --experimental-strip-types --max-old-space-size=10240 scripts/manhattan-ground-build-cli.mjs build",
     "ground:validate": "node --experimental-strip-types scripts/validate-manhattan-ground-release.mjs",
+    "ground-embellishment:census": "UDT_WRITE_GROUND_WAVE_CENSUS=1 vitest run src/release/ground-embellishment-wave-census.test.ts",
     "citywide:publish-local": "node --experimental-strip-types scripts/publish-manhattan-citywide-local.mjs",
     "citywide:benchmark": "node --experimental-strip-types scripts/benchmark-manhattan-citywide.mjs",
     "travel-context:acquire": "node --experimental-strip-types scripts/travel-context-cli.mjs acquire",

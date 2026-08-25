@@ -33,9 +33,16 @@ import { loadGroundRelease, type GroundFetcher } from "./ground-release-runtime"
 
 const BASE_PATH = `/data/${MANHATTAN_GROUND_EMBELLISHMENT_RELEASE_ID}/`;
 
-/** A level-14 tile inside the Midtown-core wave, and one that is not. */
+/**
+ * A level-14 tile inside a promoted wave, and one that is not.
+ *
+ * T011 promoted every row-owning wave, so "outside" is no longer another
+ * Manhattan wave: rows 4471-4488 are all promoted. Row 4489 is the one the
+ * ground partition reaches by outward-snapping the declared extent and that no
+ * building wave owns, which makes it the honest out-of-coverage case.
+ */
 const INSIDE_TILE_KEY = "wgs84-geodetic/14/4825/4482";
-const OUTSIDE_TILE_KEY = "wgs84-geodetic/14/4825/4486";
+const OUTSIDE_TILE_KEY = "wgs84-geodetic/14/4825/4489";
 
 async function sha256(text: string): Promise<string> {
   const digest = await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
@@ -222,41 +229,68 @@ function centerOf(bounds: { west: number; south: number; east: number; north: nu
   return { longitude: (bounds.west + bounds.east) / 2, latitude: (bounds.south + bounds.north) / 2 };
 }
 
-describe("ground embellishment canary scope", () => {
+describe("ground embellishment promoted scope", () => {
   it("takes its tile rows from the exterior wave plan rather than restating them", () => {
     const rows = groundEmbellishmentCanaryTileRows();
-    const midtown = EXTERIOR_WAVE_PLAN.find((wave) => wave.waveId === "midtown-core")!;
-    expect(GROUND_EMBELLISHMENT_CANARY_WAVES).toEqual(["midtown-core"]);
-    expect(midtown.tileRowRange).not.toBeNull();
-    expect([...rows].sort()).toEqual([midtown.tileRowRange!.northRowY, midtown.tileRowRange!.southRowY]);
+    const rowOwning = EXTERIOR_WAVE_PLAN.filter((wave) => wave.tileRowRange !== null);
+    // T011: every row-owning wave, derived from the plan rather than counted.
+    expect([...GROUND_EMBELLISHMENT_CANARY_WAVES]).toEqual(rowOwning.map((wave) => wave.waveId));
+    const expectedRows = new Set<number>();
+    for (const wave of rowOwning) {
+      for (let rowY = wave.tileRowRange!.northRowY; rowY <= wave.tileRowRange!.southRowY; rowY += 1) expectedRows.add(rowY);
+    }
+    expect([...rows].sort((left, right) => left - right)).toEqual([...expectedRows].sort((left, right) => left - right));
+    expect(rows.size).toBe(4488 - 4471 + 1);
     // Ground cells partition at the same tile level the waves are declared at,
     // which is what makes a row intersection a legitimate mapping at all.
     expect(EXTERIOR_WAVE_TILE_LEVEL).toBe(14);
   });
 
   /**
-   * The generalization T011 will perform, exercised now.
+   * Per-wave rollback, which is the whole reason the promoted set is a list.
    *
-   * If widening the canary needed anything but this constant, this test would
-   * be the one that noticed.
+   * Removing one entry must take away exactly that wave's rows and leave every
+   * other wave's rows serving. Nothing else in the module is touched, which is
+   * what makes a revert a one-line operation rather than a redeployment.
    */
-  it("generalizes to more waves by naming them, with no other change", () => {
-    const wider = groundEmbellishmentCanaryTileRows(["midtown-core", "lower-manhattan"]);
-    expect(wider.has(4482)).toBe(true);
-    expect(wider.has(4486)).toBe(true);
-    expect(groundEmbellishmentCanaryTileRows().has(4486)).toBe(false);
-    const everyWave = EXTERIOR_WAVE_PLAN.filter((wave) => wave.tileRowRange !== null).map((wave) => wave.waveId);
-    expect(groundEmbellishmentCanaryTileRows(everyWave).size).toBe(4488 - 4471 + 1);
+  it("rolls back exactly one wave when one name is removed, and nothing else", () => {
+    const full = groundEmbellishmentCanaryTileRows();
+    for (const wave of EXTERIOR_WAVE_PLAN) {
+      if (wave.tileRowRange === null) continue;
+      const withoutWave = GROUND_EMBELLISHMENT_CANARY_WAVES.filter((waveId) => waveId !== wave.waveId);
+      const rows = groundEmbellishmentCanaryTileRows(withoutWave);
+      for (let rowY = wave.tileRowRange.northRowY; rowY <= wave.tileRowRange.southRowY; rowY += 1) {
+        expect(full.has(rowY)).toBe(true);
+        expect(rows.has(rowY)).toBe(false);
+      }
+      const removed = [...full].filter((rowY) => !rows.has(rowY));
+      expect(removed.length).toBe(wave.tileRowRange.southRowY - wave.tileRowRange.northRowY + 1);
+      // Every remaining row still serves: the rollback is a subtraction, never
+      // a re-scoping of the waves that stayed.
+      for (const rowY of full) if (!removed.includes(rowY)) expect(rows.has(rowY)).toBe(true);
+    }
   });
 
   it("refuses a wave that owns no tile rows instead of silently covering nothing", () => {
     expect(() => groundEmbellishmentCanaryTileRows(["block-835"])).toThrow(/owns no tile rows/u);
+    // And it is not smuggled in through the promoted set either: Block 835's
+    // ground sits in rows midtown-core already owns, so its curbs are served
+    // without naming a wave that owns no rows.
+    expect(GROUND_EMBELLISHMENT_CANARY_WAVES).not.toContain("block-835");
+    expect(groundEmbellishmentCanaryTileRows().has(4481)).toBe(true);
+    expect(groundEmbellishmentCanaryTileRows().has(4482)).toBe(true);
   });
 
   it("classifies cells by their own level-14 row", () => {
     const rows = groundEmbellishmentCanaryTileRows();
     expect(isGroundEmbellishmentCanaryCell("ground-cell-000050-14-4823-4482", rows)).toBe(true);
     expect(isGroundEmbellishmentCanaryCell("ground-cell-000058-14-4824-4481", rows)).toBe(true);
+    // Every promoted wave, not just the one the canary shipped with.
+    expect(isGroundEmbellishmentCanaryCell("ground-cell-000030-14-4824-4485", rows)).toBe(true);
+    expect(isGroundEmbellishmentCanaryCell("ground-cell-000037-14-4824-4484", rows)).toBe(true);
+    expect(isGroundEmbellishmentCanaryCell("ground-cell-000070-14-4825-4479", rows)).toBe(true);
+    expect(isGroundEmbellishmentCanaryCell("ground-cell-000090-14-4826-4471", rows)).toBe(true);
+    // Row 4489 is inside the ground partition and outside every building wave.
     expect(isGroundEmbellishmentCanaryCell("ground-cell-000001-14-4823-4489", rows)).toBe(false);
     expect(isGroundEmbellishmentCanaryCell("not-a-ground-cell", rows)).toBe(false);
   });
