@@ -430,10 +430,37 @@ carries an append-only correction to `0032`'s citywide UV share).
 | mid | textured `lod_1` | the same releases — **declared eligible**, selected past the ring; *not* rendered-verified, see below |
 | far | baked HLOD tiles, one per ownership cell | **883 tiles — every ledger cell**, `FAR_TIER_DEFAULT_ON = true` |
 | fallback | procedural tan massing | wherever no tier above it draws |
+| ground | the cartographic base — roadbed, sidewalk, park, plaza, water | **`manhattan-ground-20260824`**, `GROUND_DEFAULT_ON = true` (2026-08-24) |
 
 The wave table above this section names the `-v3`/`-p1` releases that were the
 default until the two-LOD promotion. **They are no longer what ships**; the six
 `-s2` releases are, and the far tier sits behind them.
+
+### The ground under it (default since 2026-08-24)
+
+**The synthetic 16-cell grid is no longer what an ordinary session stands on.**
+A default session loads and verifies `manhattan-ground-20260824` at boot and
+draws the cartographic base — NYC OTI Planimetrics roadbed and sidewalk, NYC DOT
+plazas, NYC Parks properties, water — under the buildings. The grid imagery
+layer is **demoted, not deleted**: it is still constructed, and it is still what
+you see while the release verifies, if that verification **fails**, or if you
+opt out. There is no state in which the ground is both missing and unexplained;
+a failed verification leaves the grid plus the explicit failure line.
+
+- **Opt out with `?ground=off`**, or with the *Disable ground base* control. The
+  same control re-arms it in the session. The parameter always states the
+  opt-out and stays silent about the default, so a default link carries no
+  ground token at all.
+- **`?ground=manhattan-ground-20260824` still means what it always meant.**
+  Every link minted while the ground was an opt-in canary is honoured as an
+  explicit request.
+- **It costs boot time, and the status line says how much**: the line reports
+  `verified in N ms` from the real load. The node-side measurement of the same
+  load + verification is **~661 ms median** (5 runs, 655–690 ms) for the release
+  documents, ownership ledger, feature/part graph and re-derived identity. Cell
+  artifacts are verified lazily as they are drawn, under the T007 streaming caps
+  (24 cells / 48 MiB). Nothing defers that boot cost yet — see
+  [`0059`](docs/decisions/0059-cartographic-ground-default-flip.md).
 
 ### The honest limits, stated where a reader will find them
 

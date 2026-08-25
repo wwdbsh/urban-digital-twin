@@ -162,3 +162,51 @@ authoritative intersection/centerline source (goal PENDING-DECISIONS P2).
   (T006).
 - Contracts are validated invariants, not observed rendering; nothing is
   wired to the runtime yet.
+
+## T008 — the ground becomes the default (2026-08-24, Issue #137)
+
+Contract hash
+`a0725a6958c9bb690de7e20b94d5dd631161a64515f4b35a6d21cf78690390ee`.
+Decision record: [ADR 0059](../decisions/0059-cartographic-ground-default-flip.md).
+
+**No release byte changed.** `manhattan-ground-20260824` — 140 cells, 42,778
+features, 47,779 parts, 352 artifacts, ledger
+`ground-ledger:city-manhattan:ground-partition-v1-level14:35a834d29aafc8be7f4352c61d575f03`
+— is exactly what T007 shipped. No budget was raised: the runtime keeps the
+borrowed `CITYWIDE_BUDGETS` ceilings and the T007 caps (24 cells / 48 MiB).
+
+- **One switch.** `GROUND_DEFAULT_ON = true` (`src/app/App.tsx`), read by the
+  boot parse, the `popstate` parse and `appendGroundUrl` and nowhere else.
+- **URL contract, polarity-agnostic.** Silent = the default;
+  `?ground=manhattan-ground-20260824` = an explicit request honoured in either
+  polarity; `?ground=off` = the opt-out; any other spelling resolves to the
+  default rather than to an unverifiable release. The writer states the opt-out
+  and deletes the parameter otherwise, so default links carry no ground token.
+- **Grid demoted, not deleted.** `GridImageryProvider` is still constructed once
+  per viewer; `ImageryLayer.show` follows `syntheticGridVisible(groundActive)`.
+  Idle, loading, **failed** and opted-out sessions keep the grid, so a failed
+  verification is grid + explicit failure line, never a void.
+- **Boot cost published, not claimed.** The status line reports
+  `verified in N ms` (`data-ground-verify-ms`) from the session's own load.
+  Node-side over the same loader: 690 / 659 / 661 / 666 / 655 ms, **median
+  661 ms** for documents + graph + re-derived identity (42,778 features, 103
+  materialized cells). Per-cell artifacts stay lazy and checksum-verified at
+  draw time. **No idle-deferral was built** — recorded as ADR 0059 risk 1.
+
+### Verification run for this record
+
+- `pnpm citywide:validate` — both phases pass. Ground phase: 140 cells,
+  42,778 features, 47,779 parts, 352/352 artifacts, 13,154,558 coordinates
+  checked, max relative area error 2.48e-9, max cell excursion 5.0e-8 deg.
+- `pnpm citywide:benchmark` — cold/warm search P95 13.65 / 13.55 ms (baseline
+  16.96 / 16.81), cold/warm pick P95 4.55 / 1.77 ms (baseline 6.44 / 2.68),
+  shard loads 117/78 and 30/2 and 451 bounded shards / 304,382,520 bytes, all
+  identical to baseline. **It measures no ground byte**; it is evidence only
+  that the flip left the buildings/search path undisturbed.
+- **Rollback rehearsal, both polarities, on the branch.** With
+  `GROUND_DEFAULT_ON = false`, the HEAD (pre-flip) copy of
+  `ground-canary.test.tsx` passes **6/6** — pre-flip default behaviour is
+  restored exactly — while the new suite fails exactly its three default-ON
+  pins and nothing else. Restored to `true`, the new suite passes 12/12. The
+  three pre-existing `App.test.tsx` exterior-streaming timeouts fail in the OFF
+  polarity too, so they are not caused by this flip.
