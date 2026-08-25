@@ -31,6 +31,7 @@ import {
   Transforms,
   VertexFormat,
   Viewer,
+  WallGeometry,
 } from "cesium";
 import type { Feature, Position } from "../../domain/schema";
 import type { Itinerary } from "../../domain/routing";
@@ -51,6 +52,8 @@ import {
   type GroundRenderRefusal,
   type GroundRenderSummary,
 } from "./ground-render-plan";
+import { activeGroundEmbellishmentCells, type LoadedGroundEmbellishmentRelease } from "../../runtime/ground-embellishment-runtime";
+import { planGroundEmbellishmentCellRender, type GroundEmbellishmentRenderSummary } from "./ground-embellishment-render-plan";
 import type { ExteriorCellOutcome, ExteriorCellRenderPlan } from "../../runtime/exterior-cell-runtime";
 import type { ExteriorRenderProfile } from "../../runtime/exterior-render-profiles";
 import { verifiedExteriorModelResource, type VerifiedExteriorResource } from "./exterior-verified-resource";
@@ -114,8 +117,19 @@ interface CesiumViewportProps {
   groundLayerVisibility?: Partial<Record<GroundClass, boolean>>;
   onGroundFeatureSelected?: (feature: GroundFeature) => void;
   onGroundRenderSummary?: (summary: GroundRenderSummary | null) => void;
-  /** Refusal statements for the parts this pass declined to draw, by canonical feature id. */
+  /**
+   * Refusal statements for the parts either ground pass declined to draw, by
+   * canonical feature id. The flat and near-tier passes publish through this
+   * one callback, merged, so the details panel keeps a single disclosure list.
+   */
   onGroundRefusals?: (refusals: ReadonlyMap<string, readonly GroundRenderRefusal[]>) => void;
+  /**
+   * The verified near-tier embellishment release (T010), or null. Non-null only
+   * when the flat base is already active: a curb is additive over a base, and
+   * this component will not draw one standing on nothing.
+   */
+  groundEmbellishmentOverlay?: LoadedGroundEmbellishmentRelease | null;
+  onGroundEmbellishmentRenderSummary?: (summary: GroundEmbellishmentRenderSummary | null) => void;
   /**
    * The exterior wave(s) to render. A build may promote more than one, so this
    * accepts an ordered set; a single overlay stays accepted unchanged.
@@ -2066,6 +2080,8 @@ export function CesiumViewport({
   onGroundFeatureSelected,
   onGroundRenderSummary,
   onGroundRefusals,
+  groundEmbellishmentOverlay = null,
+  onGroundEmbellishmentRenderSummary,
   exteriorOverlay = null,
   onExteriorUnanchored,
   onExteriorCellsRetired,
@@ -2083,9 +2099,33 @@ export function CesiumViewport({
   const onGroundFeatureSelectedRef = useRef(onGroundFeatureSelected);
   const onGroundRenderSummaryRef = useRef(onGroundRenderSummary);
   const onGroundRefusalsRef = useRef(onGroundRefusals);
+  const onGroundEmbellishmentRenderSummaryRef = useRef(onGroundEmbellishmentRenderSummary);
   const onStage3RenderProofRef = useRef(onStage3RenderProof);
   const onCameraChangedRef = useRef(onCameraChanged);
   const onDenseMetricsRef = useRef(onDenseMetrics);
+  /**
+   * Publishes both ground passes' refusals as one map.
+   *
+   * Merged at publication rather than in a shared mutable map, so neither pass
+   * can clear or overwrite the other's entries: a curb failure cannot erase a
+   * roadbed's disclosure, which is the same isolation the separate collections
+   * give the geometry. Entries are appended per canonical feature because one
+   * feature can legitimately be refused for different reasons in different
+   * cells and by different passes.
+   */
+  const publishGroundRefusals = useCallback(() => {
+    const callback = onGroundRefusalsRef.current;
+    if (!callback) return;
+    const merged = new Map<string, GroundRenderRefusal[]>();
+    for (const source of [groundRefusalsRef.current, groundEmbellishmentRefusalsRef.current]) {
+      for (const [canonicalFeatureId, refusals] of source) {
+        const existing = merged.get(canonicalFeatureId) ?? [];
+        for (const refusal of refusals) if (!existing.some((entry) => entry.partId === refusal.partId && entry.reason === refusal.reason)) existing.push(refusal);
+        merged.set(canonicalFeatureId, existing);
+      }
+    }
+    callback(merged);
+  }, []);
   adapterRef.current = adapter;
   onFeatureSelectedRef.current = onFeatureSelected;
   onFeatureOverlapRef.current = onFeatureOverlap;
@@ -2094,6 +2134,7 @@ export function CesiumViewport({
   onGroundFeatureSelectedRef.current = onGroundFeatureSelected;
   onGroundRenderSummaryRef.current = onGroundRenderSummary;
   onGroundRefusalsRef.current = onGroundRefusals;
+  onGroundEmbellishmentRenderSummaryRef.current = onGroundEmbellishmentRenderSummary;
   onStage3RenderProofRef.current = onStage3RenderProof;
   onCameraChangedRef.current = onCameraChanged;
   onDenseMetricsRef.current = onDenseMetrics;
@@ -2143,6 +2184,21 @@ export function CesiumViewport({
   /** What each drawn `${cellId}/${class}` contributed, for the status line. */
   const groundDrawnRef = useRef(new Map<string, { polygons: number; refusals: number }>());
   const groundRenderGenerationRef = useRef(0);
+  /**
+   * The near tier's own collection and bookkeeping (T010).
+   *
+   * Kept entirely separate from the flat ground's refs rather than folded into
+   * them. A curb failure must be incapable of disturbing the base, and the
+   * cheapest way to guarantee that is for the two passes to share no mutable
+   * state at all — they meet only in the pick map, which is an ADDITIVE index
+   * of canonical ground features, and in the merged refusal publication.
+   */
+  const groundEmbellishmentCollectionRef = useRef<PrimitiveCollection | null>(null);
+  const groundEmbellishmentPrimitivesRef = useRef(new Map<string, Primitive>());
+  const groundEmbellishmentRefusalsRef = useRef(new Map<string, GroundRenderRefusal[]>());
+  const groundEmbellishmentFailuresRef = useRef(new Map<string, string>());
+  const groundEmbellishmentDrawnRef = useRef(new Map<string, { segments: number; refusals: number }>());
+  const groundEmbellishmentGenerationRef = useRef(0);
   const exteriorPickMapRef = useRef(new Map<string, string>());
   const exteriorCellCollectionsRef = useRef(new Map<string, ExteriorOwnedCellCollection>());
   const exteriorUnanchoredRef = useRef<string>("");
@@ -2388,6 +2444,12 @@ export function CesiumViewport({
     // for the ground release.
     const groundCollection = viewer.scene.primitives.add(new PrimitiveCollection());
     groundCollectionRef.current = groundCollection;
+    // The near tier gets its own collection, added AFTER the flat one so a curb
+    // is drawn over the base it rises from rather than under it. It is also the
+    // unit of removal: dropping the near tier is emptying this collection, and
+    // it cannot reach into the flat one to do damage on the way out.
+    const groundEmbellishmentCollection = viewer.scene.primitives.add(new PrimitiveCollection());
+    groundEmbellishmentCollectionRef.current = groundEmbellishmentCollection;
     // THE SYNTHETIC GRID IS DEMOTED, NOT DELETED (T008).
     //
     // It is still constructed exactly once per viewer, and it is still what a
@@ -2531,6 +2593,7 @@ export function CesiumViewport({
       if (cameraSettledEmitterRef.current) cameraSettledEmitterRef.current = null;
       if (denseCollectionRef.current === denseCollection) denseCollectionRef.current = null;
       if (groundCollectionRef.current === groundCollection) groundCollectionRef.current = null;
+      if (groundEmbellishmentCollectionRef.current === groundEmbellishmentCollection) groundEmbellishmentCollectionRef.current = null;
       if (gridImageryLayerRef.current === gridImageryLayer) gridImageryLayerRef.current = null;
       groundPrimitivesRef.current.clear();
       groundPickMapRef.current.clear();
@@ -2538,6 +2601,11 @@ export function CesiumViewport({
       groundFailuresRef.current.clear();
       groundDrawnRef.current.clear();
       groundRenderGenerationRef.current += 1;
+      groundEmbellishmentPrimitivesRef.current.clear();
+      groundEmbellishmentRefusalsRef.current.clear();
+      groundEmbellishmentFailuresRef.current.clear();
+      groundEmbellishmentDrawnRef.current.clear();
+      groundEmbellishmentGenerationRef.current += 1;
       activeDenseLayerRef.current = null;
       pendingDenseLayerRef.current = null;
       pendingDenseBuildRef.current?.cancel();
@@ -3248,7 +3316,7 @@ export function CesiumViewport({
         viewer.scene.requestRender();
       }
       onGroundRenderSummaryRef.current?.(null);
-      onGroundRefusalsRef.current?.(new Map());
+      publishGroundRefusals();
       return undefined;
     }
 
@@ -3294,7 +3362,7 @@ export function CesiumViewport({
         failedCells: groundFailuresRef.current.size,
         residentBytes: residency.bytes,
       });
-      onGroundRefusalsRef.current?.(new Map(groundRefusalsRef.current));
+      publishGroundRefusals();
     };
     publish(true);
 
@@ -3356,7 +3424,150 @@ export function CesiumViewport({
       if (!stale()) publish(true);
     })();
     return () => { cancelled = true; };
-  }, [groundOverlay, groundLayerVisibility, viewportFootprint, viewerReadyGeneration]);
+  }, [groundOverlay, groundLayerVisibility, publishGroundRefusals, viewportFootprint, viewerReadyGeneration]);
+
+  /**
+   * The near-tier curb canary's entire scene contribution (T010).
+   *
+   * A deliberate mirror of the flat pass above, sharing its cadence and none of
+   * its state. Three things are worth reading twice:
+   *
+   * 1. **It runs on the same settled camera.** The dependency list ends in the
+   *    same `viewportFootprint`, published by `moveEnd`, so the near tier
+   *    reconciles on this application's existing camera debounce rather than
+   *    introducing a second one that could disagree with the first.
+   * 2. **Activation is the release's own number.** `activeGroundEmbellishmentCells`
+   *    compares the measured camera-to-cell distance against each asset's
+   *    declared `maxDistanceMeters`; nothing here knows that it is 400.
+   * 3. **Pick identity is not re-minted.** Curb features are registered into the
+   *    SAME `groundPickMapRef` under the same canonical ids the flat pass uses,
+   *    and the wall carries the same `ground:` pick id. A tier switch therefore
+   *    cannot change what a pick resolves to — there is nothing to change.
+   *
+   * A failure here removes curbs and nothing else. This effect never touches
+   * `groundCollectionRef`, `groundPrimitivesRef`, `groundDrawnRef` or
+   * `groundFailuresRef`, so there is no path by which a bad curb artifact
+   * disturbs the cartographic base.
+   */
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    const collection = groundEmbellishmentCollectionRef.current;
+    if (!viewer || !collection) return undefined;
+    const generation = ++groundEmbellishmentGenerationRef.current;
+    const owned = groundEmbellishmentPrimitivesRef.current;
+    const dropAll = () => {
+      if (owned.size > 0) {
+        for (const primitive of owned.values()) collection.remove(primitive);
+        owned.clear();
+        viewer.scene.requestRender();
+      }
+      groundEmbellishmentDrawnRef.current.clear();
+      groundEmbellishmentFailuresRef.current.clear();
+      groundEmbellishmentRefusalsRef.current.clear();
+    };
+    if (!groundEmbellishmentOverlay) {
+      dropAll();
+      onGroundEmbellishmentRenderSummaryRef.current?.(null);
+      publishGroundRefusals();
+      return undefined;
+    }
+
+    const active = activeGroundEmbellishmentCells({
+      groundCenter: viewportFootprint?.groundCenter,
+      cells: groundEmbellishmentOverlay.servingCells,
+    });
+    const wantedKeys = new Set(active.map((entry) => entry.key));
+    // Leaving the ring is an UNLOAD, not a hide: a curb outside the declared
+    // near distance is not a curb the release says anything about at that
+    // distance, so its geometry leaves the scene and its bytes become evictable.
+    for (const [key, primitive] of [...owned]) {
+      if (wantedKeys.has(key)) continue;
+      collection.remove(primitive);
+      owned.delete(key);
+      groundEmbellishmentDrawnRef.current.delete(key);
+    }
+    groundEmbellishmentOverlay.retain(wantedKeys);
+    // The declared ring, echoed from the assets in play rather than asserted.
+    const declaredRing = active.length > 0
+      ? Math.max(...groundEmbellishmentOverlay.servingCells
+        .filter((cell) => wantedKeys.has(`${cell.cellId}/${cell.groundClass}`))
+        .map((cell) => cell.maxDistanceMeters))
+      : null;
+
+    let lastPublishedAt = 0;
+    const publish = (force: boolean) => {
+      const now = Date.now();
+      if (!force && now - lastPublishedAt < 250) return;
+      lastPublishedAt = now;
+      let segments = 0;
+      let skippedParts = 0;
+      for (const entry of groundEmbellishmentDrawnRef.current.values()) { segments += entry.segments; skippedParts += entry.refusals; }
+      onGroundEmbellishmentRenderSummaryRef.current?.({
+        activeCells: new Set([...groundEmbellishmentDrawnRef.current.keys()].map((key) => key.slice(0, key.lastIndexOf("/")))).size,
+        eligibleCells: active.length,
+        drawnSegments: segments,
+        skippedParts,
+        failedCells: groundEmbellishmentFailuresRef.current.size,
+        residentBytes: groundEmbellishmentOverlay.residency().bytes,
+        nearTierMaxDistanceMeters: declaredRing,
+      });
+      publishGroundRefusals();
+    };
+    publish(true);
+
+    let cancelled = false;
+    const stale = () => cancelled || generation !== groundEmbellishmentGenerationRef.current;
+    void (async () => {
+      for (const entry of active) {
+        if (stale()) return;
+        if (owned.has(entry.key)) continue;
+        try {
+          const loaded = await groundEmbellishmentOverlay.loadCellClass(entry.cellId, entry.groundClass);
+          if (stale()) return;
+          const plan = planGroundEmbellishmentCellRender(loaded.artifact);
+          const color = Color.fromCssColorString(plan.cssColor);
+          const instances = plan.walls.map((wall) => new GeometryInstance({
+            geometry: WallGeometry.fromConstantHeights({
+              positions: Cartesian3.fromDegreesArray(wall.positions),
+              maximumHeight: plan.topHeightMeters,
+              minimumHeight: plan.baseHeightMeters,
+              vertexFormat: PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
+            }),
+            id: wall.pickId,
+            attributes: { color: ColorGeometryInstanceAttribute.fromColor(color) },
+          }));
+          for (const canonicalFeatureId of plan.drawnFeatureIds) {
+            const feature = groundEmbellishmentOverlay.feature(canonicalFeatureId);
+            if (feature) groundPickMapRef.current.set(canonicalFeatureId, feature);
+          }
+          for (const refusal of plan.refusals) {
+            const existing = groundEmbellishmentRefusalsRef.current.get(refusal.canonicalFeatureId) ?? [];
+            if (!existing.some((entryRefusal) => entryRefusal.partId === refusal.partId)) existing.push(refusal);
+            groundEmbellishmentRefusalsRef.current.set(refusal.canonicalFeatureId, existing);
+          }
+          if (instances.length > 0) {
+            const primitive = collection.add(new Primitive({
+              geometryInstances: instances,
+              appearance: new PerInstanceColorAppearance({ flat: true, translucent: false, closed: false }),
+              asynchronous: true,
+              allowPicking: true,
+              releaseGeometryInstances: true,
+            })) as Primitive;
+            owned.set(entry.key, primitive);
+          }
+          groundEmbellishmentDrawnRef.current.set(entry.key, { segments: plan.segments, refusals: plan.refusals.length });
+          groundEmbellishmentFailuresRef.current.delete(entry.key);
+          viewer.scene.requestRender();
+        } catch (error) {
+          if (stale() || (error instanceof DOMException && error.name === "AbortError")) return;
+          groundEmbellishmentFailuresRef.current.set(entry.key, error instanceof Error ? error.message : String(error));
+        }
+        publish(false);
+      }
+      if (!stale()) publish(true);
+    })();
+    return () => { cancelled = true; };
+  }, [groundEmbellishmentOverlay, publishGroundRefusals, viewportFootprint, viewerReadyGeneration]);
 
   // Selection feedback for exterior geometry lives in its own effect on
   // purpose. Folding `selectedFeatureId` into the effect above would rebuild the

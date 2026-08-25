@@ -40,6 +40,7 @@ import {
   isGroundClass,
   type GroundClass,
   type GroundFeature,
+  type GroundSurfaceClass,
 } from "../domain/ground.ts";
 import { sha256HexBytes } from "../domain/deterministic-hash.ts";
 import { CITYWIDE_BUDGETS } from "../release/citywide-release.ts";
@@ -144,11 +145,27 @@ function record(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-export function groundCacheKey(cellId: string, groundClass: GroundClass): string {
+/**
+ * The residency key for one (cell, class) pair.
+ *
+ * Typed over the whole SURFACE vocabulary rather than the base classes alone so
+ * the embellishment runtime keys its own cache the same way. Widening the key
+ * does not widen what either loader will serve — each still refuses the other's
+ * classes at its asset loop — it only keeps one key scheme instead of two.
+ */
+export function groundCacheKey(cellId: string, groundClass: GroundSurfaceClass): string {
   return `${cellId}/${groundClass}`;
 }
 
-async function sha256(bytes: ArrayBuffer): Promise<string> {
+/**
+ * The digest every ground-family artifact is admitted by.
+ *
+ * Exported so the T010 embellishment loader verifies bytes with THIS function
+ * rather than a second copy: two hash paths in one family is two chances for
+ * one of them to be quietly weakened. Nothing about the flat loader's own use
+ * of it changed when it was named.
+ */
+export async function groundArtifactSha256(bytes: ArrayBuffer): Promise<string> {
   // Web Crypto is only exposed in secure contexts (https / localhost). This
   // local-first app can legitimately be served over plain http on a LAN
   // address, so fall back to the repository's pure-JS digest instead of
@@ -157,6 +174,8 @@ async function sha256(bytes: ArrayBuffer): Promise<string> {
   const digest = await globalThis.crypto.subtle.digest("SHA-256", bytes);
   return [...new Uint8Array(digest)].map((part) => part.toString(16).padStart(2, "0")).join("");
 }
+
+const sha256 = groundArtifactSha256;
 
 function normalizeBasePath(basePath: string): string {
   if (!basePath.startsWith(`/data/${MANHATTAN_GROUND_RELEASE_ID}/`) || !basePath.endsWith("/")) {
@@ -334,22 +353,22 @@ export function visibleGroundCellIds(input: GroundVisibilityInput): string[] {
  * eviction candidate, or a pan would drop the cell it just drew and refetch it
  * on the next frame.
  */
-export class GroundArtifactCache {
-  private readonly entries = new Map<string, { value: LoadedGroundCellArtifact; used: number }>();
+export class GroundArtifactCache<T extends { byteSize: number } = LoadedGroundCellArtifact> {
+  private readonly entries = new Map<string, { value: T; used: number }>();
   private clock = 0;
   private evictions = 0;
   private totalBytes = 0;
   constructor(private readonly maxBytes: number = GROUND_RUNTIME_BUDGETS.maxCachedBytes) {
     if (!Number.isSafeInteger(maxBytes) || maxBytes < 1) throw new Error("Ground cache byte ceiling must be a positive integer.");
   }
-  get(key: string): LoadedGroundCellArtifact | undefined {
+  get(key: string): T | undefined {
     const entry = this.entries.get(key);
     if (!entry) return undefined;
     entry.used = ++this.clock;
     return entry.value;
   }
   has(key: string): boolean { return this.entries.has(key); }
-  set(key: string, value: LoadedGroundCellArtifact): void {
+  set(key: string, value: T): void {
     const existing = this.entries.get(key);
     if (existing) this.totalBytes -= existing.value.byteSize;
     this.entries.set(key, { value, used: ++this.clock });
@@ -427,7 +446,7 @@ export function createGroundFaultFetcher(fault: GroundFault, fetcher: GroundFetc
 // ---------------------------------------------------------------------------
 
 /** Bounded parallelism, borrowed from `CITYWIDE_BUDGETS.maxConcurrentRequests`. */
-class RequestGate {
+export class GroundRequestGate {
   private active = 0;
   private readonly waiting: (() => void)[] = [];
   constructor(private readonly limit: number) {}
@@ -515,7 +534,7 @@ export async function loadGroundRelease(
   }
 
   const cache = new GroundArtifactCache();
-  const gate = new RequestGate(GROUND_RUNTIME_BUDGETS.maxConcurrentRequests);
+  const gate = new GroundRequestGate(GROUND_RUNTIME_BUDGETS.maxConcurrentRequests);
   const inFlight = new Map<string, Promise<LoadedGroundCellArtifact>>();
 
   const loadCellClass = async (cellId: string, groundClass: GroundClass, requestSignal?: AbortSignal): Promise<LoadedGroundCellArtifact> => {
