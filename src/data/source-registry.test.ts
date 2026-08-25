@@ -4,6 +4,8 @@ import { sha256HexSync } from "../domain/deterministic-hash.ts";
 import {
   BLOCK835_PUBLIC_REALM_APPROVAL_EVIDENCE,
   CITYWIDE_PUBLIC_REALM_APPROVAL_EVIDENCE,
+  CITYWIDE_PUBLIC_REALM_ORTHO_APPROVAL_EVIDENCE,
+  CITYWIDE_PUBLIC_REALM_ORTHO_APPROVAL_STATEMENT,
   CITYWIDE_PUBLIC_REALM_VECTOR_APPROVAL_EVIDENCE,
   CITYWIDE_PUBLIC_REALM_VECTOR_APPROVAL_STATEMENT,
   getSourceRegistryEntry,
@@ -258,30 +260,35 @@ describe.each([
   });
 });
 
-describe("nyc.orthoimagery-2024-manhattan stays behind the ungranted T004 imagery gate", () => {
+describe("nyc.orthoimagery-2024-manhattan graduated at the T004 imagery gate", () => {
   const entry = getSourceRegistryEntry("nyc.orthoimagery-2024-manhattan");
 
-  it("is registered, unapproved, and cites the correct dataset", () => {
+  it("is registered, approved for ingestion, and cites the correct dataset", () => {
     expect(entry).toBeDefined();
     expect(entry!.datasetId).toBe("boro_manhattan_sp24.zip");
-    expect(entry!.approval.state).toBe("pending");
+    expect(entry!.approval.state).toBe("approved");
     expect(entry!.approval.scope).toBe("ingestion");
   });
 
-  it("still cites the draft evidence and not the granted vector evidence", () => {
-    expect(entry!.approvalEvidence).toBe(CITYWIDE_PUBLIC_REALM_APPROVAL_EVIDENCE);
-    expect(entry!.approvalEvidence).not.toBe(CITYWIDE_PUBLIC_REALM_VECTOR_APPROVAL_EVIDENCE);
-    expect(entry!.approval.note).toContain("approval:citywide-public-realm:20260824:pending-user-approval");
-    expect(entry!.approval.note).toMatch(/NOT yet user-approved/i);
+  it("was reviewed on the T004 gate date, not the inherited real-wave date", () => {
+    expect(entry!.approval.reviewedAt).toBe("2026-08-25T00:00:00Z");
   });
 
-  it("is the only remaining source citing the draft evidence", () => {
+  it("cites the ortho envelope, not the T002 draft and not the vector envelope", () => {
+    expect(entry!.approvalEvidence).toBe(CITYWIDE_PUBLIC_REALM_ORTHO_APPROVAL_EVIDENCE);
+    expect(entry!.approvalEvidence).not.toBe(CITYWIDE_PUBLIC_REALM_APPROVAL_EVIDENCE);
+    expect(entry!.approvalEvidence).not.toBe(CITYWIDE_PUBLIC_REALM_VECTOR_APPROVAL_EVIDENCE);
+    expect(entry!.approval.note).toContain("approval:citywide-public-realm-ortho:20260825:standing-envelope");
+    expect(entry!.approval.note).not.toMatch(/NOT yet user-approved/i);
+  });
+
+  it("leaves the T002 draft evidence with no citing source entry", () => {
     // `sourceRegistry` is a heterogeneous union and some members carry no
     // `approvalEvidence` at all, so the property is probed rather than assumed.
     const citing = sourceRegistry
       .filter((candidate) => "approvalEvidence" in candidate && candidate.approvalEvidence === CITYWIDE_PUBLIC_REALM_APPROVAL_EVIDENCE)
       .map((candidate) => candidate.id);
-    expect(citing).toEqual(["nyc.orthoimagery-2024-manhattan"]);
+    expect(citing).toEqual([]);
   });
 
   it("carries its license reference into the license registry", () => {
@@ -302,9 +309,51 @@ describe("nyc.orthoimagery-2024-manhattan honest gaps", () => {
     expect(entry.attribution).toMatch(/not CC BY-SA/i);
   });
 
-  it("flags the T004 FGDC metadata inspection gate rather than asserting terms", () => {
+  it("records the completed T004 FGDC inspection rather than asserting terms", () => {
     expect(entry.derivativePolicy.constraints).toMatch(/T004/);
     expect(entry.derivativePolicy.constraints).toMatch(/FGDC/);
-    expect(entry.approval.note).toMatch(/honest gap/i);
+    // The inspection found unfilled template placeholders. That is recorded as
+    // non-contradiction of CC BY 4.0, never as an affirmative grant by the zip.
+    expect(entry.derivativePolicy.constraints).toMatch(/placeholder/i);
+    expect(entry.approval.note).toMatch(/not as an affirmative grant/i);
+    expect(entry.approval.note).toMatch(/closed by inspection/i);
+  });
+
+  it("keeps the CC BY 4.0 attribution obligation attached to derivatives", () => {
+    expect(entry.derivativePolicy.allowed).toBe("conditional");
+    expect(entry.derivativePolicy.constraints).toMatch(/attribution/i);
+    expect(entry.retention.constraints).toMatch(/CC BY 4\.0 attribution/);
+  });
+});
+
+describe("CITYWIDE_PUBLIC_REALM_ORTHO_APPROVAL_EVIDENCE (T004 granted envelope)", () => {
+  it("has a reproducible fingerprint over the verbatim approval statement", () => {
+    const recomputed = sha256HexSync(CITYWIDE_PUBLIC_REALM_ORTHO_APPROVAL_STATEMENT);
+    expect(CITYWIDE_PUBLIC_REALM_ORTHO_APPROVAL_EVIDENCE.fingerprintSha256).toBe(recomputed);
+    expect(CITYWIDE_PUBLIC_REALM_ORTHO_APPROVAL_EVIDENCE.approvalStatement).toBe(CITYWIDE_PUBLIC_REALM_ORTHO_APPROVAL_STATEMENT);
+  });
+
+  it("records the statement as a single line with no surrounding whitespace", () => {
+    expect(CITYWIDE_PUBLIC_REALM_ORTHO_APPROVAL_STATEMENT).not.toMatch(/\n/);
+    expect(CITYWIDE_PUBLIC_REALM_ORTHO_APPROVAL_STATEMENT.trim()).toBe(CITYWIDE_PUBLIC_REALM_ORTHO_APPROVAL_STATEMENT);
+  });
+
+  it("is a granted envelope distinct from the T002 draft", () => {
+    expect(CITYWIDE_PUBLIC_REALM_ORTHO_APPROVAL_EVIDENCE.evidenceId).toBe("approval:citywide-public-realm-ortho:20260825:standing-envelope");
+    expect(CITYWIDE_PUBLIC_REALM_ORTHO_APPROVAL_EVIDENCE.evidenceId).not.toMatch(/pending-user-approval/);
+    expect(CITYWIDE_PUBLIC_REALM_ORTHO_APPROVAL_EVIDENCE.fingerprintSha256).not.toBe(CITYWIDE_PUBLIC_REALM_APPROVAL_EVIDENCE.fingerprintSha256);
+  });
+
+  it("widened acquisition permission only, never use permission", () => {
+    expect(CITYWIDE_PUBLIC_REALM_ORTHO_APPROVAL_EVIDENCE.exclusions).toEqual(CITYWIDE_PUBLIC_REALM_APPROVAL_EVIDENCE.exclusions);
+    expect(CITYWIDE_PUBLIC_REALM_ORTHO_APPROVAL_EVIDENCE.scope).toMatch(/No redistribution/i);
+    expect(CITYWIDE_PUBLIC_REALM_ORTHO_APPROVAL_EVIDENCE.scope).toMatch(/local-only/i);
+  });
+
+  it("names the imagery it covers and does not reach the vector datasets", () => {
+    expect(CITYWIDE_PUBLIC_REALM_ORTHO_APPROVAL_EVIDENCE.scope).toContain("boro_manhattan_sp24.zip");
+    for (const vectorDatasetId of ["xgwd-7vhd", "vfx9-tbb6", "x9uq-u3qs", "pjs3-c3z5", "k5k6-6jex"]) {
+      expect(CITYWIDE_PUBLIC_REALM_ORTHO_APPROVAL_EVIDENCE.scope).not.toContain(vectorDatasetId);
+    }
   });
 });

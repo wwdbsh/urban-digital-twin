@@ -10,8 +10,10 @@
  * and release packaging belong to T006 and are deliberately absent here rather
  * than stubbed, so nothing downstream can mistake a stub for a contract.
  *
- * Imagery is NOT in this envelope. `nyc.orthoimagery-2024-manhattan` remains
- * gated on the ungranted T004 approval and this CLI never requests it.
+ * Imagery is NOT in this envelope and this CLI never requests it.
+ * `nyc.orthoimagery-2024-manhattan` was granted its own separate T004 envelope
+ * on 2026-08-25 and is acquired and retained independently under
+ * `data/raw/nyc-ortho-2024-manhattan/`.
  */
 import { createHash } from "node:crypto";
 import { Buffer } from "node:buffer";
@@ -735,7 +737,7 @@ async function acquire(profileKey = "primary") {
     sourceNativeCrs: "EPSG:2263 (NAD83 / New York Long Island US feet) per the official NYC Planimetrics Capture Rules",
     responseCrs: `${EXPECTED_CRS_NAME}; the Socrata GeoJSON response is 2D and carries no Z coordinate`,
     transformPolicy: "Raw bytes are preserved exactly as served. No reprojection, simplification, clipping, or repair is applied at acquisition time.",
-    scopeBoundary: "Vector datasets only. nyc.orthoimagery-2024-manhattan is NOT acquired here; its T004 imagery approval has not been granted.",
+    scopeBoundary: "Vector datasets only. nyc.orthoimagery-2024-manhattan is NOT acquired here; it carries its own separate T004 envelope and its own snapshot under data/raw/nyc-ortho-2024-manhattan/.",
     noFallbackProviders: true,
     localOnly: true,
     runtimeExternalNetwork: false,

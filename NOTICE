@@ -42,7 +42,7 @@ excluded.
 
 ### NYC Open Data / NYC Office of Technology and Innovation (OTI) datasets
 
-Registry `licenseClass: "nyc-open-data-terms"` — 20 entries.
+Registry `licenseClass: "nyc-open-data-terms"` — 22 entries.
 
 Terms:
   - <https://opendata.cityofnewyork.us/overview/>
@@ -68,6 +68,8 @@ Terms:
 - `nyc.dot-traffic` — Source: NYC Department of Transportation traffic data feeds.
 - `nyc.addresspoint` — Source: NYC Department of City Planning, Address Point, dataset uf93-f8nk; accessed through NYC Open Data.
 - `nyc.dcwp-legally-operating-businesses` — Source: NYC Department of Consumer and Worker Protection, Issued Licenses / Legally Operating Businesses base dataset w7w3-xahh; accessed through NYC Open Data.
+- `nyc.hydrography` — Source: NYC Office of Technology and Innovation (OTI), NYC Planimetric Database: Hydrography; accessed through NYC Open Data (pjs3-c3z5).
+- `nyc.dot-pedestrian-plazas` — Source: NYC Department of Transportation (DOT), NYC DOT Pedestrian Plazas (Polygon); accessed through NYC Open Data (k5k6-6jex).
 
 ### OpenStreetMap and Overture data — Open Database License (ODbL) 1.0, SHARE-ALIKE
 
@@ -128,11 +130,12 @@ Terms:
 
 ### Sources whose licence class is recorded as UNKNOWN
 
-Registry `licenseClass: "unknown"` — 8 entries.
+Registry `licenseClass: "unknown"` — 9 entries.
 
 Terms:
   - <https://docs.overturemaps.org/attribution/>
   - <https://www.mta.info/open-data>
+  - <https://github.com/CityOfNewYork/nyc-geo-metadata/blob/main/Metadata/Metadata_AerialImagery.md>
 
 - `mta.gtfs-static` — Source: Metropolitan Transportation Authority General Transit Feed Specification (GTFS) Static Data.
 - `mta.gtfs-realtime` — Source: Metropolitan Transportation Authority NYC Subway GTFS-Realtime documentation.
@@ -142,6 +145,7 @@ Terms:
 - `overture.addresses` — Source: Overture Maps Foundation Addresses theme; retain record-level source attribution and license metadata.
 - `overture.places` — Source: Overture Maps Foundation Places; retain each record's source license and attribution fields.
 - `overture.transportation-routing` — Source: Overture Maps Foundation Transportation theme; retain upstream source attribution.
+- `nyc.orthoimagery-2024-manhattan` — Source: NYC Office of Technology and Innovation (OTI) / NYS Statewide Digital Orthoimagery Program, 2024 6-inch true orthoimagery, Manhattan borough; CC BY 4.0 (not CC BY-SA) per NYC OTI aerial-imagery metadata. Recorded here under licence class `"unknown"` rather than a plain CC BY 4.0 class, which the domain `LicenseClass` enum does not define (only `cc-by-sa-4.0`, which would wrongly add a share-alike obligation this source does not impose). The true CC BY 4.0 basis is stated explicitly in the attribution string above and in the registry's `derivativePolicy`/`approvalNote` for this entry.
 
 ### Local synthetic fixtures (no external source)
 
