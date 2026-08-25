@@ -1664,6 +1664,10 @@ export function App() {
   const [inspectorOpen, setInspectorOpen] = useState(!initialRealRequest);
   const [focusRequest, setFocusRequest] = useState(0);
   const [focusFeatureId, setFocusFeatureId] = useState<string | null>(initialRealRequest ? null : runtimeMarker.id);
+  // The scene refused a focus request for this feature id. A refused focus leaves
+  // the camera exactly where it was, which the user cannot tell apart from a
+  // flight to the wrong place, so it is stated rather than swallowed.
+  const [focusUnavailableId, setFocusUnavailableId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeSearchIndex, setActiveSearchIndex] = useState(-1);
@@ -1775,7 +1779,11 @@ export function App() {
   // activated a requested release. Preserve that request until the pinned
   // adapter is ready instead of replacing it with the fixture mode.
   const initialRealNavigationPendingRef = useRef(initialRealRequest);
-  const pendingNavigationPoseRef = useRef<CameraPose | null>(initialRealRequest ? initialNavigation.pose : null);
+  // A hand-written pose link is a camera intent regardless of which data mode it
+  // asks for. Gating this on `initialRealRequest` meant a fixture-session pose
+  // URL was discarded the moment Cesium published its own initial view, and the
+  // published URL was rewritten to that view. Gate on the presence of a pose.
+  const pendingNavigationPoseRef = useRef<CameraPose | null>(initialNavigation.pose);
   const terminalRealFallbackNoticeRef = useRef<string | null>(null);
   const citywideDebugMeasurementRunRef = useRef(0);
   const block835PerformanceProbeRunRef = useRef(0);
@@ -3506,7 +3514,7 @@ export function App() {
       const requestedReal = state.dataMode === "real-pilot" || state.dataMode === "civic-context";
       const requestedCitywide = requestedReal && state.releaseId === CITYWIDE_RELEASE_ID;
       const requestedCivic = requestedReal && state.releaseId === TRAVEL_CONTEXT_RELEASE_ID;
-      pendingNavigationPoseRef.current = requestedReal ? state.pose : null;
+      pendingNavigationPoseRef.current = state.pose;
       if (!requestedReal) initialRealNavigationPendingRef.current = false;
       if (requestedCitywide) {
         releaseIdRef.current = CITYWIDE_RELEASE_ID;
@@ -3952,13 +3960,30 @@ export function App() {
     if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrlForApp({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: nextMode, pose: normalized, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibility).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicMode ? selectedCivicFacets : selectedCategories, ...getOverlayUrlFields() }, window.location.href));
   };
   const focusCurrentSelection = () => {
-    if (!selectedRuntimeFeature) return;
-    if (!shouldFocusFeature(selectedRuntimeFeature) || (citywideMode || civicMode) && (selectedRuntimeFeature.attributes.citywideLocationStatus === "location-unavailable" || selectedRuntimeFeature.attributes.civicLocationStatus === "location-unavailable")) {
+    // Each attempt starts clean; the scene restates a refusal against the new
+    // request id if it still cannot honour it.
+    setFocusUnavailableId(null);
+    /**
+     * `selectedRuntimeFeature` resolves through the ACTIVE ADAPTER only, and the
+     * adapter deliberately does not index overlay id spaces — a `public-realm:`
+     * selection is never in it. Returning here therefore made the button a
+     * silent no-op for every public-realm selection: no flight, no message, and
+     * a camera left wherever it was, which the user cannot tell apart from a
+     * flight to the wrong place. The inspector's own Focus button already keys
+     * off `selectedFeature` and worked for the identical selection.
+     *
+     * The viewport's lookup chain (dense map, then adapter, then the
+     * `public-realm:` prefix) is a superset of this one, so the selection is
+     * handed to it and the scene states its own refusal via
+     * `onFocusUnavailable` if it truly cannot resolve or locate the record.
+     */
+    const target = selectedRuntimeFeature ?? selectedFeature;
+    if (!shouldFocusFeature(target) || (citywideMode || civicMode) && (target.attributes.citywideLocationStatus === "location-unavailable" || target.attributes.civicLocationStatus === "location-unavailable")) {
       setDeepLinkMessage(citywideMode ? "This DOHMH parent has no source coordinates; details remain available and no substitute marker is shown." : "This civic record has no source coordinates; details remain available and no substitute marker is shown.");
       return;
     }
-    setActiveSelectionId(selectedRuntimeFeature.id);
-    setFocusFeatureId(selectedRuntimeFeature.id);
+    setActiveSelectionId(target.id);
+    setFocusFeatureId(target.id);
     setFocusRequest((request) => request + 1);
   };
   const onViewportKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
@@ -4382,6 +4407,7 @@ export function App() {
           viewportFootprint={viewportFootprint}
           cameraRequest={stressCameraRequest}
           cameraPoseRequest={cameraRequest}
+          onFocusUnavailable={setFocusUnavailableId}
           onViewportKeyDown={onViewportKeyDown}
         />
         <section className="camera-controls" aria-label="Camera controls">
@@ -4393,6 +4419,7 @@ export function App() {
           <button type="button" onClick={focusCurrentSelection}>Current selection</button>
           <small>Keyboard arrows move only when this 3D viewport is focused; no street-level imagery or live navigation.</small>
           {poseInvalid && <small role="status">Malformed camera pose ignored; safe bounded view is active.</small>}
+          {focusUnavailableId && <small role="status">This record has no locatable geometry in the loaded scene, so the camera did not move; details remain available and no substitute view was chosen ({focusUnavailableId}).</small>}
         </section>
         {overlapFeatures.length > 1 && <section className="overlap-chooser" aria-label="Overlapping feature choices" role="dialog">
           <strong>Overlapping records</strong>

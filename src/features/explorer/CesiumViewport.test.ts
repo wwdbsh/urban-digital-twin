@@ -527,6 +527,20 @@ describe("Cesium POI render seam", () => {
     expect(normalizeFocusCameraPose(actual, requested)).toEqual(requested);
   });
 
+  /**
+   * The same read-back ambiguity reaches the camera-pose-request settle path,
+   * which is what the Overview/Reset/North presets use (issue #46). There it is
+   * worse than a mislabelled link: the settled pose is persisted and then spread
+   * into every later preset request, so one ambiguous frame at the near-nadir
+   * default pitch poisons the presets for the rest of the session. Position is
+   * still the camera's, only the commanded orientation is restored.
+   */
+  it("restores the commanded orientation of a near-nadir preset while keeping the settled position", () => {
+    const settled = { longitude: -73.99101, latitude: 40.74399, height: 4_000, heading: 180, pitch: -75, roll: 180 };
+    const requested = { longitude: -73.991, latitude: 40.744, height: 4_000, heading: 0, pitch: -75, roll: 0 };
+    expect(normalizeFocusCameraPose(settled, requested)).toEqual({ longitude: -73.99101, latitude: 40.74399, height: 4_000, heading: 0, pitch: -75, roll: 0 });
+  });
+
   it("resolves every Cesium part pick through its canonical parent ID", () => {
     const canonicalId = "udt:manhattan:lpc:LP-00006";
     const feature = { ...realRestaurant, id: canonicalId };
