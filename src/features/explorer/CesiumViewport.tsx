@@ -92,6 +92,13 @@ interface CesiumViewportProps {
   viewportFootprint?: ViewportFootprint | null;
   cameraRequest?: (TileCameraState | CameraPose) & { requestId: number };
   cameraPoseRequest?: (CameraPose & { requestId: number });
+  /**
+   * A focus request this scene cannot honour must be stated, not swallowed: an
+   * unresolvable or deliberately markerless feature leaves the camera where it
+   * was, which is indistinguishable from a wrong flight. Called with the refused
+   * feature id, and with `null` when a focus flight does start.
+   */
+  onFocusUnavailable?: (featureId: string | null) => void;
   onViewportKeyDown?: KeyboardEventHandler<HTMLDivElement>;
   assetResolver?: CityAssetResolver;
   commercialOverlay?: LoadedExteriorPilotRelease | null;
@@ -2033,6 +2040,7 @@ export function CesiumViewport({
   viewportFootprint = null,
   cameraRequest,
   cameraPoseRequest,
+  onFocusUnavailable,
   onViewportKeyDown,
   assetResolver,
   commercialOverlay = null,
@@ -2077,6 +2085,8 @@ export function CesiumViewport({
   onDenseMetricsRef.current = onDenseMetrics;
   const cameraPoseRequestRef = useRef(cameraPoseRequest);
   cameraPoseRequestRef.current = cameraPoseRequest;
+  const onFocusUnavailableRef = useRef(onFocusUnavailable);
+  onFocusUnavailableRef.current = onFocusUnavailable;
   const previewIndexRef = useRef(0);
   const previewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const denseFeatureMapRef = useRef(new Map<string, Feature>());
@@ -2309,11 +2319,12 @@ export function CesiumViewport({
   onExteriorCellsRetiredRef.current = onExteriorCellsRetired;
   const suppressCameraEventsUntilRef = useRef(0);
   const lastValidFootprintRef = useRef<ViewportFootprint | null>(viewportFootprint?.valid ? viewportFootprint : null);
-  const cameraSettledEmitterRef = useRef<(() => void) | null>(null);
+  const cameraSettledEmitterRef = useRef<((requestedOrientation?: CameraPose) => void) | null>(null);
   const lastCameraRequestIdRef = useRef(0);
   const lastCameraPoseRequestIdRef = useRef(0);
   const lastFocusFlightRequestRef = useRef(0);
   const lastFocusTargetSignatureRef = useRef<string | null>(null);
+  const lastFocusRefusedRequestRef = useRef(0);
   if (viewportFootprint?.valid) lastValidFootprintRef.current = viewportFootprint;
 
   useEffect(() => {
@@ -2456,22 +2467,35 @@ export function CesiumViewport({
       }
     }, ScreenSpaceEventType.LEFT_CLICK);
     viewerRef.current = viewer;
-    const emitSettledCamera = (force = false) => {
+    /**
+     * `requestedOrientation`, when present, is the orientation this camera was
+     * just COMMANDED into. Cesium's local-frame read-back is ambiguous near
+     * nadir — it can report an equivalent `roll ≈ 180°` for a view that was
+     * requested upright — and a settled pose is persisted by the app and then
+     * spread into every later camera request. Emitting the raw read-back
+     * therefore poisons subsequent presets rather than merely mislabelling one
+     * frame, so a commanded pose publishes its requested orientation. A genuine
+     * user-driven `moveEnd` passes nothing and still publishes the real camera.
+     */
+    const emitSettledCamera = (force = false, requestedOrientation?: CameraPose) => {
       if (!force && Date.now() < suppressCameraEventsUntilRef.current) return;
       const footprint = cameraFootprintForViewer(viewer, lastValidFootprintRef.current);
       if (footprint?.valid) lastValidFootprintRef.current = footprint;
-      onCameraChangedRef.current?.(cameraStateForViewer(viewer), footprint ?? lastValidFootprintRef.current ?? undefined);
+      const settled = cameraStateForViewer(viewer);
+      onCameraChangedRef.current?.(requestedOrientation ? normalizeFocusCameraPose(settled, requestedOrientation) : settled, footprint ?? lastValidFootprintRef.current ?? undefined);
     };
-    cameraSettledEmitterRef.current = () => emitSettledCamera(true);
+    cameraSettledEmitterRef.current = (requestedOrientation?: CameraPose) => emitSettledCamera(true, requestedOrientation);
     const onCameraMoveEnd = () => emitSettledCamera();
     viewer.camera.moveEnd.addEventListener(onCameraMoveEnd);
     const initialCameraPoseRequest = cameraPoseRequestRef.current;
+    let appliedInitialPoseRequest: CameraPose | undefined;
     if (initialCameraPoseRequest && shouldApplyCameraPoseRequest(lastCameraPoseRequestIdRef.current, initialCameraPoseRequest)) {
       lastCameraPoseRequestIdRef.current = initialCameraPoseRequest.requestId;
       suppressCameraEventsUntilRef.current = Date.now() + 900;
       applyCameraPoseRequest(viewer, initialCameraPoseRequest);
+      appliedInitialPoseRequest = initialCameraPoseRequest;
     }
-    emitSettledCamera(true);
+    emitSettledCamera(true, appliedInitialPoseRequest);
     setViewerReadyGeneration((generation) => generation + 1);
 
     return () => {
@@ -3418,7 +3442,17 @@ export function CesiumViewport({
     if (!viewer || focusRequest === 0 || !focusFeatureId) return;
     const publicRealmFeature = publicRealmOverlay?.feature(focusFeatureId.replace(/^public-realm:/u, ""));
     const feature = denseFeatureMapRef.current.get(focusFeatureId) ?? adapter.getFeature(focusFeatureId) ?? (publicRealmFeature && publicRealmOverlay ? publicRealmFeatureToFeature(publicRealmFeature, publicRealmOverlay.document.generatedAt) : undefined);
-    if (!feature || !shouldFocusFeature(feature)) return;
+    if (!feature || !shouldFocusFeature(feature)) {
+      // Report once per request id. This effect also reruns on adapter and dense
+      // shard changes, and a feature that arrives on a later shard must not
+      // restate a refusal the user already saw — nor must the first miss stay on
+      // screen once the flight it refused actually happens (see the clear below).
+      if (focusRequest !== lastFocusRefusedRequestRef.current) {
+        lastFocusRefusedRequestRef.current = focusRequest;
+        onFocusUnavailableRef.current?.(focusFeatureId);
+      }
+      return;
+    }
     const requestChanged = shouldStartFocusFlight(lastFocusFlightRequestRef.current, focusRequest, true);
     const focusHeight = focusHeightForFeature(feature, assetResolver);
     const focusCoordinates = focusCoordinatesForFeature(feature, assetResolver);
@@ -3428,6 +3462,10 @@ export function CesiumViewport({
     if (!requestChanged && !targetChanged) return;
     lastFocusFlightRequestRef.current = focusRequest;
     lastFocusTargetSignatureRef.current = focusTargetSignature;
+    if (lastFocusRefusedRequestRef.current !== 0) {
+      lastFocusRefusedRequestRef.current = 0;
+      onFocusUnavailableRef.current?.(null);
+    }
     viewer.camera.cancelFlight();
     const viewport = containerRef.current;
     const inspector = focusOverlayOpen ? viewport?.parentElement?.querySelector<HTMLElement>(".inspector") : null;
@@ -3510,7 +3548,7 @@ export function CesiumViewport({
      * The `flyTo` completion path above is NOT this defect and is untouched: a
      * flight's `complete` callback already runs after frames have been drawn.
      */
-    return emitCameraSettledAfterNextFrame(viewer.scene, () => cameraSettledEmitterRef.current?.());
+    return emitCameraSettledAfterNextFrame(viewer.scene, () => cameraSettledEmitterRef.current?.(cameraPoseRequest));
   }, [cameraPoseRequest]);
 
 

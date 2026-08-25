@@ -49,6 +49,18 @@ describe("visitor navigation contracts", () => {
     expect(parseNavigationUrl("https://fixture.invalid/?data=manhattan-civic-context-20260804&lon=-73.991&lat=40.744&height=4000&heading=0&pitch=-75&roll=0")).toMatchObject({ cameraMode: "explore", pose: DEFAULT_CAMERA_POSE });
   });
 
+  /**
+   * A hand-written pose link carries camera intent whether or not it also names
+   * a release. Issue #46: this parsed correctly all along, but the app then
+   * gated the pose on `dataMode`, so a fixture-session pose URL was silently
+   * dropped. Pin the parse contract that the app-level fix depends on.
+   */
+  it("keeps a pose that names no data mode", () => {
+    const parsed = parseNavigationUrl("https://fixture.invalid/?lon=-73.9857&lat=40.7484&height=900&heading=200&pitch=-30&roll=0");
+    expect(parsed).toMatchObject({ cameraMode: "explore", poseInvalid: false, pose: { longitude: -73.9857, latitude: 40.7484, height: 900, heading: 200, pitch: -30, roll: 0 } });
+    expect(parsed).not.toHaveProperty("dataMode");
+  });
+
   it("guards itinerary step navigation at both ends", () => {
     expect(stepIndex(0, "previous", 3)).toBe(0);
     expect(stepIndex(0, "next", 3)).toBe(1);
