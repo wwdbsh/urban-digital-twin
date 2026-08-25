@@ -38,14 +38,18 @@ export const BLOCK835_PUBLIC_REALM_APPROVAL_EVIDENCE: SourceApprovalEvidence = {
  * can treat it as ingestion- or runtime-ready.
  *
  * On 2026-08-24 the five VECTOR datasets named in `scope` below graduated to
- * `CITYWIDE_PUBLIC_REALM_VECTOR_APPROVAL_EVIDENCE`, which is a real user-granted
- * envelope. The remaining consumer of this draft is
- * `nyc.orthoimagery-2024-manhattan`, whose T004 imagery gate has NOT been
- * granted. `scope` and `fingerprintSha256` are deliberately left byte-identical
- * to their T002 form: the fingerprint attests to the recorded T002 draft text,
- * so rewriting the scope here would silently repoint an already-recorded
+ * `CITYWIDE_PUBLIC_REALM_VECTOR_APPROVAL_EVIDENCE`, and on 2026-08-25 the
+ * orthoimagery named in `scope` graduated to
+ * `CITYWIDE_PUBLIC_REALM_ORTHO_APPROVAL_EVIDENCE` at the T004 gate. Both are
+ * real user-granted envelopes. This draft therefore now has NO citing source
+ * entry and is retained only as the historical T002 record that those two
+ * envelopes descend from.
+ *
+ * `scope` and `fingerprintSha256` are deliberately left byte-identical to their
+ * T002 form: the fingerprint attests to the recorded T002 draft text, so
+ * rewriting the scope here would silently repoint an already-recorded
  * fingerprint at different words. Read `scope` as the T002 draft it hashes, and
- * this comment as the authority on which of its datasets are still pending.
+ * this comment as the authority on what has since superseded it.
  */
 export const CITYWIDE_PUBLIC_REALM_APPROVAL_EVIDENCE: SourceApprovalEvidence = {
   evidenceId: "approval:citywide-public-realm:20260824:pending-user-approval",
@@ -75,9 +79,10 @@ export const CITYWIDE_PUBLIC_REALM_VECTOR_APPROVAL_STATEMENT =
  * registered with `approvedEntry(...)` (or, for the three Block 835
  * planimetrics entries, keep their own Block 835 approval and cite this
  * constant additionally for the wider Manhattan clip). Imagery is deliberately
- * absent — `nyc.orthoimagery-2024-manhattan` stays on the pending
- * `CITYWIDE_PUBLIC_REALM_APPROVAL_EVIDENCE` draft until the T004 gate is
- * granted.
+ * absent from THIS envelope and always was; `nyc.orthoimagery-2024-manhattan`
+ * was granted its own separate envelope at the T004 gate on 2026-08-25, namely
+ * `CITYWIDE_PUBLIC_REALM_ORTHO_APPROVAL_EVIDENCE`. The two envelopes stay
+ * distinct so that neither one's fingerprint covers the other's datasets.
  *
  * `exclusions` mirrors the T002 draft's exactly, so graduating from draft to
  * approved widened only the acquisition permission, never the use permission:
@@ -90,6 +95,59 @@ export const CITYWIDE_PUBLIC_REALM_VECTOR_APPROVAL_EVIDENCE = Object.freeze({
   scope: "Local-only immutable Manhattan-clipped snapshots of five NYC Open Data vector datasets: citywide Roadbed xgwd-7vhd, Sidewalk vfx9-tbb6, and Pavement Edge x9uq-u3qs, plus NYC Planimetric Database: Hydrography pjs3-c3z5 and NYC DOT Pedestrian Plazas (Polygon) k5k6-6jex. Clipped server-side with within_box to the snapped Manhattan ground coverage (west -74.0478515625, south 40.67138671875, east -73.89404296875, north 40.89111328125) derived from MANHATTAN_GROUND_EXTENT in src/release/ground-release.ts. The bbox is a rectangular envelope, not a borough boundary: adjacent-borough and New Jersey features inside it are retained honestly rather than filtered. Imagery is NOT in this envelope.",
   exclusions: ["Google products/data/imagery", "OSM/Overpass/third-party extracts", "paid or credentialed services", "runtime external network", "public deployment or conveyance", "current-paint or survey-grade crosswalk/curb claims", "street furniture/landscaping/traffic/lighting/signs/facades"],
 } satisfies SourceApprovalEvidence & { approvalStatement: string });
+
+/**
+ * The user turn that granted the T004 orthoimagery envelope, recorded verbatim
+ * as a single line with no trailing newline.
+ *
+ * `CITYWIDE_PUBLIC_REALM_ORTHO_APPROVAL_EVIDENCE.fingerprintSha256` is the
+ * SHA-256 of this string, so the fingerprint is reproducible from the constant
+ * itself. `src/data/source-registry.test.ts` recomputes it, and the acquisition
+ * manifest at `data/raw/nyc-ortho-2024-manhattan/manifest.json` records the
+ * same statement and the same fingerprint.
+ */
+export const CITYWIDE_PUBLIC_REALM_ORTHO_APPROVAL_STATEMENT =
+  "User turn 2026-08-25: standing envelope authorizing autonomous execution through T015; T004 orthoimagery acquisition approved under that envelope: NYC/NYS 2024 6-inch Manhattan borough orthoimagery archive boro_manhattan_sp24.zip from gisdata.ny.gov, license basis CC BY 4.0 per NYC OTI aerial-imagery metadata and confirmed by the T004 embedded-metadata inspection finding no access or use constraint in the shipped FGDC metadata; local-only immutable retention, no redistribution, no public deployment";
+
+/**
+ * User-granted approval for the T004 orthoimagery acquisition.
+ *
+ * This graduates `nyc.orthoimagery-2024-manhattan` off the T002 draft
+ * `CITYWIDE_PUBLIC_REALM_APPROVAL_EVIDENCE`. The T004 stop-rule was executed
+ * before any imagery ingestion: the archive's embedded FGDC metadata
+ * (`24_b_manhattan_l06_4bd.shp.xml`) leaves both `<accconst>` and `<useconst>`
+ * as unpopulated ESRI template placeholders, and the archive carries no license
+ * file, copyright notice, or distribution-liability element. Nothing in it
+ * contradicts or narrows the CC BY 4.0 basis published in NYC OTI's own
+ * aerial-imagery metadata, so the NAIP fallback was not triggered. The verbatim
+ * text and the honest limit on what that absence proves are recorded in
+ * `docs/research/PUBLIC_REALM_LICENSING.md` section 4a.
+ *
+ * `exclusions` mirrors the T002 draft's exactly: this envelope widened only the
+ * acquisition permission, never the use permission. Runtime external network,
+ * public deployment, and conveyance stay excluded, and CC BY 4.0 attribution
+ * must travel with every derived tile or clip.
+ */
+export const CITYWIDE_PUBLIC_REALM_ORTHO_APPROVAL_EVIDENCE = Object.freeze({
+  evidenceId: "approval:citywide-public-realm-ortho:20260825:standing-envelope",
+  fingerprintSha256: "f0bbb1c8bf279e4ce6bf02138ae6d0d9891425c70684e58b7a02a754bb239ffe",
+  approvalStatement: CITYWIDE_PUBLIC_REALM_ORTHO_APPROVAL_STATEMENT,
+  scope: "Local-only immutable retention of the NYC/NYS Statewide Digital Orthoimagery Program 2024 annual-lot 6-inch Manhattan borough archive (boro_manhattan_sp24.zip, 258 JPEG 2000 tiles in EPSG:2263), acquired once from gisdata.ny.gov and pinned by SHA-256, for texturing the park, water, and plaza ground zones. License basis is CC BY 4.0 per NYC OTI aerial-imagery metadata, corroborated as un-narrowed by the T004 inspection of the archive's embedded metadata. Attribution to NYC OTI / NYS Statewide Digital Orthoimagery Program must travel with every derived tile or clip. No redistribution, no public deployment or conveyance, no runtime provider request.",
+  exclusions: ["Google products/data/imagery", "OSM/Overpass/third-party extracts", "paid or credentialed services", "runtime external network", "public deployment or conveyance", "current-paint or survey-grade crosswalk/curb claims", "street furniture/landscaping/traffic/lighting/signs/facades"],
+} satisfies SourceApprovalEvidence & { approvalStatement: string });
+
+const orthoApprovalDate = "2026-08-25T00:00:00Z";
+
+/**
+ * Access posture for the T004-approved orthoimagery. Download is now permitted;
+ * runtime integration is not, because the granted envelope is a local-only
+ * immutable archive with no runtime external network.
+ */
+const citywideOrthoAccess = {
+  keyOrAgreementRequired: false,
+  kind: "none" as const,
+  constraints: "No credential or fee. Download is authorized under approval:citywide-public-realm-ortho:20260825:standing-envelope for a local-only immutable pinned archive; CC BY 4.0 attribution travels with every derived tile, and runtime provider requests, redistribution, and public deployment remain excluded.",
+};
 
 const cityTerms = "https://www.nyc.gov/html/datamine/html/data/terms.html?dataSetJs=raw";
 const overtureTerms = "https://overturemaps.org/about/faq/";
@@ -310,7 +368,7 @@ export const sourceRegistry = [
     reviewedAt: citywideVectorApprovalDate,
     approvalNote: "Approved under approval:citywide-public-realm-vector:20260824:user-approved for a local-only immutable Manhattan-clipped snapshot (T003). Selected in T001 (docs/research/PUBLIC_REALM_LICENSING.md) over DCP POPS (qeta-4kqg) because only this dataset carries polygon geometry and direct Times Square coverage; POPS is point-based and out of scope. Plaza presence is a DOT-operated designation only, not an assertion of current paving, furniture, or public-access hours. No runtime provider request, no redistribution, and no public deployment.",
   }),
-  pendingEntry({
+  approvedEntry({
     id: "nyc.orthoimagery-2024-manhattan",
     provider: "NYS Statewide Digital Orthoimagery Program (distributing NYC OTI aerial imagery)",
     datasetId: "boro_manhattan_sp24.zip",
@@ -328,13 +386,22 @@ export const sourceRegistry = [
     updateTimestamp: "2025-06-05T00:00:00Z",
     cadence: "Static per-vintage borough zip; HEAD-verified 2026-08-24 as HTTP 200, approximately 2.4 GB, Last-Modified 2025-06-05. Capture window 2024-03-14 through 2024-03-24 per NYC OTI metadata.",
     retention: { rawSnapshots: "conditional", maximumDays: null, caching: "allowed", constraints: "CC BY 4.0 attribution to NYC OTI / NYS Statewide Digital Orthoimagery Program must travel with any derived tile or clip; local-only retention consistent with the project posture; the ~2.4 GB full-borough zip must inform the T004 download/clip envelope." },
-    derivativePolicy: { allowed: "conditional", constraints: "CC BY 4.0 permits derivative use with attribution, but the T004 gate must first inspect the FGDC metadata embedded in the 2024 zip before any ingestion; if that metadata imposes use constraints incompatible with local rendering plus attribution, the NAIP fallback rule applies instead (see docs/research/PUBLIC_REALM_LICENSING.md section 5)." },
-    access: pendingAccess,
-    geographicScope: "Manhattan borough, clipped to park/water/plaza zones for the citywide public-realm wave; full-borough zip covers all of Manhattan.",
-    expectedCrs: "varies",
+    derivativePolicy: { allowed: "conditional", constraints: "CC BY 4.0 permits derivative use with attribution. The T004 gate inspected the FGDC metadata embedded in the 2024 zip before any ingestion and found both <accconst> and <useconst> to be unpopulated ESRI template placeholders, with no license file, copyright notice, or distribution-liability element anywhere in the archive; the classified/withheld-tile language of the 2001-2010 vintages does not appear. Nothing narrows CC BY 4.0, so the NAIP fallback (docs/research/PUBLIC_REALM_LICENSING.md section 5) was not triggered. Attribution to NYC OTI / NYS Statewide Digital Orthoimagery Program must travel with every derived tile or clip; redistribution and public conveyance remain excluded. Verbatim text in docs/research/PUBLIC_REALM_LICENSING.md section 4a." },
+    access: citywideOrthoAccess,
+    geographicScope: "Manhattan borough; the retained archive is the full 258-tile borough coverage (WGS84 envelope approximately west -74.0875, south 40.6813, east -73.8978, north 40.8803), of which 215 tiles intersect a park, water, or plaza zone per data/raw/nyc-ortho-2024-manhattan/zone-tile-mapping.json.",
+    // `expectedCrs` describes runtime-delivered geometry, and the domain enum
+    // is deliberately limited to the runtime CRSs (EPSG:4326 / EPSG:3857).
+    // This source delivers no runtime geometry at all: it is an acquisition-time
+    // raster archive whose native CRS is EPSG:2263 (NAD83 / New York Long
+    // Island, US survey feet). That native CRS IS known and is recorded as
+    // `nativeCrs` in data/raw/nyc-ortho-2024-manhattan/manifest.json; it is
+    // "unknown" here only because the runtime enum cannot express it, and
+    // reprojection into the runtime CRS happens in T012's texture pipeline.
+    expectedCrs: "unknown",
     expectedVerticalDatum: "Not applicable to 2D orthoimagery texture; no elevation claim.",
-    approvalEvidence: CITYWIDE_PUBLIC_REALM_APPROVAL_EVIDENCE,
-    approvalNote: "Draft registration only under approval:citywide-public-realm:20260824:pending-user-approval; NOT yet user-approved. License basis is NYC OTI's own aerial-imagery metadata declaring CC BY 4.0 / Access Rights Public (docs/research/PUBLIC_REALM_LICENSING.md section 4); the NYS FGDC metadata for this specific 2024 vintage was not located as a standalone page, so its exact terms remain an honest gap the T004 gate must inspect inside the downloaded zip before ingestion. 2024 was selected over older vintages because it is the confirmed-downloadable, most recent 6-inch full true orthoimagery for Manhattan. Acquisition remains gated on the T003/T004 user approvals, and the NAIP fallback rule governs if that inspection or the download fails.",
+    approvalEvidence: CITYWIDE_PUBLIC_REALM_ORTHO_APPROVAL_EVIDENCE,
+    reviewedAt: orthoApprovalDate,
+    approvalNote: "Approved under approval:citywide-public-realm-ortho:20260825:standing-envelope for a local-only immutable pinned archive (T004). License basis is NYC OTI's own aerial-imagery metadata declaring CC BY 4.0 / Access Rights Public (docs/research/PUBLIC_REALM_LICENSING.md section 4). The T002 honest gap about the FGDC terms for this vintage is now closed by inspection rather than assumption: the metadata shipped inside the zip asserts no access or use constraint, because those elements were never filled in. That is recorded as non-contradiction, not as an affirmative grant, so the operative basis remains NYC OTI's published metadata. 2024 was selected over older vintages because it is the confirmed-downloadable, most recent 6-inch full true orthoimagery for Manhattan. The archive is retained at data/raw/nyc-ortho-2024-manhattan/ pinned by SHA-256 with per-tile CRC-32; imagery tiles were deliberately not bulk-extracted because 215 of 258 tiles intersect a zone, so extraction would duplicate most of the archive for little saving. No redistribution, no public deployment, and no runtime provider request.",
   }),
   approvedEntry({
     id: "nyc.building-footprints",

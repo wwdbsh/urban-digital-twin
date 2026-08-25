@@ -129,6 +129,58 @@ obligations: attribution to NYC OTI / NYS Statewide Digital Orthoimagery
 Program, capture-window display (March 2024), local-only retention consistent
 with the project posture.
 
+## 4a. 2024 zip embedded metadata inspection (T004, 2026-08-25)
+
+The §4 honest gap is now closed by inspection rather than assumption. The
+`boro_manhattan_sp24.zip` central directory (1,300 members) was read, and the
+metadata members were extracted and read **before any imagery ingestion**, per
+the T004 stop-rule.
+
+The zip ships exactly one FGDC-style metadata document,
+`24_b_manhattan_l06_4bd.shp.xml` (45,716 bytes), which documents the tile-index
+shapefile, plus `readme2024zip.txt` (1,283 bytes), an ESRI image catalog
+(`24ic_b_manhattan_l06_4bd.dbf`), and per-tile `.jp2.aux.xml` / `.j2w` / `.tab`
+georeferencing sidecars. There is no license file, no copyright notice, and no
+`distliab` element anywhere in the archive.
+
+**Verbatim constraint text, `24_b_manhattan_l06_4bd.shp.xml`:**
+
+> `<accconst>REQUIRED: Restrictions and legal prerequisites for accessing the data set.</accconst>`
+> `<useconst>REQUIRED: Restrictions and legal prerequisites for using the data set after access is granted.</useconst>`
+
+These are **unpopulated ESRI metadata-template placeholders**, not asserted
+terms. The same document's `<abstract>`, `<purpose>`, `<origin>`, `<pubdate>`,
+and `<caldate>` are likewise the literal `REQUIRED: …` template strings, and its
+`<title>` is a stale `lot10_nyc_06in_4bd_051910` carried over from the 2010 lot
+(the populated `<resTitle>` is `lot24_liz_nyc_06in_060724`). A full-text scan
+for `licen`, `copyright`, `restrict`, `classif`, `sensitiv`, `constrain`,
+`liabil`, `disclaim`, and `redistrib` returned no substantive matches.
+
+**`readme2024zip.txt` is purely technical** — it enumerates the `.jp2`, `.tab`,
+`.j2w`, and `.aux` member types and states the imagery specification:
+
+> "All annual lot 2024 imagery is 4 - band digital camera imagery. Imagery
+> covering New York City, St. Lawrence County, Rockland County, Chautauqua
+> County (partial), and Albany County (partial) is ½ ft pixel Ground Sample
+> Distance (GSD)"
+
+It imposes no access, use, or redistribution condition.
+
+**Decision: GO — proceed.** Notably, the classified/withheld-tile language
+quoted in §4 from the 2001–2010 vintages **does not appear** in the 2024 zip at
+all, so the narrower reading in §4 was, if anything, conservative. Nothing in
+the archive imposes a use constraint incompatible with local rendering plus
+attribution, so the NAIP fallback trigger in §5(1) is **not** fired.
+
+**Honest limit on what this proves.** Absence of constraint text in an
+unpopulated template is *not* an affirmative grant. This inspection establishes
+only that the shipped metadata does not contradict or narrow the CC BY 4.0
+basis; it does not independently corroborate it. The operative license basis
+therefore remains NYC OTI's own published aerial-imagery metadata (§4:
+"Use Limitations | CC BY 4.0", "Access Rights | Public"), and the project
+continues to carry the full CC BY 4.0 attribution obligation on every derived
+tile or clip.
+
 ## 5. NAIP fallback rule
 
 USGS/USDA NAIP is public domain with no use restrictions
