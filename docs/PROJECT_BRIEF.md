@@ -320,3 +320,46 @@ three-tier city works": it is that a tier can be built, measured where
 measurement is possible, and have its unmeasurable parts named instead of
 guessed — including four criteria left unmet and a bar (`A3'' = 0.035`) disclosed
 as post-hoc rather than presented as the original.
+
+## The citywide public realm, delivered and awaiting a decision (2026-08-26)
+
+The `manhattan-citywide-public-realm` goal replaced the synthetic 16-cell grid
+with a real cartographic ground. Three immutable, checksum-pinned releases now
+ship by default: `manhattan-ground-20260824` (140 cells, 42,778 features —
+roadbed, sidewalk, park, plaza, water), `manhattan-ground-embellishment-20260825`
+(extruded curbs inside a 400 m ring, 87 cells, 45,588 walls), and
+`manhattan-ground-zone-imagery-20260826` (2024 six-inch orthoimagery draped on
+87 zones, with 75 zones refused rather than part-synthesized). The grid is
+demoted to an explicit fallback, not deleted, and remains what a failed
+verification shows.
+
+**This section supersedes the 2026-08-04 statement above that the delivered
+scope "does not add real … parks … photos, street imagery."** Parks, plazas and
+water are now real registered NYC datasets, and aerial — not street-level —
+orthoimagery is drawn on them, carrying its 2024 capture window on screen.
+
+The criterion-by-criterion record is
+`artifacts/ground-goal-acceptance-20260826/ACCEPTANCE.md`. What is genuinely
+established is structural: deterministic builds, fail-closed validators at three
+phases, checksum-pinned snapshots behind a pre-network approval gate whose
+fingerprints hash the real approval text, and seven named places resolving to
+correct identities, layer classes, deep links and sourced provenance.
+
+What is not established, and is recorded as not:
+
+- **Nobody has looked at it since it became the default.** The only live browser
+  session verified the ground as an opt-in canary on 2026-08-24. The default
+  flip, the curbs, the orthoimagery and the named places are verified by tests
+  and re-derived evidence artifacts only. Recognizability — the goal's own word —
+  is therefore claimed structurally and not visually.
+- **Crosswalk striping exists only at Block 835.** The repository registers no
+  intersection or centerline source, so generalizing it would ship an
+  unfalsifiable "estimated" claim. The reduction is deliberate and awaits a user
+  decision.
+- **Frame time and GPU memory for the new tiers are unmeasured** on real
+  hardware, and two margins have no headroom at all: the worst-case near-tier
+  ring sits exactly on its four-cell ceiling and the largest curb artifact at
+  94.6% of the per-artifact bar.
+
+As with the far-tier goal, the completion decision is **presented to the user
+rather than taken**.

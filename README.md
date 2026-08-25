@@ -431,6 +431,7 @@ carries an append-only correction to `0032`'s citywide UV share).
 | far | baked HLOD tiles, one per ownership cell | **883 tiles — every ledger cell**, `FAR_TIER_DEFAULT_ON = true` |
 | fallback | procedural tan massing | wherever no tier above it draws |
 | ground | the cartographic base — roadbed, sidewalk, park, plaza, water | **`manhattan-ground-20260824`**, `GROUND_DEFAULT_ON = true` (2026-08-24) |
+| near-tier curbs | extruded curbs over the base, inside a 400 m ring | **`manhattan-ground-embellishment-20260825`**, served for the five row-owning waves in `GROUND_EMBELLISHMENT_CANARY_WAVES` (2026-08-26). **Curbs only — no crosswalk striping outside Block 835**, see below |
 | zone imagery | 2024 orthoimagery draped on park, plaza and water polygons | **`manhattan-ground-zone-imagery-20260826`**, `ZONE_IMAGERY_DEFAULT_ON = true` (2026-08-26) |
 
 The wave table above this section names the `-v3`/`-p1` releases that were the
@@ -462,6 +463,30 @@ a failed verification leaves the grid plus the explicit failure line.
   artifacts are verified lazily as they are drawn, under the T007 streaming caps
   (24 cells / 48 MiB). Nothing defers that boot cost yet — see
   [`0059`](docs/decisions/0059-cartographic-ground-default-flip.md).
+
+### The curbs on the near street (default since 2026-08-26)
+
+**Within 400 m of the camera, the ground grows curbs.** A default session that
+already has a verified base then loads `manhattan-ground-embellishment-20260825`
+and extrudes a 0.22 m curb wall along each pavement edge. It is additive: the
+release declares near-tier geometry only, so a consumer that cannot load, verify
+or afford a curb artifact draws the flat base alone and nothing else changes.
+
+- **87 cells across the five row-owning waves, 45,588 walls, 0 refusals.** The
+  per-wave cost is measured, not estimated, in
+  [`wave-curb-census.json`](artifacts/ground-embellishment-promotion-20260826/wave-curb-census.json)
+  and re-derived by `pnpm ground-embellishment:census`.
+- **Curbs only. There is no crosswalk striping outside Block 835.** Block 835's
+  crosswalks are enumerated from a hardcoded building union, and the repository
+  registers no intersection or centerline dataset, so inferring crosswalks
+  anywhere else would ship an "estimated" claim nothing could falsify. The
+  absence is deliberate and is stated in the release's own provenance.
+- **The margins are thin and known.** The worst-case 400 m ring holds exactly
+  four cells, which is the ceiling itself, and the largest artifact is 94.6% of
+  the per-artifact shard bar. A denser future release would breach both; the
+  gates that would catch it run in the census suite.
+- Real-GPU frame time for the near tier has not been measured; see *The honest
+  limits* below.
 
 ### The photographs on the ground (default since 2026-08-26)
 
@@ -547,6 +572,16 @@ are never drawn — and every other class keeps its cartographic fill.
   confidence interval, no cross-machine claim. The bake's byte-determinism *is*
   established across process boundaries; the rendering and timing results are
   not established across machines.
+- **The public realm has not been looked at since it became the default.** One
+  live browser session on 2026-08-24 verified the ground *while it was still an
+  opt-in canary* — polygons drawn, a park pick resolving to its deep link, an
+  injected checksum fault refusing every artifact with zero partial geometry.
+  Everything after that — the default flip, curbs in all five waves, orthoimagery
+  draped on parks and water, and the seven named places — is verified
+  structurally, by tests and by re-derived evidence artifacts, and **has never
+  been rendered in front of a person**. Frame time and GPU memory for the curb
+  and imagery tiers are unmeasured on real hardware. No visual or
+  recognizability claim is made anywhere in this README on that basis.
 
 The goal's own acceptance record closes at **2 MET, 4 MET-AS-ADJUDICATED, 5
 NOT-MET**, with a sixteen-item residual register and a completion decision left

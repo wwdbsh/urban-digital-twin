@@ -94,8 +94,12 @@ builds byte-identical across 356 files); validated by
 
 ## T007 runtime canary record
 
-The flat ground renders behind the explicit `ground=manhattan-ground-20260824`
-URL flag (default byte-for-byte unchanged without it): fail-closed loader
+At T007 the flat ground rendered behind the explicit
+`ground=manhattan-ground-20260824` URL flag, with the default session
+byte-for-byte unchanged without it. **T008 inverted that** — the ground is now
+the default and the flag is the explicit request; see the T008 section below.
+The rest of this record describes the machinery, which T008 did not change:
+fail-closed loader
 (`src/runtime/ground-release-runtime.ts`) with runtime SHA-256 of every
 artifact plus re-derivation of the unhashed ledger/identity manifests;
 visibility-driven per-cell per-class streaming under borrowed
@@ -150,7 +154,7 @@ authoritative intersection/centerline source (goal PENDING-DECISIONS P2).
 - Watch item: largest artifact is 94.6% of `geometryShardBytes`; nothing
   gates per-artifact size yet (T010 must set the serving ceiling).
 
-## Known limitations (recorded, not hidden)
+## Known limitations as recorded at T005 (with their later disposition)
 
 - The Manhattan ground extent (`-74.03/40.68/-73.90/40.89`, outward-snapped
   to 140 level-14 cells) is a declared envelope, not a surveyed boundary;
@@ -160,8 +164,13 @@ authoritative intersection/centerline source (goal PENDING-DECISIONS P2).
 - `{kind:"bounds"}` occupancy is a documented over-approximation for
   fixtures; real polygons must use `declared-cells` from an actual clipper
   (T006).
-- Contracts are validated invariants, not observed rendering; nothing is
-  wired to the runtime yet.
+- Contracts are validated invariants, not observed rendering; nothing was
+  wired to the runtime at T005. **Superseded**: T007 wired the fail-closed
+  loader (`src/runtime/ground-release-runtime.ts`) and T008/T011/T013 made
+  the ground, its curbs, and its zone imagery the default — see those
+  sections. What remains true is the narrower original point: a passing
+  contract validator is still not evidence of observed rendering, which is
+  why each runtime section carries its own separate evidence.
 
 ## T008 — the ground becomes the default (2026-08-24, Issue #137)
 

@@ -1,0 +1,410 @@
+{
+  "schemaVersion": "ground-goal-acceptance-evidence-1",
+  "goal": "manhattan-citywide-public-realm",
+  "goalIssue": 129,
+  "task": "T015",
+  "taskIssue": 144,
+  "generatedBy": "artifacts/ground-goal-acceptance-20260826/build-evidence.mjs",
+  "mergedTaskPullRequests": {
+    "T001": 145,
+    "T002": 146,
+    "T003": 148,
+    "T004": 153,
+    "T005": 147,
+    "T006": 149,
+    "T007": 150,
+    "T008": 154,
+    "T009": 152,
+    "T010": 155,
+    "T011": 157,
+    "T012": 156,
+    "T013": 158,
+    "T014": 159,
+    "ad-hoc-issue-46": 151
+  },
+  "releases": {
+    "ground": {
+      "releaseId": "manhattan-ground-20260824",
+      "immutable": true,
+      "generatedAt": "2026-08-24T00:00:00.000Z",
+      "ownershipLedgerId": "ground-ledger:city-manhattan:ground-partition-v1-level14:35a834d29aafc8be7f4352c61d575f03",
+      "partitionSchemeId": "ground-partition-v1-level14",
+      "files": [
+        {
+          "path": "public/data/manhattan-ground-20260824/release.json",
+          "sha256": "209d72b18f90018b1a7e18a4a4861bcf95b178ee0b28f5db791f7f0df11beb04",
+          "bytes": 175685
+        },
+        {
+          "path": "public/data/manhattan-ground-20260824/ledger.json",
+          "sha256": "4f3af537f4bbb87d146bdfdd576d4c513fb5c2facd071faa60844fcfa85a9863",
+          "bytes": 3863370
+        },
+        {
+          "path": "public/data/manhattan-ground-20260824/features.json",
+          "sha256": "597f7fe7ce1c0205e0093c8e322cc644f9d981f186c11beb545f381e3a736df0",
+          "bytes": 42657717
+        },
+        {
+          "path": "public/data/manhattan-ground-20260824/parts.json",
+          "sha256": "c5b55e463b127dba466aaabddc971238ccc7d31947ec94bd200386dd7005fe93",
+          "bytes": 9945254
+        }
+      ]
+    },
+    "curbs": {
+      "releaseId": "manhattan-ground-embellishment-20260825",
+      "immutable": true,
+      "generatedAt": "2026-08-25T00:00:00.000Z",
+      "ownershipLedgerId": "ground-ledger:city-manhattan:ground-partition-v1-level14:ab802550f84a870c732e5f598f2e3064",
+      "files": [
+        {
+          "path": "public/data/manhattan-ground-embellishment-20260825/release.json",
+          "sha256": "daab076ec9bef4f033d6a22e77e0080f4ba92e9d46638e24511268d4b980ff92",
+          "bytes": 52272
+        },
+        {
+          "path": "public/data/manhattan-ground-embellishment-20260825/ledger.json",
+          "sha256": "e71eb3c98d0d696a2411d82a9bdb3663b85d433a9e9a4703fbc1287404a5f0d5",
+          "bytes": 3858279
+        }
+      ]
+    },
+    "zoneImagery": {
+      "releaseId": "manhattan-ground-zone-imagery-20260826",
+      "immutable": true,
+      "generatedAt": "2026-08-26T00:00:00.000Z",
+      "ownershipLedgerId": "ground-ledger:city-manhattan:ground-partition-v1-level14:35a834d29aafc8be7f4352c61d575f03",
+      "pinnedToBaseReleaseId": "manhattan-ground-20260824",
+      "compatibilityPinHolds": true,
+      "captureYear": 2024,
+      "targetGroundSampleDistanceMeters": 1.2,
+      "texturedZones": 87,
+      "recordedRefusals": 75,
+      "files": [
+        {
+          "path": "public/data/manhattan-ground-zone-imagery-20260826/release.json",
+          "sha256": "1084af6913c3d930bf0187a52fe98d850782107508a13ccb9e23721c0c83a544",
+          "bytes": 84315
+        },
+        {
+          "path": "public/data/manhattan-ground-zone-imagery-20260826/zone-imagery.json",
+          "sha256": "f0edab3f06e5123d311ef834e1988be19a26b8b2582de65de5b4f4a5050b80ca",
+          "bytes": 71258
+        }
+      ]
+    }
+  },
+  "curbCensus": {
+    "source": {
+      "path": "artifacts/ground-embellishment-promotion-20260826/wave-curb-census.json",
+      "sha256": "79fee7721fe1a308958f66041380bfbaf8cb2e712d6edd17a526d1f2542913bf",
+      "bytes": 7814
+    },
+    "regeneratedBy": "pnpm ground-embellishment:census",
+    "servingCeilingBytes": 2097152,
+    "maxActiveCells": 4,
+    "promotedWaves": [
+      "midtown-core",
+      "lower-manhattan",
+      "southern-remainder",
+      "central-upper-manhattan",
+      "northern-manhattan"
+    ],
+    "promotedRelease": {
+      "cellsWithCurbArtifacts": 87,
+      "totalArtifactBytes": 86189948,
+      "curbParts": 45522,
+      "drawnWalls": 45588,
+      "drawnTriangles": 5277922,
+      "refusedParts": 0,
+      "largestArtifactFractionOfCeiling": 0.946016788482666,
+      "worstCaseActiveCells": 4
+    },
+    "budgetBreaches": 0,
+    "zeroHeadroom": {
+      "ringAtCeiling": true,
+      "largestArtifactFraction": 0.946016788482666
+    },
+    "perWave": [
+      {
+        "waveId": "midtown-core",
+        "promoted": true,
+        "cells": 12,
+        "bytes": 12418615,
+        "walls": 6600,
+        "triangles": 759344,
+        "refusedParts": 0,
+        "largestArtifactFractionOfCeiling": 0.705841064453125,
+        "worstCaseActiveCells": 4,
+        "breachesBudget": false
+      },
+      {
+        "waveId": "lower-manhattan",
+        "promoted": true,
+        "cells": 26,
+        "bytes": 28223296,
+        "walls": 14801,
+        "triangles": 1732654,
+        "refusedParts": 0,
+        "largestArtifactFractionOfCeiling": 0.946016788482666,
+        "worstCaseActiveCells": 4,
+        "breachesBudget": false
+      },
+      {
+        "waveId": "southern-remainder",
+        "promoted": true,
+        "cells": 12,
+        "bytes": 13307589,
+        "walls": 7158,
+        "triangles": 810730,
+        "refusedParts": 0,
+        "largestArtifactFractionOfCeiling": 0.817664623260498,
+        "worstCaseActiveCells": 4,
+        "breachesBudget": false
+      },
+      {
+        "waveId": "central-upper-manhattan",
+        "promoted": true,
+        "cells": 15,
+        "bytes": 11569763,
+        "walls": 6285,
+        "triangles": 702544,
+        "refusedParts": 0,
+        "largestArtifactFractionOfCeiling": 0.5852441787719727,
+        "worstCaseActiveCells": 4,
+        "breachesBudget": false
+      },
+      {
+        "waveId": "northern-manhattan",
+        "promoted": true,
+        "cells": 22,
+        "bytes": 20670685,
+        "walls": 10744,
+        "triangles": 1272650,
+        "refusedParts": 0,
+        "largestArtifactFractionOfCeiling": 0.7037014961242676,
+        "worstCaseActiveCells": 4,
+        "breachesBudget": false
+      }
+    ],
+    "shippedButNeverActivatedCells": 8
+  },
+  "places": {
+    "source": {
+      "path": "artifacts/named-places-20260826/named-places-evidence.json",
+      "sha256": "f6ed5b6d5b6908f85519ead6778a34dd2ffc11d2311c1dfc0be41f504b89d584",
+      "bytes": 36571
+    },
+    "regeneratedBy": "pnpm named-places:evidence",
+    "count": 7,
+    "groundReleaseId": "manhattan-ground-20260824",
+    "zoneImageryReleaseId": "manhattan-ground-zone-imagery-20260826",
+    "entries": [
+      {
+        "placeKey": "central-park",
+        "displayName": "Central Park",
+        "canonicalFeatureId": "udt:manhattan:park:M010",
+        "groundClass": "park",
+        "identityOrigin": "referenced-existing",
+        "deepLink": "/?view=explore&lon=-73.972141&lat=40.775654&height=2500.000000&heading=35.000000&pitch=-70.000000&roll=0.000000&groundFeature=udt%3Amanhattan%3Apark%3AM010",
+        "ownerCells": 7,
+        "texturedCells": 7,
+        "refusedCells": 0,
+        "unaccountedCells": 0,
+        "geometryInView": true,
+        "sourceRefCount": 1
+      },
+      {
+        "placeKey": "bryant-park",
+        "displayName": "Bryant Park",
+        "canonicalFeatureId": "udt:manhattan:park:M008",
+        "groundClass": "park",
+        "identityOrigin": "referenced-existing",
+        "deepLink": "/?view=explore&lon=-73.983030&lat=40.750697&height=650.000000&heading=0.000000&pitch=-65.000000&roll=0.000000&groundFeature=udt%3Amanhattan%3Apark%3AM008",
+        "ownerCells": 2,
+        "texturedCells": 2,
+        "refusedCells": 0,
+        "unaccountedCells": 0,
+        "geometryInView": true,
+        "sourceRefCount": 1
+      },
+      {
+        "placeKey": "washington-square-park",
+        "displayName": "Washington Square Park",
+        "canonicalFeatureId": "udt:manhattan:park:M098",
+        "groundClass": "park",
+        "identityOrigin": "referenced-existing",
+        "deepLink": "/?view=explore&lon=-73.997440&lat=40.727887&height=650.000000&heading=0.000000&pitch=-65.000000&roll=0.000000&groundFeature=udt%3Amanhattan%3Apark%3AM098",
+        "ownerCells": 1,
+        "texturedCells": 1,
+        "refusedCells": 0,
+        "unaccountedCells": 0,
+        "geometryInView": true,
+        "sourceRefCount": 1
+      },
+      {
+        "placeKey": "the-battery",
+        "displayName": "The Battery",
+        "canonicalFeatureId": "udt:manhattan:park:M005",
+        "groundClass": "park",
+        "identityOrigin": "referenced-existing",
+        "deepLink": "/?view=explore&lon=-74.014150&lat=40.699058&height=700.000000&heading=0.000000&pitch=-65.000000&roll=0.000000&groundFeature=udt%3Amanhattan%3Apark%3AM005",
+        "ownerCells": 2,
+        "texturedCells": 1,
+        "refusedCells": 1,
+        "unaccountedCells": 0,
+        "geometryInView": true,
+        "sourceRefCount": 1
+      },
+      {
+        "placeKey": "times-square",
+        "displayName": "Times Square Plaza",
+        "canonicalFeatureId": "udt:ground:manhattan:plaza:24aeb72178ec5bd0",
+        "groundClass": "plaza",
+        "identityOrigin": "ground-owned",
+        "deepLink": "/?view=explore&lon=-73.987128&lat=40.754583&height=700.000000&heading=20.000000&pitch=-55.000000&roll=0.000000&groundFeature=udt%3Aground%3Amanhattan%3Aplaza%3A24aeb72178ec5bd0",
+        "ownerCells": 2,
+        "texturedCells": 2,
+        "refusedCells": 0,
+        "unaccountedCells": 0,
+        "geometryInView": true,
+        "sourceRefCount": 1
+      },
+      {
+        "placeKey": "east-river",
+        "displayName": "East River",
+        "canonicalFeatureId": "udt:ground:manhattan:water:d32d405d331afe68",
+        "groundClass": "water",
+        "identityOrigin": "ground-owned",
+        "deepLink": "/?view=explore&lon=-73.909178&lat=40.797115&height=2500.000000&heading=225.000000&pitch=-65.000000&roll=0.000000&groundFeature=udt%3Aground%3Amanhattan%3Awater%3Ad32d405d331afe68",
+        "ownerCells": 8,
+        "texturedCells": 3,
+        "refusedCells": 5,
+        "unaccountedCells": 0,
+        "geometryInView": true,
+        "sourceRefCount": 1
+      },
+      {
+        "placeKey": "hudson-river",
+        "displayName": "Hudson River",
+        "canonicalFeatureId": "udt:ground:manhattan:water:96c4c6af8c1fea9b",
+        "groundClass": "water",
+        "identityOrigin": "ground-owned",
+        "deepLink": "/?view=explore&lon=-74.027118&lat=40.760000&height=2500.000000&heading=90.000000&pitch=-60.000000&roll=0.000000&groundFeature=udt%3Aground%3Amanhattan%3Awater%3A96c4c6af8c1fea9b",
+        "ownerCells": 30,
+        "texturedCells": 22,
+        "refusedCells": 8,
+        "unaccountedCells": 0,
+        "geometryInView": true,
+        "sourceRefCount": 1
+      }
+    ]
+  },
+  "campaign": {
+    "ranAt": "2026-08-26",
+    "branch": "fcp/144-acceptance-campaign",
+    "headCommit": "6329585",
+    "note": "Recorded output of the T015 campaign run. These are measurements of a process, not of a file, so they are carried here rather than re-derived. Re-run the commands in `commands` to check any of them.",
+    "commands": {
+      "validate": "pnpm citywide:validate",
+      "benchmark": "pnpm citywide:benchmark",
+      "tests": "pnpm test",
+      "testsSerial": "npx vitest run --no-file-parallelism",
+      "census": "pnpm ground-embellishment:census",
+      "namedPlaces": "pnpm named-places:evidence",
+      "zoneImagery": "pnpm zone-imagery:validate"
+    },
+    "validate": {
+      "exitCode": 0,
+      "phases": 3,
+      "citywideRelease": {
+        "valid": true,
+        "declaredFiles": 452,
+        "totalDeclaredBytes": 304382520,
+        "buildings": 45194,
+        "restaurants": 109386
+      },
+      "groundRelease": {
+        "valid": true,
+        "cells": 140,
+        "features": 42778,
+        "parts": 47779,
+        "artifacts": 352,
+        "totalArtifactBytes": 182027517,
+        "coordinatesChecked": 13154558,
+        "maxCellExcursionDegrees": 4.999999703159119e-8,
+        "maxObservedRelativeAreaError": 2.482730398582752e-9
+      },
+      "zoneImagery": {
+        "valid": true,
+        "textures": 87,
+        "recordedRefusals": 75,
+        "mebibytes": 56.8
+      }
+    },
+    "benchmark": {
+      "exitCode": 0,
+      "scope": "buildings + restaurants search/pick only — loads ZERO ground, curb or imagery bytes (recorded gap)",
+      "searchSamples": 30,
+      "pickSamples": 30,
+      "coldSearchP95Ms": 14.923667000000023,
+      "warmSearchP95Ms": 15.237875000000031,
+      "coldPickP95Ms": 4.578625000000102,
+      "warmPickP95Ms": 1.981999999999971,
+      "recordedBudgetSearchP95Ms": {
+        "cold": 16.96,
+        "warm": 16.81
+      },
+      "recordedBudgetPickP95Ms": {
+        "cold": 6.44,
+        "warm": 2.68
+      },
+      "boundedReleaseShards": 451
+    },
+    "tests": {
+      "head": {
+        "files": 231,
+        "passed": 3655,
+        "failed": 7,
+        "skipped": 18,
+        "exitCode": 1
+      },
+      "headSerial": {
+        "files": 231,
+        "passed": 3658,
+        "failed": 4,
+        "skipped": 18,
+        "exitCode": 1,
+        "command": "npx vitest run --no-file-parallelism",
+        "note": "With worker contention removed, the failure set at HEAD is a strict SUBSET of the pre-goal baseline's failure set. Every remaining failure also failed before the goal's first commit."
+      },
+      "preGoalBaseline": {
+        "commit": "b38e40f",
+        "description": "the commit immediately before T001 (#145) — the goal's first",
+        "files": 211,
+        "passed": 3252,
+        "failed": 5,
+        "skipped": 18,
+        "exitCode": 1,
+        "method": "detached worktree with node_modules, public/data and data symlinked from the main tree so the payload-dependent tests see identical inputs"
+      },
+      "preExistingFailures": [
+        "src/runtime/exterior-serving-residency.test.ts > re-derives the assembly per-asset weight from the committed retention packages",
+        "src/app/App.test.tsx > closes details with Escape and returns focus to the located-pick trigger",
+        "src/app/App.test.tsx > streams the whole promoted set in a default session, naming each wave",
+        "src/app/App.test.tsx > streams the promoted release with no exterior parameters once a real base is active",
+        "src/app/App.test.tsx > keeps the promotion gates in force after an off/on toggle, so a drifted record still fails closed"
+      ],
+      "newLoadDependentFailures": [
+        "src/app/ground-canary.test.tsx > serves near-tier curbs in the default session, appended to the base's status line",
+        "src/app/ground-canary.test.tsx > deactivates exactly one wave's cells when that wave is rolled back"
+      ],
+      "newLoadDependentFailuresNote": "Both PASS when the file runs alone (19/19), at every intermediate commit of the goal under the same payload (T012 15/15, T013 16/16, T014 19/19 in a detached worktree), and in the full suite under --no-file-parallelism. They appear only under parallel full-suite worker load. They are NOT pre-existing — the file did not exist before T007 — and they are recorded as a genuine new defect in the TEST SUITE, not in the shipped release.",
+      "escapeFocusFlake": {
+        "test": "src/app/App.test.tsx > closes details with Escape and returns focus to the located-pick trigger",
+        "status": "Pre-existing (fails in the pre-goal baseline too) and confirmed contention-only: passes under --no-file-parallelism. Matches the prior goal's recorded finding."
+      }
+    }
+  }
+}
