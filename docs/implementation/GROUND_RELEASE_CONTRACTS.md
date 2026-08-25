@@ -391,3 +391,37 @@ drape. No release byte, no budget and no other module changes.
   visible at close range. The `textureCoordinates` path is not exercised in
   jsdom — CesiumJS does not render there — so the st arithmetic is unit-tested
   and the Cesium plumbing rests on browser validation, which remains outstanding.
+
+## T014 — named places get deep-linked poses (2026-08-26, Issue #143)
+
+Seven landmarks are bound to one canonical ground identity each in
+`src/domain/named-places.ts`, with a derived camera pose, a sourced display
+name, and a deep link. Full record:
+`docs/implementation/20260826-named-places.md`.
+
+- **Ground consumers may now name a feature, but only from its source.** Each
+  entry carries `sourceDisplayName` and `displayNameField` — the literal string
+  and the property it was read from — so a display name is a citation, not a
+  label. The only transformation permitted is recorded per entry
+  (`displayNameNote`); today that is title-casing two upper-cased hydrography
+  names.
+- **The naming decision on record: "The Battery" (M005), never "Battery
+  Park".** NYC Parks has no property with that literal name, and M283 is the
+  separate "Battery Park City". No alias is offered in any surface.
+- **A named-place deep link pins nothing but the pose and the ground
+  selection.** No `data=`, no `release=`, and no `ground=` token: the ground
+  release loads independently of data mode, and `GROUND_DEFAULT_ON` keeps the
+  default polarity silent, so the link stays a request for one surface.
+- **Cell extents are plate carrée.** `groundCellBounds` derives a cell's box
+  from its id as 2^level equal steps of 360/2^level longitude and 180/2^level
+  latitude. A Mercator reading of the same numbers misses Manhattan by ~20
+  degrees; the disk half of the test checks the derivation against the
+  `cellBounds` in every per-cell artifact.
+- **Imagery accounting, not imagery completeness.** Every `(cell, class)` pair
+  the seven places own is textured or refused with a stated reason;
+  `unaccounted` is zero and the generator refuses to write the record otherwise.
+  Fourteen are refusals (Hudson 22/8, East River 3/5, The Battery 1/1) at the
+  edge of the retained 2024 orthoimagery footprint.
+- **Not measured here**: anything visual. No screenshots were captured this
+  cycle, so "recognizable" is asserted structurally only and is deferred to the
+  P3 browser batch.

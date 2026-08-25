@@ -135,6 +135,8 @@ import {
 import { EXTERIOR_WAVE_PLAN, type ExteriorWaveId } from "../release/exterior-wave-ledger";
 import { groundCellTileKey } from "../release/ground-release";
 import { tileBounds } from "../runtime/spatial";
+import { NAMED_PLACES } from "../domain/named-places";
+import { parseNavigationUrl } from "../domain/visitor-navigation";
 
 const parkFeature: GroundFeature = {
   canonicalFeatureId: "udt:manhattan:park:M010",
@@ -619,5 +621,81 @@ describe("near-tier curb canary (T010)", () => {
     await waitFor(() => expect(document.querySelector(".viewport")).toBeInTheDocument());
     expect(embellishmentMocks.loadGroundEmbellishmentRelease).not.toHaveBeenCalled();
     expect(embellishmentOverlay()).toBe("");
+  });
+});
+
+/**
+ * The named-place quick nav (T014).
+ *
+ * These assertions are about WIRING, not about what the camera then shows: the
+ * viewport is mocked, so "the pose was requested and the surface was selected"
+ * is the whole claim. Whether each pose reads as its landmark is a visual
+ * question, deferred to the P3 browser batch.
+ */
+describe("named places", () => {
+  const openPlaces = () => fireEvent.click(screen.getByRole("button", { name: "Places" }));
+
+  it("lists every registry place with the canonical id it navigates to", async () => {
+    window.history.replaceState({}, "", initialTestUrl);
+    render(<App />);
+    await waitFor(() => expect(groundStatus()?.getAttribute("data-ground-state")).toBe("ready"));
+    openPlaces();
+    const panel = document.querySelector<HTMLElement>(".places-panel")!;
+    expect(panel).not.toBeNull();
+    const entries = panel.querySelectorAll("[data-named-place]");
+    expect(entries).toHaveLength(NAMED_PLACES.length);
+    for (const place of NAMED_PLACES) {
+      expect(panel.textContent).toContain(place.displayName);
+      // The convenience label never travels without the identity it stands for.
+      expect(panel.textContent).toContain(place.canonicalFeatureId);
+    }
+    // The naming decision is visible in the shipped UI, not only in the registry.
+    expect(panel.textContent).toContain("The Battery");
+    expect(panel.textContent).not.toContain("Battery Park");
+  });
+
+  it("writes the place's pose and ground selection into one history entry", async () => {
+    window.history.replaceState({}, "", initialTestUrl);
+    render(<App />);
+    await waitFor(() => expect(groundStatus()?.getAttribute("data-ground-state")).toBe("ready"));
+    openPlaces();
+    const battery = NAMED_PLACES.find((place) => place.placeKey === "the-battery")!;
+    fireEvent.click(document.querySelector<HTMLElement>(".places-panel [data-named-place='the-battery']")!);
+    await waitFor(() => expect(window.location.search).toContain(`groundFeature=${encodeURIComponent(battery.canonicalFeatureId)}`));
+    // The pose written is the place's own, in the canonical six-decimal form,
+    // and not the pose the camera happened to be at when the click landed.
+    const parsed = parseNavigationUrl(window.location.href);
+    expect(parsed.pose).toEqual(battery.pose);
+    expect(parsed.cameraMode).toBe("explore");
+    expect(window.location.search).toContain(`lon=${battery.pose.longitude.toFixed(6)}`);
+    expect(window.location.search).toContain(`height=${battery.pose.height.toFixed(6)}`);
+  });
+
+  it("surfaces the content-addressed places that no catalog carries", async () => {
+    window.history.replaceState({}, "", initialTestUrl);
+    render(<App />);
+    await waitFor(() => expect(groundStatus()?.getAttribute("data-ground-state")).toBe("ready"));
+    // The query is driven through the app's own URL restore rather than through
+    // a synthetic keystroke: this is the path a shared '?q=' link takes, and it
+    // exercises the same 'namedPlaceResults' render the typed path does.
+    window.history.replaceState({}, "", `${new URL(initialTestUrl).origin}/?q=${encodeURIComponent("Hudson River")}`);
+    window.dispatchEvent(new PopStateEvent("popstate"));
+    const input = screen.getByRole("combobox", { name: "Search Manhattan" });
+    await waitFor(() => expect((input as HTMLInputElement).value).toBe("Hudson River"));
+    fireEvent.focus(input);
+    const hit = await waitFor(() => {
+      const node = document.querySelector<HTMLElement>(".search-results [data-named-place='hudson-river']");
+      expect(node).not.toBeNull();
+      return node!;
+    });
+    expect(hit.textContent).toContain("Hudson River");
+    expect(hit.textContent).toContain("water");
+    // The catalog carries no such record, and the empty-state notice must not
+    // claim otherwise while a real result is on screen.
+    expect(document.querySelector(".search-results .search-empty")).toBeNull();
+    fireEvent.click(hit);
+    const hudson = NAMED_PLACES.find((place) => place.placeKey === "hudson-river")!;
+    await waitFor(() => expect(window.location.search).toContain(`groundFeature=${encodeURIComponent(hudson.canonicalFeatureId)}`));
+    expect(parseNavigationUrl(window.location.href).pose).toEqual(hudson.pose);
   });
 });

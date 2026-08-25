@@ -1,5 +1,8 @@
 import type { Itinerary, TravelMode } from "./routing";
-import { explorationUrl, parseExplorationUrl, type ExplorationUrlState } from "./exploration";
+// Explicit `.ts`, as everywhere else in `src/`: Node's `--experimental-strip-types`
+// loader does no extension resolution, so an extensionless value import here
+// makes this module unloadable from the `scripts/` CLIs that reach it.
+import { explorationUrl, parseExplorationUrl, type ExplorationUrlState } from "./exploration.ts";
 
 export const VISITOR_NAVIGATION_SCHEMA_VERSION = "1.0" as const;
 export type CameraMode = "overview" | "explore";

@@ -130,6 +130,7 @@
     "mass-generation:stage0": "node --experimental-strip-types --max-old-space-size=8192 scripts/mass-generation-stage0-cli.mjs",
     "mass-generation:wave": "node --experimental-strip-types --max-old-space-size=8192 scripts/mass-generation-wave-cli.mjs",
     "mass-generation:coverage": "node --experimental-strip-types --max-old-space-size=8192 scripts/mass-generation-coverage-cli.mjs",
+    "named-places:evidence": "node --experimental-strip-types --max-old-space-size=8192 scripts/named-places-evidence-cli.mjs",
     "zone-imagery:build": "node --experimental-strip-types --max-old-space-size=8192 scripts/manhattan-zone-imagery-build-cli.mjs",
     "zone-imagery:validate": "node --experimental-strip-types scripts/validate-manhattan-zone-imagery.mjs"
   },

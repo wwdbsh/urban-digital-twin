@@ -1,0 +1,1083 @@
+{
+  "schemaVersion": "named-places-evidence-1",
+  "groundReleaseId": "manhattan-ground-20260824",
+  "zoneImageryReleaseId": "manhattan-ground-zone-imagery-20260826",
+  "deepLinkBase": "http://localhost/",
+  "places": [
+    {
+      "placeKey": "central-park",
+      "displayName": "Central Park",
+      "sourceDisplayName": "Central Park",
+      "displayNameField": "NYC Parks properties `name` (gispropnum M010)",
+      "canonicalFeatureId": "udt:manhattan:park:M010",
+      "groundClass": "park",
+      "identityOrigin": "referenced-existing",
+      "deepLink": "/?view=explore&lon=-73.972141&lat=40.775654&height=2500.000000&heading=35.000000&pitch=-70.000000&roll=0.000000&groundFeature=udt%3Amanhattan%3Apark%3AM010",
+      "pose": {
+        "longitude": -73.972141,
+        "latitude": 40.775654,
+        "height": 2500,
+        "heading": 35,
+        "pitch": -70,
+        "roll": 0
+      },
+      "groundTarget": {
+        "longitude": -73.965949,
+        "latitude": 40.78235
+      },
+      "viewFootprint": {
+        "west": -73.995608,
+        "south": 40.759892,
+        "east": -73.93629,
+        "north": 40.804807
+      },
+      "geometryBounds": {
+        "west": -73.982263,
+        "south": 40.764424,
+        "east": -73.94964,
+        "north": 40.800266
+      },
+      "geometryInView": true,
+      "ownerCellIds": [
+        "ground-cell-000058-14-4824-4481",
+        "ground-cell-000059-14-4825-4481",
+        "ground-cell-000066-14-4825-4480",
+        "ground-cell-000073-14-4825-4479",
+        "ground-cell-000074-14-4826-4479",
+        "ground-cell-000080-14-4825-4478",
+        "ground-cell-000081-14-4826-4478"
+      ],
+      "ownerCellIdsInView": [
+        "ground-cell-000058-14-4824-4481",
+        "ground-cell-000059-14-4825-4481",
+        "ground-cell-000066-14-4825-4480",
+        "ground-cell-000073-14-4825-4479",
+        "ground-cell-000074-14-4826-4479",
+        "ground-cell-000080-14-4825-4478",
+        "ground-cell-000081-14-4826-4478"
+      ],
+      "classCensus": {
+        "ground-cell-000058-14-4824-4481": {
+          "park": 10,
+          "plaza": 1,
+          "roadbed": 307,
+          "sidewalk": 226,
+          "water": 1
+        },
+        "ground-cell-000059-14-4825-4481": {
+          "park": 7,
+          "plaza": 1,
+          "roadbed": 466,
+          "sidewalk": 222,
+          "water": 7
+        },
+        "ground-cell-000066-14-4825-4480": {
+          "park": 6,
+          "roadbed": 265,
+          "sidewalk": 173,
+          "water": 3
+        },
+        "ground-cell-000073-14-4825-4479": {
+          "park": 9,
+          "roadbed": 281,
+          "sidewalk": 187,
+          "water": 2
+        },
+        "ground-cell-000074-14-4826-4479": {
+          "park": 20,
+          "plaza": 1,
+          "roadbed": 346,
+          "sidewalk": 227,
+          "water": 2
+        },
+        "ground-cell-000080-14-4825-4478": {
+          "park": 14,
+          "roadbed": 257,
+          "sidewalk": 196,
+          "water": 2
+        },
+        "ground-cell-000081-14-4826-4478": {
+          "park": 30,
+          "plaza": 1,
+          "roadbed": 440,
+          "sidewalk": 215,
+          "water": 6
+        }
+      },
+      "imagery": [
+        {
+          "zoneRef": "ground-cell-000058-14-4824-4481/park",
+          "cellId": "ground-cell-000058-14-4824-4481",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000059-14-4825-4481/park",
+          "cellId": "ground-cell-000059-14-4825-4481",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000066-14-4825-4480/park",
+          "cellId": "ground-cell-000066-14-4825-4480",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000073-14-4825-4479/park",
+          "cellId": "ground-cell-000073-14-4825-4479",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000074-14-4826-4479/park",
+          "cellId": "ground-cell-000074-14-4826-4479",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000080-14-4825-4478/park",
+          "cellId": "ground-cell-000080-14-4825-4478",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000081-14-4826-4478/park",
+          "cellId": "ground-cell-000081-14-4826-4478",
+          "status": "textured"
+        }
+      ],
+      "imagerySummary": {
+        "textured": 7,
+        "refused": 0,
+        "unaccounted": 0
+      },
+      "sourceRefs": [
+        {
+          "provider": "NYC Parks",
+          "datasetId": "enfh-gkve",
+          "sourceRecordId": "M010",
+          "licenseRefId": "nyc-open-data-terms",
+          "capturedAt": "2026-08-04T14:47:42.642Z",
+          "updatedAt": "2026-07-17T13:40:16.000Z"
+        }
+      ]
+    },
+    {
+      "placeKey": "bryant-park",
+      "displayName": "Bryant Park",
+      "sourceDisplayName": "Bryant Park",
+      "displayNameField": "NYC Parks properties `name` (gispropnum M008)",
+      "canonicalFeatureId": "udt:manhattan:park:M008",
+      "groundClass": "park",
+      "identityOrigin": "referenced-existing",
+      "deepLink": "/?view=explore&lon=-73.983030&lat=40.750697&height=650.000000&heading=0.000000&pitch=-65.000000&roll=0.000000&groundFeature=udt%3Amanhattan%3Apark%3AM008",
+      "pose": {
+        "longitude": -73.98303,
+        "latitude": 40.750697,
+        "height": 650,
+        "heading": 0,
+        "pitch": -65,
+        "roll": 0
+      },
+      "groundTarget": {
+        "longitude": -73.98303,
+        "latitude": 40.75342
+      },
+      "viewFootprint": {
+        "west": -73.990738,
+        "south": 40.747581,
+        "east": -73.975322,
+        "north": 40.759259
+      },
+      "geometryBounds": {
+        "west": -73.984802,
+        "south": 40.752329,
+        "east": -73.981088,
+        "north": 40.754645
+      },
+      "geometryInView": true,
+      "ownerCellIds": [
+        "ground-cell-000051-14-4824-4482",
+        "ground-cell-000052-14-4825-4482"
+      ],
+      "ownerCellIdsInView": [
+        "ground-cell-000051-14-4824-4482",
+        "ground-cell-000052-14-4825-4482"
+      ],
+      "classCensus": {
+        "ground-cell-000051-14-4824-4482": {
+          "park": 9,
+          "plaza": 4,
+          "roadbed": 555,
+          "sidewalk": 237
+        },
+        "ground-cell-000052-14-4825-4482": {
+          "park": 14,
+          "plaza": 2,
+          "roadbed": 488,
+          "sidewalk": 222,
+          "water": 2
+        }
+      },
+      "imagery": [
+        {
+          "zoneRef": "ground-cell-000051-14-4824-4482/park",
+          "cellId": "ground-cell-000051-14-4824-4482",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000052-14-4825-4482/park",
+          "cellId": "ground-cell-000052-14-4825-4482",
+          "status": "textured"
+        }
+      ],
+      "imagerySummary": {
+        "textured": 2,
+        "refused": 0,
+        "unaccounted": 0
+      },
+      "sourceRefs": [
+        {
+          "provider": "NYC Parks",
+          "datasetId": "enfh-gkve",
+          "sourceRecordId": "M008",
+          "licenseRefId": "nyc-open-data-terms",
+          "capturedAt": "2026-08-04T14:47:42.642Z",
+          "updatedAt": "2026-07-17T13:40:16.000Z"
+        }
+      ]
+    },
+    {
+      "placeKey": "washington-square-park",
+      "displayName": "Washington Square Park",
+      "sourceDisplayName": "Washington Square Park",
+      "displayNameField": "NYC Parks properties `name` (gispropnum M098)",
+      "canonicalFeatureId": "udt:manhattan:park:M098",
+      "groundClass": "park",
+      "identityOrigin": "referenced-existing",
+      "deepLink": "/?view=explore&lon=-73.997440&lat=40.727887&height=650.000000&heading=0.000000&pitch=-65.000000&roll=0.000000&groundFeature=udt%3Amanhattan%3Apark%3AM098",
+      "pose": {
+        "longitude": -73.99744,
+        "latitude": 40.727887,
+        "height": 650,
+        "heading": 0,
+        "pitch": -65,
+        "roll": 0
+      },
+      "groundTarget": {
+        "longitude": -73.99744,
+        "latitude": 40.73061
+      },
+      "viewFootprint": {
+        "west": -74.005145,
+        "south": 40.724771,
+        "east": -73.989735,
+        "north": 40.736449
+      },
+      "geometryBounds": {
+        "west": -73.999474,
+        "south": 40.729668,
+        "east": -73.995729,
+        "north": 40.732115
+      },
+      "geometryInView": true,
+      "ownerCellIds": [
+        "ground-cell-000037-14-4824-4484"
+      ],
+      "ownerCellIdsInView": [
+        "ground-cell-000037-14-4824-4484"
+      ],
+      "classCensus": {
+        "ground-cell-000037-14-4824-4484": {
+          "park": 30,
+          "plaza": 4,
+          "roadbed": 549,
+          "sidewalk": 298
+        }
+      },
+      "imagery": [
+        {
+          "zoneRef": "ground-cell-000037-14-4824-4484/park",
+          "cellId": "ground-cell-000037-14-4824-4484",
+          "status": "textured"
+        }
+      ],
+      "imagerySummary": {
+        "textured": 1,
+        "refused": 0,
+        "unaccounted": 0
+      },
+      "sourceRefs": [
+        {
+          "provider": "NYC Parks",
+          "datasetId": "enfh-gkve",
+          "sourceRecordId": "M098",
+          "licenseRefId": "nyc-open-data-terms",
+          "capturedAt": "2026-08-04T14:47:42.642Z",
+          "updatedAt": "2026-07-17T13:40:16.000Z"
+        }
+      ]
+    },
+    {
+      "placeKey": "the-battery",
+      "displayName": "The Battery",
+      "sourceDisplayName": "The Battery",
+      "displayNameField": "NYC Parks properties `name` (gispropnum M005)",
+      "canonicalFeatureId": "udt:manhattan:park:M005",
+      "groundClass": "park",
+      "identityOrigin": "referenced-existing",
+      "deepLink": "/?view=explore&lon=-74.014150&lat=40.699058&height=700.000000&heading=0.000000&pitch=-65.000000&roll=0.000000&groundFeature=udt%3Amanhattan%3Apark%3AM005",
+      "pose": {
+        "longitude": -74.01415,
+        "latitude": 40.699058,
+        "height": 700,
+        "heading": 0,
+        "pitch": -65,
+        "roll": 0
+      },
+      "groundTarget": {
+        "longitude": -74.01415,
+        "latitude": 40.70199
+      },
+      "viewFootprint": {
+        "west": -74.022445,
+        "south": 40.695702,
+        "east": -74.005855,
+        "north": 40.708278
+      },
+      "geometryBounds": {
+        "west": -74.017701,
+        "south": 40.700804,
+        "east": -74.012654,
+        "north": 40.704621
+      },
+      "geometryInView": true,
+      "ownerCellIds": [
+        "ground-cell-000015-14-4823-4487",
+        "ground-cell-000022-14-4823-4486"
+      ],
+      "ownerCellIdsInView": [
+        "ground-cell-000015-14-4823-4487",
+        "ground-cell-000022-14-4823-4486"
+      ],
+      "classCensus": {
+        "ground-cell-000015-14-4823-4487": {
+          "park": 2,
+          "plaza": 1,
+          "roadbed": 63,
+          "sidewalk": 31,
+          "water": 3
+        },
+        "ground-cell-000022-14-4823-4486": {
+          "park": 9,
+          "plaza": 2,
+          "roadbed": 405,
+          "sidewalk": 204,
+          "water": 2
+        }
+      },
+      "imagery": [
+        {
+          "zoneRef": "ground-cell-000015-14-4823-4487/park",
+          "cellId": "ground-cell-000015-14-4823-4487",
+          "status": "refused",
+          "reason": "Only 91.448% of this cell is covered by retained orthoimagery; a partially synthesized texture would be indistinguishable from a photographed one once draped, so the whole texture is refused and the polygon base draws instead."
+        },
+        {
+          "zoneRef": "ground-cell-000022-14-4823-4486/park",
+          "cellId": "ground-cell-000022-14-4823-4486",
+          "status": "textured"
+        }
+      ],
+      "imagerySummary": {
+        "textured": 1,
+        "refused": 1,
+        "unaccounted": 0
+      },
+      "sourceRefs": [
+        {
+          "provider": "NYC Parks",
+          "datasetId": "enfh-gkve",
+          "sourceRecordId": "M005",
+          "licenseRefId": "nyc-open-data-terms",
+          "capturedAt": "2026-08-04T14:47:42.642Z",
+          "updatedAt": "2026-07-17T13:40:16.000Z"
+        }
+      ],
+      "extentNote": "NYC Parks property M005, named \"The Battery\". This is not M283 \"Battery Park City\", which is a separate property further north along the Hudson."
+    },
+    {
+      "placeKey": "times-square",
+      "displayName": "Times Square Plaza",
+      "sourceDisplayName": "Times Square Plaza",
+      "displayNameField": "NYC DOT pedestrian plazas `plazaname` (objectid 11)",
+      "canonicalFeatureId": "udt:ground:manhattan:plaza:24aeb72178ec5bd0",
+      "groundClass": "plaza",
+      "identityOrigin": "ground-owned",
+      "deepLink": "/?view=explore&lon=-73.987128&lat=40.754583&height=700.000000&heading=20.000000&pitch=-55.000000&roll=0.000000&groundFeature=udt%3Aground%3Amanhattan%3Aplaza%3A24aeb72178ec5bd0",
+      "pose": {
+        "longitude": -73.987128,
+        "latitude": 40.754583,
+        "height": 700,
+        "heading": 20,
+        "pitch": -55,
+        "roll": 0
+      },
+      "groundTarget": {
+        "longitude": -73.98514,
+        "latitude": 40.75872
+      },
+      "viewFootprint": {
+        "west": -73.993441,
+        "south": 40.752432,
+        "east": -73.976838,
+        "north": 40.765009
+      },
+      "geometryBounds": {
+        "west": -73.986823,
+        "south": 40.755026,
+        "east": -73.98273,
+        "north": 40.763321
+      },
+      "geometryInView": true,
+      "ownerCellIds": [
+        "ground-cell-000051-14-4824-4482",
+        "ground-cell-000058-14-4824-4481"
+      ],
+      "ownerCellIdsInView": [
+        "ground-cell-000051-14-4824-4482",
+        "ground-cell-000058-14-4824-4481"
+      ],
+      "classCensus": {
+        "ground-cell-000051-14-4824-4482": {
+          "park": 9,
+          "plaza": 4,
+          "roadbed": 555,
+          "sidewalk": 237
+        },
+        "ground-cell-000058-14-4824-4481": {
+          "park": 10,
+          "plaza": 1,
+          "roadbed": 307,
+          "sidewalk": 226,
+          "water": 1
+        }
+      },
+      "imagery": [
+        {
+          "zoneRef": "ground-cell-000051-14-4824-4482/plaza",
+          "cellId": "ground-cell-000051-14-4824-4482",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000058-14-4824-4481/plaza",
+          "cellId": "ground-cell-000058-14-4824-4481",
+          "status": "textured"
+        }
+      ],
+      "imagerySummary": {
+        "textured": 2,
+        "refused": 0,
+        "unaccounted": 0
+      },
+      "sourceRefs": [
+        {
+          "provider": "NYC Department of Transportation (DOT)",
+          "datasetId": "k5k6-6jex",
+          "sourceRecordId": "11",
+          "licenseRefId": "nyc-open-data-terms",
+          "capturedAt": "2026-08-24T02:41:06.563Z",
+          "updatedAt": "2026-08-01T10:00:43.000Z"
+        }
+      ],
+      "extentNote": "The DOT plaza record spans Broadway from 41 Street to 53 Street (partner: Times Square Alliance). It is the pedestrian plaza programme boundary, not the colloquial extent of Times Square, and not a survey of current paving."
+    },
+    {
+      "placeKey": "east-river",
+      "displayName": "East River",
+      "sourceDisplayName": "EAST RIVER",
+      "displayNameField": "NYC hydrography `name` (source_id 10262000010.0)",
+      "canonicalFeatureId": "udt:ground:manhattan:water:d32d405d331afe68",
+      "groundClass": "water",
+      "identityOrigin": "ground-owned",
+      "deepLink": "/?view=explore&lon=-73.909178&lat=40.797115&height=2500.000000&heading=225.000000&pitch=-65.000000&roll=0.000000&groundFeature=udt%3Aground%3Amanhattan%3Awater%3Ad32d405d331afe68",
+      "pose": {
+        "longitude": -73.909178,
+        "latitude": 40.797115,
+        "height": 2500,
+        "heading": 225,
+        "pitch": -65,
+        "roll": 0
+      },
+      "groundTarget": {
+        "longitude": -73.918959,
+        "latitude": 40.78971
+      },
+      "viewFootprint": {
+        "west": -73.948621,
+        "south": 40.767252,
+        "east": -73.889296,
+        "north": 40.812168
+      },
+      "geometryBounds": {
+        "west": -73.943878,
+        "south": 40.772535,
+        "east": -73.894043,
+        "north": 40.806879
+      },
+      "geometryInView": true,
+      "ownerCellIds": [
+        "ground-cell-000067-14-4826-4480",
+        "ground-cell-000068-14-4827-4480",
+        "ground-cell-000074-14-4826-4479",
+        "ground-cell-000075-14-4827-4479",
+        "ground-cell-000076-14-4828-4479",
+        "ground-cell-000082-14-4827-4478",
+        "ground-cell-000083-14-4828-4478",
+        "ground-cell-000090-14-4828-4477"
+      ],
+      "ownerCellIdsInView": [
+        "ground-cell-000067-14-4826-4480",
+        "ground-cell-000068-14-4827-4480",
+        "ground-cell-000074-14-4826-4479",
+        "ground-cell-000075-14-4827-4479",
+        "ground-cell-000076-14-4828-4479",
+        "ground-cell-000082-14-4827-4478",
+        "ground-cell-000083-14-4828-4478",
+        "ground-cell-000090-14-4828-4477"
+      ],
+      "classCensus": {
+        "ground-cell-000067-14-4826-4480": {
+          "park": 8,
+          "plaza": 1,
+          "roadbed": 333,
+          "sidewalk": 200,
+          "water": 3
+        },
+        "ground-cell-000068-14-4827-4480": {
+          "park": 2,
+          "roadbed": 390,
+          "sidewalk": 180,
+          "water": 2
+        },
+        "ground-cell-000074-14-4826-4479": {
+          "park": 20,
+          "plaza": 1,
+          "roadbed": 346,
+          "sidewalk": 227,
+          "water": 2
+        },
+        "ground-cell-000075-14-4827-4479": {
+          "park": 7,
+          "roadbed": 148,
+          "sidewalk": 98,
+          "water": 2
+        },
+        "ground-cell-000076-14-4828-4479": {
+          "park": 1,
+          "roadbed": 134,
+          "sidewalk": 67,
+          "water": 5
+        },
+        "ground-cell-000082-14-4827-4478": {
+          "park": 16,
+          "roadbed": 342,
+          "sidewalk": 134,
+          "water": 3
+        },
+        "ground-cell-000083-14-4828-4478": {
+          "park": 1,
+          "roadbed": 91,
+          "sidewalk": 32,
+          "water": 2
+        },
+        "ground-cell-000090-14-4828-4477": {
+          "roadbed": 328,
+          "sidewalk": 143,
+          "water": 1
+        }
+      },
+      "imagery": [
+        {
+          "zoneRef": "ground-cell-000067-14-4826-4480/water",
+          "cellId": "ground-cell-000067-14-4826-4480",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000068-14-4827-4480/water",
+          "cellId": "ground-cell-000068-14-4827-4480",
+          "status": "refused",
+          "reason": "Only 46.660% of this cell is covered by retained orthoimagery; a partially synthesized texture would be indistinguishable from a photographed one once draped, so the whole texture is refused and the polygon base draws instead."
+        },
+        {
+          "zoneRef": "ground-cell-000074-14-4826-4479/water",
+          "cellId": "ground-cell-000074-14-4826-4479",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000075-14-4827-4479/water",
+          "cellId": "ground-cell-000075-14-4827-4479",
+          "status": "refused",
+          "reason": "Only 99.948% of this cell is covered by retained orthoimagery; a partially synthesized texture would be indistinguishable from a photographed one once draped, so the whole texture is refused and the polygon base draws instead."
+        },
+        {
+          "zoneRef": "ground-cell-000076-14-4828-4479/water",
+          "cellId": "ground-cell-000076-14-4828-4479",
+          "status": "refused",
+          "reason": "Only 29.882% of this cell is covered by retained orthoimagery; a partially synthesized texture would be indistinguishable from a photographed one once draped, so the whole texture is refused and the polygon base draws instead."
+        },
+        {
+          "zoneRef": "ground-cell-000082-14-4827-4478/water",
+          "cellId": "ground-cell-000082-14-4827-4478",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000083-14-4828-4478/water",
+          "cellId": "ground-cell-000083-14-4828-4478",
+          "status": "refused",
+          "reason": "Only 41.010% of this cell is covered by retained orthoimagery; a partially synthesized texture would be indistinguishable from a photographed one once draped, so the whole texture is refused and the polygon base draws instead."
+        },
+        {
+          "zoneRef": "ground-cell-000090-14-4828-4477/water",
+          "cellId": "ground-cell-000090-14-4828-4477",
+          "status": "refused",
+          "reason": "Only 5.884% of this cell is covered by retained orthoimagery; a partially synthesized texture would be indistinguishable from a photographed one once draped, so the whole texture is refused and the polygon base draws instead."
+        }
+      ],
+      "imagerySummary": {
+        "textured": 3,
+        "refused": 5,
+        "unaccounted": 0
+      },
+      "sourceRefs": [
+        {
+          "provider": "NYC Office of Technology and Innovation (OTI) Planimetrics",
+          "datasetId": "pjs3-c3z5",
+          "sourceRecordId": "10262000010.0",
+          "licenseRefId": "nyc-open-data-terms",
+          "capturedAt": "2026-08-24T02:50:44.279Z",
+          "updatedAt": "2024-04-24T20:08:25.000Z"
+        }
+      ],
+      "extentNote": "The retained clip of this hydrography polygon covers the upper East River reach beside Manhattan, roughly 40.7725 to 40.8069 N. The pose frames that reach; it is not a view of the whole river.",
+      "displayNameNote": "The hydrography snapshot stores names upper-cased; the display name is the same string in title case."
+    },
+    {
+      "placeKey": "hudson-river",
+      "displayName": "Hudson River",
+      "sourceDisplayName": "HUDSON RIVER",
+      "displayNameField": "NYC hydrography `name` (source_id 12262000008.0)",
+      "canonicalFeatureId": "udt:ground:manhattan:water:96c4c6af8c1fea9b",
+      "groundClass": "water",
+      "identityOrigin": "ground-owned",
+      "deepLink": "/?view=explore&lon=-74.027118&lat=40.760000&height=2500.000000&heading=90.000000&pitch=-60.000000&roll=0.000000&groundFeature=udt%3Aground%3Amanhattan%3Awater%3A96c4c6af8c1fea9b",
+      "pose": {
+        "longitude": -74.027118,
+        "latitude": 40.76,
+        "height": 2500,
+        "heading": 90,
+        "pitch": -60,
+        "roll": 0
+      },
+      "groundTarget": {
+        "longitude": -74.01,
+        "latitude": 40.76
+      },
+      "viewFootprint": {
+        "west": -74.039649,
+        "south": 40.737542,
+        "east": -73.980351,
+        "north": 40.782458
+      },
+      "geometryBounds": {
+        "west": -74.025388,
+        "south": 40.692843,
+        "east": -73.919089,
+        "north": 40.891113
+      },
+      "geometryInView": true,
+      "ownerCellIds": [
+        "ground-cell-000008-14-4823-4488",
+        "ground-cell-000015-14-4823-4487",
+        "ground-cell-000022-14-4823-4486",
+        "ground-cell-000029-14-4823-4485",
+        "ground-cell-000036-14-4823-4484",
+        "ground-cell-000043-14-4823-4483",
+        "ground-cell-000050-14-4823-4482",
+        "ground-cell-000057-14-4823-4481",
+        "ground-cell-000058-14-4824-4481",
+        "ground-cell-000064-14-4823-4480",
+        "ground-cell-000065-14-4824-4480",
+        "ground-cell-000072-14-4824-4479",
+        "ground-cell-000073-14-4825-4479",
+        "ground-cell-000079-14-4824-4478",
+        "ground-cell-000080-14-4825-4478",
+        "ground-cell-000086-14-4824-4477",
+        "ground-cell-000087-14-4825-4477",
+        "ground-cell-000094-14-4825-4476",
+        "ground-cell-000095-14-4826-4476",
+        "ground-cell-000101-14-4825-4475",
+        "ground-cell-000102-14-4826-4475",
+        "ground-cell-000108-14-4825-4474",
+        "ground-cell-000109-14-4826-4474",
+        "ground-cell-000116-14-4826-4473",
+        "ground-cell-000123-14-4826-4472",
+        "ground-cell-000124-14-4827-4472",
+        "ground-cell-000130-14-4826-4471",
+        "ground-cell-000131-14-4827-4471",
+        "ground-cell-000137-14-4826-4470",
+        "ground-cell-000138-14-4827-4470"
+      ],
+      "ownerCellIdsInView": [
+        "ground-cell-000043-14-4823-4483",
+        "ground-cell-000050-14-4823-4482",
+        "ground-cell-000057-14-4823-4481",
+        "ground-cell-000058-14-4824-4481",
+        "ground-cell-000064-14-4823-4480",
+        "ground-cell-000065-14-4824-4480",
+        "ground-cell-000072-14-4824-4479",
+        "ground-cell-000073-14-4825-4479"
+      ],
+      "classCensus": {
+        "ground-cell-000008-14-4823-4488": {
+          "roadbed": 91,
+          "sidewalk": 67,
+          "water": 4
+        },
+        "ground-cell-000015-14-4823-4487": {
+          "park": 2,
+          "plaza": 1,
+          "roadbed": 63,
+          "sidewalk": 31,
+          "water": 3
+        },
+        "ground-cell-000022-14-4823-4486": {
+          "park": 9,
+          "plaza": 2,
+          "roadbed": 405,
+          "sidewalk": 204,
+          "water": 2
+        },
+        "ground-cell-000029-14-4823-4485": {
+          "park": 9,
+          "plaza": 2,
+          "roadbed": 292,
+          "sidewalk": 182,
+          "water": 1
+        },
+        "ground-cell-000036-14-4823-4484": {
+          "park": 5,
+          "roadbed": 206,
+          "sidewalk": 141,
+          "water": 1
+        },
+        "ground-cell-000043-14-4823-4483": {
+          "park": 5,
+          "plaza": 1,
+          "roadbed": 168,
+          "sidewalk": 105,
+          "water": 1
+        },
+        "ground-cell-000050-14-4823-4482": {
+          "park": 1,
+          "roadbed": 44,
+          "sidewalk": 48,
+          "water": 1
+        },
+        "ground-cell-000057-14-4823-4481": {
+          "roadbed": 4,
+          "sidewalk": 1,
+          "water": 1
+        },
+        "ground-cell-000058-14-4824-4481": {
+          "park": 10,
+          "plaza": 1,
+          "roadbed": 307,
+          "sidewalk": 226,
+          "water": 1
+        },
+        "ground-cell-000064-14-4823-4480": {
+          "roadbed": 2,
+          "sidewalk": 2,
+          "water": 1
+        },
+        "ground-cell-000065-14-4824-4480": {
+          "park": 12,
+          "roadbed": 179,
+          "sidewalk": 112,
+          "water": 1
+        },
+        "ground-cell-000072-14-4824-4479": {
+          "park": 2,
+          "roadbed": 36,
+          "sidewalk": 20,
+          "water": 1
+        },
+        "ground-cell-000073-14-4825-4479": {
+          "park": 9,
+          "roadbed": 281,
+          "sidewalk": 187,
+          "water": 2
+        },
+        "ground-cell-000079-14-4824-4478": {
+          "water": 1
+        },
+        "ground-cell-000080-14-4825-4478": {
+          "park": 14,
+          "roadbed": 257,
+          "sidewalk": 196,
+          "water": 2
+        },
+        "ground-cell-000086-14-4824-4477": {
+          "water": 1
+        },
+        "ground-cell-000087-14-4825-4477": {
+          "park": 6,
+          "roadbed": 91,
+          "sidewalk": 94,
+          "water": 1
+        },
+        "ground-cell-000094-14-4825-4476": {
+          "park": 2,
+          "roadbed": 37,
+          "sidewalk": 20,
+          "water": 1
+        },
+        "ground-cell-000095-14-4826-4476": {
+          "park": 21,
+          "plaza": 2,
+          "roadbed": 408,
+          "sidewalk": 228,
+          "water": 1
+        },
+        "ground-cell-000101-14-4825-4475": {
+          "water": 1
+        },
+        "ground-cell-000102-14-4826-4475": {
+          "park": 22,
+          "roadbed": 261,
+          "sidewalk": 179,
+          "water": 1
+        },
+        "ground-cell-000108-14-4825-4474": {
+          "water": 1
+        },
+        "ground-cell-000109-14-4826-4474": {
+          "park": 7,
+          "plaza": 3,
+          "roadbed": 221,
+          "sidewalk": 102,
+          "water": 1
+        },
+        "ground-cell-000116-14-4826-4473": {
+          "park": 7,
+          "roadbed": 174,
+          "sidewalk": 41,
+          "water": 1
+        },
+        "ground-cell-000123-14-4826-4472": {
+          "park": 1,
+          "roadbed": 2,
+          "sidewalk": 1,
+          "water": 1
+        },
+        "ground-cell-000124-14-4827-4472": {
+          "park": 11,
+          "plaza": 2,
+          "roadbed": 227,
+          "sidewalk": 108,
+          "water": 2
+        },
+        "ground-cell-000130-14-4826-4471": {
+          "water": 1
+        },
+        "ground-cell-000131-14-4827-4471": {
+          "park": 3,
+          "roadbed": 57,
+          "sidewalk": 32,
+          "water": 2
+        },
+        "ground-cell-000137-14-4826-4470": {
+          "water": 1
+        },
+        "ground-cell-000138-14-4827-4470": {
+          "roadbed": 46,
+          "sidewalk": 30,
+          "water": 1
+        }
+      },
+      "imagery": [
+        {
+          "zoneRef": "ground-cell-000008-14-4823-4488/water",
+          "cellId": "ground-cell-000008-14-4823-4488",
+          "status": "refused",
+          "reason": "Only 89.018% of this cell is covered by retained orthoimagery; a partially synthesized texture would be indistinguishable from a photographed one once draped, so the whole texture is refused and the polygon base draws instead."
+        },
+        {
+          "zoneRef": "ground-cell-000015-14-4823-4487/water",
+          "cellId": "ground-cell-000015-14-4823-4487",
+          "status": "refused",
+          "reason": "Only 91.448% of this cell is covered by retained orthoimagery; a partially synthesized texture would be indistinguishable from a photographed one once draped, so the whole texture is refused and the polygon base draws instead."
+        },
+        {
+          "zoneRef": "ground-cell-000022-14-4823-4486/water",
+          "cellId": "ground-cell-000022-14-4823-4486",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000029-14-4823-4485/water",
+          "cellId": "ground-cell-000029-14-4823-4485",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000036-14-4823-4484/water",
+          "cellId": "ground-cell-000036-14-4823-4484",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000043-14-4823-4483/water",
+          "cellId": "ground-cell-000043-14-4823-4483",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000050-14-4823-4482/water",
+          "cellId": "ground-cell-000050-14-4823-4482",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000057-14-4823-4481/water",
+          "cellId": "ground-cell-000057-14-4823-4481",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000058-14-4824-4481/water",
+          "cellId": "ground-cell-000058-14-4824-4481",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000064-14-4823-4480/water",
+          "cellId": "ground-cell-000064-14-4823-4480",
+          "status": "refused",
+          "reason": "Only 93.248% of this cell is covered by retained orthoimagery; a partially synthesized texture would be indistinguishable from a photographed one once draped, so the whole texture is refused and the polygon base draws instead."
+        },
+        {
+          "zoneRef": "ground-cell-000065-14-4824-4480/water",
+          "cellId": "ground-cell-000065-14-4824-4480",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000072-14-4824-4479/water",
+          "cellId": "ground-cell-000072-14-4824-4479",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000073-14-4825-4479/water",
+          "cellId": "ground-cell-000073-14-4825-4479",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000079-14-4824-4478/water",
+          "cellId": "ground-cell-000079-14-4824-4478",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000080-14-4825-4478/water",
+          "cellId": "ground-cell-000080-14-4825-4478",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000086-14-4824-4477/water",
+          "cellId": "ground-cell-000086-14-4824-4477",
+          "status": "refused",
+          "reason": "Only 93.090% of this cell is covered by retained orthoimagery; a partially synthesized texture would be indistinguishable from a photographed one once draped, so the whole texture is refused and the polygon base draws instead."
+        },
+        {
+          "zoneRef": "ground-cell-000087-14-4825-4477/water",
+          "cellId": "ground-cell-000087-14-4825-4477",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000094-14-4825-4476/water",
+          "cellId": "ground-cell-000094-14-4825-4476",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000095-14-4826-4476/water",
+          "cellId": "ground-cell-000095-14-4826-4476",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000101-14-4825-4475/water",
+          "cellId": "ground-cell-000101-14-4825-4475",
+          "status": "refused",
+          "reason": "Only 95.600% of this cell is covered by retained orthoimagery; a partially synthesized texture would be indistinguishable from a photographed one once draped, so the whole texture is refused and the polygon base draws instead."
+        },
+        {
+          "zoneRef": "ground-cell-000102-14-4826-4475/water",
+          "cellId": "ground-cell-000102-14-4826-4475",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000108-14-4825-4474/water",
+          "cellId": "ground-cell-000108-14-4825-4474",
+          "status": "refused",
+          "reason": "Only 87.631% of this cell is covered by retained orthoimagery; a partially synthesized texture would be indistinguishable from a photographed one once draped, so the whole texture is refused and the polygon base draws instead."
+        },
+        {
+          "zoneRef": "ground-cell-000109-14-4826-4474/water",
+          "cellId": "ground-cell-000109-14-4826-4474",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000116-14-4826-4473/water",
+          "cellId": "ground-cell-000116-14-4826-4473",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000123-14-4826-4472/water",
+          "cellId": "ground-cell-000123-14-4826-4472",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000124-14-4827-4472/water",
+          "cellId": "ground-cell-000124-14-4827-4472",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000130-14-4826-4471/water",
+          "cellId": "ground-cell-000130-14-4826-4471",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000131-14-4827-4471/water",
+          "cellId": "ground-cell-000131-14-4827-4471",
+          "status": "textured"
+        },
+        {
+          "zoneRef": "ground-cell-000137-14-4826-4470/water",
+          "cellId": "ground-cell-000137-14-4826-4470",
+          "status": "refused",
+          "reason": "Only 1.552% of this cell is covered by retained orthoimagery; a partially synthesized texture would be indistinguishable from a photographed one once draped, so the whole texture is refused and the polygon base draws instead."
+        },
+        {
+          "zoneRef": "ground-cell-000138-14-4827-4470/water",
+          "cellId": "ground-cell-000138-14-4827-4470",
+          "status": "refused",
+          "reason": "Only 1.439% of this cell is covered by retained orthoimagery; a partially synthesized texture would be indistinguishable from a photographed one once draped, so the whole texture is refused and the polygon base draws instead."
+        }
+      ],
+      "imagerySummary": {
+        "textured": 22,
+        "refused": 8,
+        "unaccounted": 0
+      },
+      "sourceRefs": [
+        {
+          "provider": "NYC Office of Technology and Innovation (OTI) Planimetrics",
+          "datasetId": "pjs3-c3z5",
+          "sourceRecordId": "12262000008.0",
+          "licenseRefId": "nyc-open-data-terms",
+          "capturedAt": "2026-08-24T02:50:44.279Z",
+          "updatedAt": "2024-04-24T20:08:25.000Z"
+        }
+      ],
+      "extentNote": "The retained clip of this hydrography polygon runs the full west side of the island, roughly 40.6928 to 40.8911 N. The pose frames the midtown reach only; the rest of the feature is off-frame by design.",
+      "displayNameNote": "The hydrography snapshot stores names upper-cased; the display name is the same string in title case."
+    }
+  ]
+}
