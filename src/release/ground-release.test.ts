@@ -154,7 +154,11 @@ function releaseDocument(ledger: GroundOwnershipLedger, overrides: Partial<Groun
       assetEntry("asset:roadbed:0", cellId, "roadbed", [flatTier()]),
       assetEntry("asset:park:0", ledger.cells[1]!.cellId, "park", [flatTier({ artifactRef: "ground/park-flat.json" })]),
       assetEntry("asset:water:0", ledger.cells[12]!.cellId, "water", [flatTier({ artifactRef: "ground/water-flat.json" })]),
-      assetEntry("asset:curb:0", cellId, "curb", [nearTier(), flatTier({ artifactRef: "ground/curb-flat.json" })]),
+      // T009: an embellishment asset carries near tiers ONLY. Before that
+      // amendment this fixture also declared a flat curb tier, which the domain
+      // contract now refuses — an estimated curb may never stand in as the
+      // always-covering cartographic base.
+      assetEntry("asset:curb:0", cellId, "curb", [nearTier()]),
     ],
     claimCeilings: {
       roadbed: "Source-backed horizontal planimetry only.",
@@ -508,6 +512,53 @@ describe("release document validation", () => {
     const document = releaseDocument(ledger);
     const promoted = { ...document, claimCeilings: { ...document.claimCeilings, curb: "Source-backed curb geometry." } };
     expect(messages(validateGroundReleaseStructure(promoted))).toMatch(/estimated/u);
+  });
+
+  /**
+   * T009: the two tier rules are opposites, and a release document must enforce
+   * both. Checked here as well as in `../domain/ground.test.ts` because the
+   * document validator is the layer a materializer actually passes through.
+   */
+  it("accepts an embellishment asset whose only tiers are finite near-3d ones", () => {
+    const document = releaseDocument(ledger);
+    const nearOnly = { ...document, assets: [assetEntry("asset:curb:0", ledger.cells[0]!.cellId, "curb", [nearTier()])], claimCeilings: { curb: document.claimCeilings.curb! } };
+    expect(validateGroundReleaseStructure(nearOnly).ok, messages(validateGroundReleaseStructure(nearOnly))).toBe(true);
+  });
+
+  it("refuses an embellishment asset that also declares a flat tier", () => {
+    const document = releaseDocument(ledger);
+    const withFlat = {
+      ...document,
+      assets: [assetEntry("asset:curb:0", ledger.cells[0]!.cellId, "curb", [nearTier(), flatTier({ artifactRef: "ground/curb-flat.json" })])],
+      claimCeilings: { curb: document.claimCeilings.curb! },
+    };
+    expect(messages(validateGroundReleaseStructure(withFlat))).toMatch(/must not declare a flat tier/u);
+  });
+
+  it("refuses an embellishment asset with no finite near tier", () => {
+    const document = releaseDocument(ledger);
+    const noNear = {
+      ...document,
+      assets: [assetEntry("asset:curb:0", ledger.cells[0]!.cellId, "curb", [flatTier({ maxDistanceMeters: 400, artifactRef: "ground/curb-bounded-flat.json" })])],
+      claimCeilings: { curb: document.claimCeilings.curb! },
+    };
+    expect(messages(validateGroundReleaseStructure(noNear))).toMatch(/at least one near-3d tier with a finite maxDistanceMeters/u);
+  });
+
+  it("holds an embellishment claim ceiling to BOTH the estimated and the uncertainty wording", () => {
+    const document = releaseDocument(ledger);
+    // Says "estimated" but drops every uncertainty word: the second regex is
+    // what stops a ceiling from shrinking to a bare label.
+    const noUncertainty = { ...document, claimCeilings: { ...document.claimCeilings, curb: "Estimated curb alignment." } };
+    const result = validateGroundReleaseStructure(noUncertainty);
+    expect(paths(result)).toContain("claimCeilings.curb");
+    expect(messages(result)).toMatch(/explicit uncertainty language/u);
+    // And a ceiling with the uncertainty wording but no claim strength.
+    const noStrength = { ...document, claimCeilings: { ...document.claimCeilings, curb: "Not a survey of current curb geometry." } };
+    expect(messages(validateGroundReleaseStructure(noStrength))).toMatch(/claim is estimated/u);
+    // Both together pass.
+    const both = { ...document, claimCeilings: { ...document.claimCeilings, curb: "Estimated curb alignment; not a survey of current curb geometry." } };
+    expect(validateGroundReleaseStructure(both).ok).toBe(true);
   });
 
   it("refuses an asset with zero or two always-covering flat tiers", () => {

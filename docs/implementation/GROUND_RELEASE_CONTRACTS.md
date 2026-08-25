@@ -119,6 +119,37 @@ geometry. Camera-pose capture was hampered by pre-existing Issue #46
 (presets intermittently write roll=180; URL pose not applied at boot) —
 unrelated to the ground overlay and left to its own backlog item.
 
+## T009 embellishment record (release `manhattan-ground-embellishment-20260825`)
+
+Curbs-only, by adversarially-reviewed decision: Block 835's crosswalks are
+enumerated (bbox corners of a hardcoded building union) and the repo has no
+intersection ground truth (route-graph is a synthetic 6-node fixture), so
+geometric crosswalk inference would ship an unfalsifiable "estimated" claim.
+Crosswalk generalization is deferred pending a user decision on acquiring an
+authoritative intersection/centerline source (goal PENDING-DECISIONS P2).
+
+- **Tier invariant amended (deliberate schema change)**: surface-class assets
+  keep "exactly one unbounded flat tier"; embellishment-class assets require
+  ≥1 finite `near-3d` tier and NO flat tier — additive 3D that vanishes at
+  distance and must never be the standalone base (`src/domain/ground.ts`).
+- Separate release id/document; the shipped flat release and the T007 loader
+  guard are untouched (regression-tested). Runtime consumption is T010's.
+- Generator: `scripts/manhattan-embellishment-cli.mjs` + shared derivation in
+  `src/release/ground-embellishment.ts` (the Block 835 equivalence fixture
+  runs the same code the CLI runs). Liang-Barsky segment clip ported into
+  `ground-geometry.ts`; clipped line pieces are never bridged (bridging would
+  invent pavement edge); L1 lengths used for conservation ratios (additive
+  across splits, no `Math.sqrt`).
+- Scale: 45,129 pavement-edge features → 49,621 parts across 95/140 cells,
+  94.5 MB artifacts, 0 refusals/collisions; two builds byte-identical (102
+  files). Near-ring 400 m aliased with a drift-check test against
+  `EXTERIOR_TWO_LOD_SERVING_NEAR_RING_METERS`.
+- Block 835 promoted release proven byte-identical after the whole run;
+  record-level curb equivalence (geometry verbatim, 0.22 m profile, estimated
+  label, derivation id) asserted by fixture.
+- Watch item: largest artifact is 94.6% of `geometryShardBytes`; nothing
+  gates per-artifact size yet (T010 must set the serving ceiling).
+
 ## Known limitations (recorded, not hidden)
 
 - The Manhattan ground extent (`-74.03/40.68/-73.90/40.89`, outward-snapped
