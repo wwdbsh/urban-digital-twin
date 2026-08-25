@@ -10,6 +10,7 @@ import {
   Database,
   HelpCircle,
   Layers3,
+  MapPin,
   Search,
   Settings,
   X,
@@ -42,6 +43,7 @@ import routeGraphFixture from "../ingestion/fixtures/route-graph.synthetic.fixtu
 import { generateSyntheticTileHarness, SYNTHETIC_TILE_ANCHORS, type SyntheticTileContent } from "../runtime/synthetic-tile-harness";
 import { RuntimeTileStream, type TileCameraState, type TileStreamMetrics } from "../runtime/tile-stream";
 import { DEFAULT_CAMERA_POSE, loadSavedNavigation, navigationUrl, normalizeCameraPose, parseNavigationUrl, persistSavedNavigation, saveJourney, savePlace, stepIndex, journeyStepCount, VISITOR_NAVIGATION_SCHEMA_VERSION, type CameraMode, type CameraPose, type NavigationDataMode, type SavedNavigationState } from "../domain/visitor-navigation";
+import { NAMED_PLACES, searchNamedPlaces, type NamedPlace } from "../domain/named-places.ts";
 import {
   DEFAULT_GROUND_LAYER_VISIBILITY,
   DEFAULT_LAYER_VISIBILITY,
@@ -120,6 +122,7 @@ import { fallbackViewportFootprint, type ViewportFootprint } from "../runtime/vi
 const navigation = [
   { label: "Explore", icon: Compass },
   { label: "Layers", icon: Layers3 },
+  { label: "Places", icon: MapPin },
   { label: "Bookmarks", icon: Bookmark },
 ] as const;
 
@@ -3635,6 +3638,50 @@ export function App() {
     }
   }, [getOverlayUrlFields, navigationUrlForApp]);
 
+  /**
+   * Fly to a named place and select its ground surface in one history entry.
+   *
+   * Both halves are written together on purpose. `cameraPoseRef` is assigned at
+   * render, so within one click handler it still holds the OLD pose; pushing
+   * the URL through `selectGroundFeature` would therefore record a pose the
+   * camera has already left, and the settled-camera `replaceState` would only
+   * heal it a frame later, after the user had a wrong link on screen.
+   *
+   * The URL goes through `navigationUrlForApp` rather than the registry's own
+   * `namedPlaceDeepLink`, so a visitor who has toggled layers, facets or the
+   * exterior overlay keeps them. The registry link is the minimal canonical
+   * form; this is that link plus whatever the session already asked for, and
+   * both parse to the same pose and the same `groundFeature`.
+   */
+  const goToNamedPlace = useCallback((place: NamedPlace) => {
+    const pose = normalizeCameraPose(place.pose);
+    if (!pose) return;
+    cameraPoseRef.current = pose;
+    cameraModeRef.current = "explore";
+    selectedGroundIdRef.current = place.canonicalFeatureId;
+    setCameraMode("explore");
+    setPoseInvalid(false);
+    setCameraPose(pose);
+    setCameraRequest((current) => ({ ...pose, requestId: (current?.requestId ?? 0) + 1 }));
+    setSelectedGroundId(place.canonicalFeatureId);
+    setInspectorOpen(true);
+    setDeepLinkMessage(null);
+    if (typeof window !== "undefined") {
+      window.history.pushState({}, "", navigationUrlForApp({
+        featureId: activeSelectionRef.current,
+        query: queryRef.current,
+        cameraMode: "explore",
+        pose,
+        poseInvalid: false,
+        dataMode: dataModeRef.current,
+        releaseId: releaseIdRef.current,
+        visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer),
+        facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current,
+        ...getOverlayUrlFields(),
+      }, window.location.href));
+    }
+  }, [getOverlayUrlFields, navigationUrlForApp]);
+
   const selectStorefront = useCallback((placement: CommercialStorefrontPlacement) => {
     const request: StorefrontResolutionState = {
       requestId: storefrontResolutionRequestRef.current + 1,
@@ -3697,6 +3744,18 @@ export function App() {
     : dataMode === "real-pilot"
     ? searchRealPlaceCatalog(activeAdapter.getFeatures(), query, selectedCategories)
     : searchUnifiedCatalog(activeAdapter.getFeatures(), syntheticCatalog, query).filter((result) => selectedCategories.length === 0 || result.feature.kind !== "poi" || selectedCategories.some((category) => placeCategoriesFromFeature(result.feature).includes(category))), [activeAdapter, civicMode, civicSearchResults, citywideMode, citywideSearchResults, dataMode, query, selectedCategories]);
+  /**
+   * The named ground places, searched alongside the catalog rather than inside it.
+   *
+   * They cannot join `unifiedResults`: a `UnifiedSearchResult` carries a
+   * catalog `Feature`, and a ground feature has no name and no representative
+   * coordinate, so building one would mean inventing a marker position — the
+   * same thing `selectGroundFeature` refuses to do. The parks in this list are
+   * also reachable through the travel-context catalog; the plaza and the two
+   * rivers are content-addressed and appear in no catalog at all, which is why
+   * this path exists.
+   */
+  const namedPlaceResults = useMemo(() => groundRequested ? searchNamedPlaces(query).slice(0, 4) : [], [groundRequested, query]);
   const composedDenseGroups = useMemo(() => civicMode && composedAdapter ? composedAdapter.getVisibleFeatureGroups() : undefined, [civicFeatures, civicMode, composedAdapter]);
   // DEV-only residency evidence. Read at render from the live shared cache
   // (it re-renders whenever the metrics above change), because the reservation
@@ -4634,7 +4693,13 @@ export function App() {
           </form>
           {searchOpen && query.length > 0 && (
             <div className="search-results" id="unified-search-results" role="listbox" aria-label="Search results">
-              {unifiedResults.length > 0 ? unifiedResults.slice(0, 8).map((result, index) => (
+              {namedPlaceResults.map((match) => (
+                <button className="search-result search-result-place" data-named-place={match.place.placeKey} key={match.place.placeKey} onClick={() => { setQuery(match.place.displayName); goToNamedPlace(match.place); setSearchOpen(false); setActiveSearchIndex(-1); }} role="option" aria-selected={false} type="button">
+                  <span className="search-result-icon" aria-hidden="true">{match.place.groundClass.slice(0, 1).toLocaleUpperCase("en-US")}</span>
+                  <span><strong>{match.place.displayName}</strong><small>{match.place.groundClass} · Ground · {match.matchedBy}</small></span>
+                </button>
+              ))}
+              {unifiedResults.length > 0 || namedPlaceResults.length > 0 ? unifiedResults.slice(0, 8).map((result, index) => (
                 <button className={index === activeSearchIndex ? "search-result is-active" : "search-result"} id={`search-result-${index}`} key={result.feature.id} onClick={() => selectSearchResult(result)} role="option" aria-selected={index === activeSearchIndex} type="button">
                   <span className="search-result-icon" aria-hidden="true">{result.typeLabel.slice(0, 1)}</span>
                   <span><strong>{result.feature.name}</strong><small>{result.typeLabel} · {result.group} · {result.matchedBy}</small></span>
@@ -5071,6 +5136,22 @@ export function App() {
           {savedNavigation.places.length ? <ul>{savedNavigation.places.map((place) => <li key={place.canonicalId}><button type="button" onClick={() => restorePlace(place)}>{place.label}</button><small>{place.canonicalId}{place.releaseId ? ` · ${place.releaseId}` : " · legacy fixture"}</small></li>)}</ul> : <p className="section-label">No saved places yet.</p>}
           <h2>Saved journeys</h2>
           {savedNavigation.journeys.length ? <ul>{savedNavigation.journeys.map((journey) => <li key={journey.id}><button type="button" onClick={() => restoreJourney(journey)}>{journey.label}</button><small>{journey.mode} · local synthetic route</small></li>)}</ul> : <p className="section-label">No saved journeys yet.</p>}
+        </section>}
+        {/*
+          The named-place quick nav. Every entry states the release identity it
+          navigates to, because a place name is a convenience label and the
+          canonical id is what the details panel, the deep link and the evidence
+          record all agree on. Refusal-bearing places say so here rather than
+          letting a flat polygon read as a rendering fault.
+        */}
+        {activeNavigation === "Places" && <section className="bookmarks-panel places-panel" aria-label="Named places">
+          <div className="quality-heading"><strong>Places</strong><span>{MANHATTAN_GROUND_RELEASE_ID}</span></div>
+          <h2>Named places</h2>
+          <ul>{NAMED_PLACES.map((place) => <li key={place.placeKey}>
+            <button type="button" data-named-place={place.placeKey} onClick={() => goToNamedPlace(place)}>{place.displayName}</button>
+            <small>{place.canonicalFeatureId} · {place.groundClass}</small>
+          </li>)}</ul>
+          {!groundActive && <p className="section-label">The citywide ground release is not active, so these surfaces cannot be selected from here yet.</p>}
         </section>}
         {helpOpen && <section className="help-panel" aria-label="Help"><strong>Help</strong><p>Search or focus a fixture feature, then inspect its provenance. Use the camera controls or focus the viewport before arrow-key exploration; routes and camera previews are synthetic offline fixtures.</p><button type="button" onClick={() => setHelpOpen(false)}>Close</button></section>}
         {settingsOpen && <section className="settings-panel" aria-label="Settings"><strong>Settings</strong><p>Provider connections, live navigation, street imagery, and remote sync are not enabled. Reduced-motion preferences are honored by the camera journey.</p><button type="button" onClick={() => setSettingsOpen(false)}>Close</button></section>}

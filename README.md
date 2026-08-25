@@ -553,6 +553,36 @@ NOT-MET**, with a sixteen-item residual register and a completion decision left
 to the reader rather than taken. Full criterion-by-criterion evidence:
 `data/manhattan-hlod-far-tier-acceptance-20260822/reconciliation.json`.
 
+## Named places (2026-08-26)
+
+Seven landmarks each have a stable deep link that restores one camera pose and
+selects the ground surface that carries the name. Append any of these to the dev
+server origin (`http://localhost:5173`):
+
+| Place | Deep link |
+| --- | --- |
+| Central Park | `/?view=explore&lon=-73.972141&lat=40.775654&height=2500.000000&heading=35.000000&pitch=-70.000000&roll=0.000000&groundFeature=udt%3Amanhattan%3Apark%3AM010` |
+| Bryant Park | `/?view=explore&lon=-73.983030&lat=40.750697&height=650.000000&heading=0.000000&pitch=-65.000000&roll=0.000000&groundFeature=udt%3Amanhattan%3Apark%3AM008` |
+| Washington Square Park | `/?view=explore&lon=-73.997440&lat=40.727887&height=650.000000&heading=0.000000&pitch=-65.000000&roll=0.000000&groundFeature=udt%3Amanhattan%3Apark%3AM098` |
+| The Battery | `/?view=explore&lon=-74.014150&lat=40.699058&height=700.000000&heading=0.000000&pitch=-65.000000&roll=0.000000&groundFeature=udt%3Amanhattan%3Apark%3AM005` |
+| Times Square Plaza | `/?view=explore&lon=-73.987128&lat=40.754583&height=700.000000&heading=20.000000&pitch=-55.000000&roll=0.000000&groundFeature=udt%3Aground%3Amanhattan%3Aplaza%3A24aeb72178ec5bd0` |
+| East River | `/?view=explore&lon=-73.909178&lat=40.797115&height=2500.000000&heading=225.000000&pitch=-65.000000&roll=0.000000&groundFeature=udt%3Aground%3Amanhattan%3Awater%3Ad32d405d331afe68` |
+| Hudson River | `/?view=explore&lon=-74.027118&lat=40.760000&height=2500.000000&heading=90.000000&pitch=-60.000000&roll=0.000000&groundFeature=udt%3Aground%3Amanhattan%3Awater%3A96c4c6af8c1fea9b` |
+
+The same seven are listed in the **Places** rail panel, and searching for
+"Times Square", "Hudson River" or "East River" surfaces the ground feature
+directly — those three are content-addressed and appear in no catalog.
+
+Two things these links do **not** claim. **"The Battery" is deliberate**: NYC
+Parks has no property named "Battery Park", M005 is "The Battery", and M283 is
+the separate "Battery Park City". And **fourteen of the places' cells are
+orthoimagery refusals, not textures** — mostly at the river margins where the
+retained 2024 footprint runs out, so those surfaces draw as verified flat
+polygons. Both decisions, the pose derivation, and the per-place evidence are in
+`docs/implementation/20260826-named-places.md`; the machine-checkable record is
+`artifacts/named-places-20260826/named-places-evidence.json`
+(`pnpm named-places:evidence`). No visual capture was taken this cycle.
+
 ## Prerequisites and setup
 
 - Node.js `>=22.12.0`
