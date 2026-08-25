@@ -210,3 +210,80 @@ borrowed `CITYWIDE_BUDGETS` ceilings and the T007 caps (24 cells / 48 MiB).
   pins and nothing else. Restored to `true`, the new suite passes 12/12. The
   three pre-existing `App.test.tsx` exterior-streaming timeouts fail in the OFF
   polarity too, so they are not caused by this flip.
+
+## T011 — near-tier curbs promoted island-wide (2026-08-26, Issue #140)
+
+**No release byte changed.** `manhattan-ground-embellishment-20260825` is
+exactly what T009 shipped — 95 cells with curb artifacts, 49,621 parts,
+94,477,695 artifact bytes. **No budget was raised**: the serving ceiling is
+still `CITYWIDE_BUDGETS.geometryShardBytes` (2,097,152) and the active-cell
+ceiling is still the derived `GROUND_EMBELLISHMENT_MAX_ACTIVE_CELLS` = 4.
+
+**One edit.** `GROUND_EMBELLISHMENT_CANARY_WAVES` went from `["midtown-core"]`
+to every row-owning wave of `EXTERIOR_WAVE_PLAN`. T010's prediction held: no
+consumer, no ledger, no artifact and no budget changed with it.
+
+### Per-wave census (`pnpm ground-embellishment:census`)
+
+Measured over checksum-verified shipped artifacts; walls and segments come from
+the production render planner, triangles are its own 2-per-segment identity.
+
+| wave | rows | cells | artifact bytes | parts | walls | segments | triangles | largest artifact | worst-case ring |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| midtown-core | 4481-4482 | 12 | 12,418,615 | 6,593 | 6,600 | 379,672 | 759,344 | 1,480,256 (70.6%) | 4 |
+| lower-manhattan | 4485-4488 | 26 | 28,223,296 | 14,786 | 14,801 | 866,327 | 1,732,654 | 1,983,941 (94.6%) | 4 |
+| southern-remainder | 4483-4484 | 12 | 13,307,589 | 7,152 | 7,158 | 405,365 | 810,730 | 1,714,767 (81.8%) | 4 |
+| central-upper-manhattan | 4478-4480 | 15 | 11,569,763 | 6,267 | 6,285 | 351,272 | 702,544 | 1,227,346 (58.5%) | 4 |
+| northern-manhattan | 4471-4477 | 22 | 20,670,685 | 10,724 | 10,744 | 636,325 | 1,272,650 | 1,475,769 (70.4%) | 4 |
+| **promoted release** | **4471-4488** | **87** | **86,189,948** | **45,522** | **45,588** | **2,638,961** | **5,277,922** | **1,983,941 (94.6%)** | **4** |
+
+- **0 budget breaches.** No artifact exceeds the serving ceiling; the T009 watch
+  item's 94.6% artifact is now GATED rather than merely under. The worst-case
+  ring is 4 = the ceiling exactly, and it is 4 for one wave and for all five:
+  promotion widens COVERAGE, not the active set, because the 400 m ring is
+  smaller than a level-14 cell in both dimensions. Cache residency is therefore
+  unchanged by this promotion.
+- **8 cells (8,287,747 bytes) ship curbs and are never promoted**: they sit in
+  level-14 row 4489, which the ground partition reaches by outward-snapping the
+  declared extent and which no building wave owns. Recorded, not hidden.
+- **`refusedParts` = 0** across every wave: no shipped alignment collapses to a
+  single position at the release's 7-decimal precision.
+- Report: `artifacts/ground-embellishment-promotion-20260826/wave-curb-census.json`,
+  deterministic (no timestamps, no paths; two runs byte-identical,
+  `79fee7721fe1a308958f66041380bfbaf8cb2e712d6edd17a526d1f2542913bf`). It is a
+  drift gate as well as evidence: the never-skipped half of
+  `ground-embellishment-wave-census.test.ts` re-applies both budget gates to the
+  committed numbers on every run, and where the release tree is present the
+  second half re-measures and requires byte-identity.
+
+### Rollback
+
+**Per wave, one line.** Deleting a wave id from
+`GROUND_EMBELLISHMENT_CANARY_WAVES` deactivates exactly that wave's level-14
+rows: those cells stop being offered to the renderer and `loadCellClass` refuses
+them by name, while every other wave keeps serving and the flat base is untouched
+in either direction. No release byte, no budget and no other module is involved.
+Proven at two levels: `ground-embellishment-runtime.test.ts` rehearses removal of
+each of the five waves in turn (exactly that wave's rows leave, all others stay),
+and `ground-canary.test.tsx` rehearses it as a session.
+
+### Wave left out, and why
+
+**`block-835` is not promoted, and its curbs are still served.** It is the one
+wave in the plan with `tileRowRange: null` — a declared building set carved out
+of a tile, not an owner of level-14 rows — so it cannot scope a row-based ground
+gate at all, and `groundEmbellishmentCanaryTileRows` refuses it by name rather
+than letting it contribute nothing. The ground beneath that block lies in rows
+4481-4482, which `midtown-core` promotes. This is a naming exclusion, not a
+coverage gap. It is NOT a budget refusal: no wave breached.
+
+### Verification run for this record
+
+- `npx vitest run` on `ground-embellishment-runtime.test.ts` (18), `ground-canary.test.tsx` (16),
+  `ground-embellishment-wave-census.test.ts` (7), `ground-embellishment-render-plan.test.ts` — all pass.
+- `pnpm typecheck`, `npx eslint` on the changed files, `pnpm build`, and
+  `pnpm citywide:validate` (all three phases) pass.
+- **Not measured here**: frame time, memory and visual acceptance of curbs drawn
+  in five waves rather than one. The census bounds what CAN be resident (4 cells,
+  largest 1.98 MB) but is not a rendering measurement; browser validation of a
+  camera roaming the promoted rows remains outstanding.

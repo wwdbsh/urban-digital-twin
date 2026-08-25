@@ -1,0 +1,245 @@
+{
+  "schemaVersion": "manhattan-ground-embellishment-wave-census-1",
+  "releaseId": "manhattan-ground-embellishment-20260825",
+  "note": "Per-wave cost of the near-tier curb release, measured over checksum-verified shipped artifacts. Wall and segment counts come from the production render planner, so refusedParts are alignments the viewport would decline to extrude rather than parts missing from the release; triangles are two per segment, that planner's own identity. worstCaseActiveSet is the most cells any single ground point can put inside the release's declared 400 m ring, evaluated by the production activation function with its cap lifted.",
+  "servingCeilingBytes": 2097152,
+  "maxActiveCells": 4,
+  "promotedWaves": [
+    "midtown-core",
+    "lower-manhattan",
+    "southern-remainder",
+    "central-upper-manhattan",
+    "northern-manhattan"
+  ],
+  "wavesWithoutTileRows": [
+    {
+      "waveId": "block-835",
+      "reason": "Declared building set carved out of a tile (tileRowRange: null), not an owner of level-14 rows, so it cannot scope a row-based ground gate; groundEmbellishmentCanaryTileRows refuses it by name rather than letting it contribute nothing. The ground beneath Block 835 lies in rows 4481-4482, which midtown-core promotes, so its curbs are served without a second name for rows another wave already owns."
+    }
+  ],
+  "waves": [
+    {
+      "waveIndex": 1,
+      "waveId": "midtown-core",
+      "tileRowRange": {
+        "northRowY": 4481,
+        "southRowY": 4482
+      },
+      "promoted": true,
+      "cellsWithCurbArtifacts": 12,
+      "totalArtifactBytes": 12418615,
+      "curbParts": 6593,
+      "drawnWalls": 6600,
+      "drawnSegments": 379672,
+      "drawnTriangles": 759344,
+      "refusedParts": 0,
+      "largestArtifact": {
+        "cellId": "ground-cell-000052-14-4825-4482",
+        "bytes": 1480256,
+        "fractionOfServingCeiling": 0.705841064453125,
+        "overServingCeiling": false
+      },
+      "worstCaseActiveSet": {
+        "cells": 4,
+        "at": {
+          "longitude": -74.00390625,
+          "latitude": 40.75927734375
+        },
+        "cellIds": [
+          "ground-cell-000050-14-4823-4482",
+          "ground-cell-000051-14-4824-4482",
+          "ground-cell-000057-14-4823-4481",
+          "ground-cell-000058-14-4824-4481"
+        ]
+      },
+      "breachesBudget": false
+    },
+    {
+      "waveIndex": 2,
+      "waveId": "lower-manhattan",
+      "tileRowRange": {
+        "northRowY": 4485,
+        "southRowY": 4488
+      },
+      "promoted": true,
+      "cellsWithCurbArtifacts": 26,
+      "totalArtifactBytes": 28223296,
+      "curbParts": 14786,
+      "drawnWalls": 14801,
+      "drawnSegments": 866327,
+      "drawnTriangles": 1732654,
+      "refusedParts": 0,
+      "largestArtifact": {
+        "cellId": "ground-cell-000030-14-4824-4485",
+        "bytes": 1983941,
+        "fractionOfServingCeiling": 0.946016788482666,
+        "overServingCeiling": false
+      },
+      "worstCaseActiveSet": {
+        "cells": 4,
+        "at": {
+          "longitude": -74.02587890625,
+          "latitude": 40.693359375
+        },
+        "cellIds": [
+          "ground-cell-000007-14-4822-4488",
+          "ground-cell-000008-14-4823-4488",
+          "ground-cell-000014-14-4822-4487",
+          "ground-cell-000015-14-4823-4487"
+        ]
+      },
+      "breachesBudget": false
+    },
+    {
+      "waveIndex": 3,
+      "waveId": "southern-remainder",
+      "tileRowRange": {
+        "northRowY": 4483,
+        "southRowY": 4484
+      },
+      "promoted": true,
+      "cellsWithCurbArtifacts": 12,
+      "totalArtifactBytes": 13307589,
+      "curbParts": 7152,
+      "drawnWalls": 7158,
+      "drawnSegments": 405365,
+      "drawnTriangles": 810730,
+      "refusedParts": 0,
+      "largestArtifact": {
+        "cellId": "ground-cell-000037-14-4824-4484",
+        "bytes": 1714767,
+        "fractionOfServingCeiling": 0.817664623260498,
+        "overServingCeiling": false
+      },
+      "worstCaseActiveSet": {
+        "cells": 4,
+        "at": {
+          "longitude": -74.00390625,
+          "latitude": 40.7373046875
+        },
+        "cellIds": [
+          "ground-cell-000036-14-4823-4484",
+          "ground-cell-000037-14-4824-4484",
+          "ground-cell-000043-14-4823-4483",
+          "ground-cell-000044-14-4824-4483"
+        ]
+      },
+      "breachesBudget": false
+    },
+    {
+      "waveIndex": 4,
+      "waveId": "central-upper-manhattan",
+      "tileRowRange": {
+        "northRowY": 4478,
+        "southRowY": 4480
+      },
+      "promoted": true,
+      "cellsWithCurbArtifacts": 15,
+      "totalArtifactBytes": 11569763,
+      "curbParts": 6267,
+      "drawnWalls": 6285,
+      "drawnSegments": 351272,
+      "drawnTriangles": 702544,
+      "refusedParts": 0,
+      "largestArtifact": {
+        "cellId": "ground-cell-000074-14-4826-4479",
+        "bytes": 1227346,
+        "fractionOfServingCeiling": 0.5852441787719727,
+        "overServingCeiling": false
+      },
+      "worstCaseActiveSet": {
+        "cells": 4,
+        "at": {
+          "longitude": -73.98193359375,
+          "latitude": 40.78125
+        },
+        "cellIds": [
+          "ground-cell-000065-14-4824-4480",
+          "ground-cell-000066-14-4825-4480",
+          "ground-cell-000072-14-4824-4479",
+          "ground-cell-000073-14-4825-4479"
+        ]
+      },
+      "breachesBudget": false
+    },
+    {
+      "waveIndex": 5,
+      "waveId": "northern-manhattan",
+      "tileRowRange": {
+        "northRowY": 4471,
+        "southRowY": 4477
+      },
+      "promoted": true,
+      "cellsWithCurbArtifacts": 22,
+      "totalArtifactBytes": 20670685,
+      "curbParts": 10724,
+      "drawnWalls": 10744,
+      "drawnSegments": 636325,
+      "drawnTriangles": 1272650,
+      "refusedParts": 0,
+      "largestArtifact": {
+        "cellId": "ground-cell-000111-14-4828-4474",
+        "bytes": 1475769,
+        "fractionOfServingCeiling": 0.7037014961242676,
+        "overServingCeiling": false
+      },
+      "worstCaseActiveSet": {
+        "cells": 4,
+        "at": {
+          "longitude": -73.9599609375,
+          "latitude": 40.814208984375
+        },
+        "cellIds": [
+          "ground-cell-000087-14-4825-4477",
+          "ground-cell-000088-14-4826-4477",
+          "ground-cell-000094-14-4825-4476",
+          "ground-cell-000095-14-4826-4476"
+        ]
+      },
+      "breachesBudget": false
+    }
+  ],
+  "promotedRelease": {
+    "cellsWithCurbArtifacts": 87,
+    "totalArtifactBytes": 86189948,
+    "curbParts": 45522,
+    "drawnWalls": 45588,
+    "drawnSegments": 2638961,
+    "drawnTriangles": 5277922,
+    "refusedParts": 0,
+    "largestArtifact": {
+      "cellId": "ground-cell-000030-14-4824-4485",
+      "bytes": 1983941,
+      "fractionOfServingCeiling": 0.946016788482666,
+      "overServingCeiling": false
+    },
+    "worstCaseActiveSet": {
+      "cells": 4,
+      "at": {
+        "longitude": -74.02587890625,
+        "latitude": 40.693359375
+      },
+      "cellIds": [
+        "ground-cell-000007-14-4822-4488",
+        "ground-cell-000008-14-4823-4488",
+        "ground-cell-000014-14-4822-4487",
+        "ground-cell-000015-14-4823-4487"
+      ]
+    }
+  },
+  "shippedCellsInNoWaveRow": {
+    "note": "Cells that ship a curb artifact but sit in a level-14 row no building wave owns. They are never promoted and never activate: the ground partition outward-snaps past the wave plan's southernmost row.",
+    "cellIds": [
+      "ground-cell-000001-14-4823-4489",
+      "ground-cell-000002-14-4824-4489",
+      "ground-cell-000003-14-4825-4489",
+      "ground-cell-000004-14-4826-4489",
+      "ground-cell-000005-14-4827-4489",
+      "ground-cell-000006-14-4828-4489",
+      "ground-cell-000138-14-4827-4470",
+      "ground-cell-000139-14-4828-4470"
+    ],
+    "totalArtifactBytes": 8287747
+  },
+  "budgetBreaches": []
+}
