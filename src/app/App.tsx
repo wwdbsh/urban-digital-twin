@@ -65,6 +65,19 @@ import { BLOCK835_PUBLIC_REALM_RELEASE_ID, createBlock835PublicRealmFaultFetcher
 import { MANHATTAN_GROUND_RELEASE_ID, createGroundFaultFetcher, groundFailureMessage, loadGroundRelease, parseGroundFault, type LoadedGroundRelease } from "../runtime/ground-release-runtime";
 import { GROUND_BASE_CLASSES, isGroundEmbellishmentClass, type GroundClass, type GroundFeature } from "../domain/ground";
 import { groundRenderStatusLine, type GroundRenderRefusal, type GroundRenderSummary } from "../features/explorer/ground-render-plan";
+import {
+  ZONE_IMAGERY_DRAPE_STATEMENT,
+  ZONE_IMAGERY_MISREGISTRATION_STATEMENT,
+  groundZoneImageryStatusSegment,
+  zoneImageryAttributionLine,
+  type GroundZoneImageryRenderSummary,
+} from "../features/explorer/ground-zone-imagery-render-plan";
+import {
+  MANHATTAN_GROUND_ZONE_IMAGERY_RELEASE_ID,
+  groundZoneImageryFailureMessage,
+  loadGroundZoneImageryRelease,
+  type LoadedGroundZoneImageryRelease,
+} from "../runtime/ground-zone-imagery-runtime";
 import { groundEmbellishmentStatusSegment, type GroundEmbellishmentRenderSummary } from "../features/explorer/ground-embellishment-render-plan";
 import {
   MANHATTAN_GROUND_EMBELLISHMENT_RELEASE_ID,
@@ -750,6 +763,58 @@ export function appendGroundUrl(baseUrl: string, requested: boolean, featureId: 
   else url.searchParams.set(GROUND_PARAM, groundOptOutValue());
   if (requested && featureId) url.searchParams.set("groundFeature", featureId);
   else url.searchParams.delete("groundFeature");
+  return url.toString();
+}
+
+/**
+ * THE ZONE IMAGERY ROLLBACK SWITCH (T013).
+ *
+ * The same one-token ADR 0045 pattern as `GROUND_DEFAULT_ON` above, read in the
+ * same three places — the boot parse, the popstate parse, and the URL writer.
+ *
+ * WHAT THE FLIP CHANGES: a default session that already has a verified ground
+ * base additionally loads and verifies `manhattan-ground-zone-imagery-20260826`
+ * and draws parks, plazas and water with their 2024 orthoimagery instead of a
+ * flat colour. What it does NOT change is anything about the base: imagery
+ * rides the ground default recorded in ADR 0059 and cannot turn itself on
+ * without one, because the loader is gated on a loaded base release.
+ *
+ * WHAT A ROLLBACK TO `false` RESTORES: every zone draws its flat colour fill,
+ * no texture is requested, and the imagery status segment, attribution line and
+ * details block all disappear because each is gated on a live drape. No release
+ * byte changes, no budget changes, and no other module changes — the ground
+ * base, the near-tier curbs and the buildings are untouched in both polarities.
+ */
+export const ZONE_IMAGERY_PARAM = "zoneImagery" as const;
+export const ZONE_IMAGERY_OFF_VALUE = "off" as const;
+export const ZONE_IMAGERY_DEFAULT_ON = true;
+
+/** The URL states whatever the default is NOT, so the default stays silent. */
+export function zoneImageryOptOutValue(): string {
+  return ZONE_IMAGERY_DEFAULT_ON ? ZONE_IMAGERY_OFF_VALUE : MANHATTAN_GROUND_ZONE_IMAGERY_RELEASE_ID;
+}
+
+/**
+ * Whether a session wants zone orthoimagery, mirroring `parseGroundRequested`.
+ *
+ * Naming the release explicitly is honoured as a request in either polarity, so
+ * an `?zoneImagery=manhattan-ground-zone-imagery-20260826` link minted while
+ * this was an opt-in canary keeps meaning what it meant. Anything else — a
+ * stale link to some other imagery release id included — resolves to the
+ * DEFAULT rather than to a release this build cannot verify.
+ */
+export function parseZoneImageryRequested(href: string): boolean {
+  const value = new URL(href, "http://localhost/").searchParams.get(ZONE_IMAGERY_PARAM);
+  if (value === MANHATTAN_GROUND_ZONE_IMAGERY_RELEASE_ID) return true;
+  if (value === ZONE_IMAGERY_OFF_VALUE) return false;
+  return ZONE_IMAGERY_DEFAULT_ON;
+}
+
+/** Preserve the imagery intent across canonical URL writes, exactly as ground does. */
+export function appendZoneImageryUrl(baseUrl: string, requested: boolean): string {
+  const url = new URL(baseUrl, typeof window === "undefined" ? "http://localhost/" : window.location.href);
+  if (requested === ZONE_IMAGERY_DEFAULT_ON) url.searchParams.delete(ZONE_IMAGERY_PARAM);
+  else url.searchParams.set(ZONE_IMAGERY_PARAM, zoneImageryOptOutValue());
   return url.toString();
 }
 
@@ -1599,6 +1664,9 @@ export function App() {
   // synthetic grid — see `GROUND_DEFAULT_ON`.
   const initialGroundRequested = typeof window === "undefined" ? GROUND_DEFAULT_ON : parseGroundRequested(window.location.href);
   const initialGroundFeatureId = typeof window !== "undefined" && initialGroundRequested ? new URL(window.location.href).searchParams.get("groundFeature") : null;
+  // T013: orthoimagery rides the ground default and is opted out of separately
+  // with `?zoneImagery=off` — see `ZONE_IMAGERY_DEFAULT_ON`.
+  const initialZoneImageryRequested = typeof window === "undefined" ? ZONE_IMAGERY_DEFAULT_ON : parseZoneImageryRequested(window.location.href);
   const initialExteriorStreaming: ExteriorStreamingUrlState = typeof window === "undefined"
     ? { override: null, explicitReleaseId: null, profile: DEFAULT_EXTERIOR_RENDER_PROFILE, canarySnapshotId: null, scheduler: false, detailRadiusMeters: null, farTier: FAR_TIER_DEFAULT_ON }
     : parseExteriorStreamingUrl(window.location.href);
@@ -1679,6 +1747,18 @@ export function App() {
   const [groundEmbellishmentError, setGroundEmbellishmentError] = useState("");
   const [groundEmbellishmentSummary, setGroundEmbellishmentSummary] = useState<GroundEmbellishmentRenderSummary | null>(null);
   const [groundRefusals, setGroundRefusals] = useState<ReadonlyMap<string, readonly GroundRenderRefusal[]>>(new Map());
+  /**
+   * The zone orthoimagery drape (T013), on by default and gated on the base.
+   *
+   * Like the near tier, an imagery failure writes its OWN note and leaves
+   * `groundLoadState`, `groundOverlay` and the flat status line untouched: an
+   * absent overlay here means "no photographs", never "no ground".
+   */
+  const [zoneImageryRequested, setZoneImageryRequested] = useState(initialZoneImageryRequested);
+  const [zoneImageryOverlay, setZoneImageryOverlay] = useState<LoadedGroundZoneImageryRelease | null>(null);
+  const [zoneImageryError, setZoneImageryError] = useState("");
+  const [zoneImagerySummary, setZoneImagerySummary] = useState<GroundZoneImageryRenderSummary | null>(null);
+  const [zoneImageryDrapedFeatureIds, setZoneImageryDrapedFeatureIds] = useState<ReadonlySet<string>>(new Set());
   // Explicit URL/toggle intent only. Whether streaming actually runs, and which
   // release it targets, is resolved from this plus the promotion record and the
   // live base release, so a promoted default cannot be half-applied.
@@ -1809,6 +1889,7 @@ export function App() {
   const publicRealmRequestedRef = useRef(publicRealmRequested);
   const selectedPublicRealmIdRef = useRef(selectedPublicRealmId);
   const groundRequestedRef = useRef(groundRequested);
+  const zoneImageryRequestedRef = useRef(zoneImageryRequested);
   const selectedGroundIdRef = useRef(selectedGroundId);
   const exteriorStreamingRequestedRef = useRef(false);
   const exteriorStreamingOverrideRef = useRef(exteriorStreamingOverride);
@@ -1886,6 +1967,7 @@ export function App() {
   publicRealmRequestedRef.current = publicRealmRequested;
   selectedPublicRealmIdRef.current = selectedPublicRealmId;
   groundRequestedRef.current = groundRequested;
+  zoneImageryRequestedRef.current = zoneImageryRequested;
   selectedGroundIdRef.current = selectedGroundId;
   exteriorStreamingOverrideRef.current = exteriorStreamingOverride;
   exteriorExplicitReleaseIdRef.current = exteriorExplicitReleaseId;
@@ -1895,10 +1977,13 @@ export function App() {
   exteriorDetailRadiusMetersRef.current = exteriorDetailRadiusMeters;
   const getOverlayUrlFields = useCallback(() => navigationOverlayFields(exteriorRequestedRef.current, selectedStorefrontIdRef.current), []);
   const navigationUrlForApp = useCallback((value: Parameters<typeof navigationUrl>[0], base: string) => appendExteriorProfileUrl(
-    appendGroundUrl(
-      appendBlock835PublicRealmUrl(navigationUrl(value, base), publicRealmRequestedRef.current, selectedPublicRealmIdRef.current),
-      groundRequestedRef.current,
-      selectedGroundIdRef.current,
+    appendZoneImageryUrl(
+      appendGroundUrl(
+        appendBlock835PublicRealmUrl(navigationUrl(value, base), publicRealmRequestedRef.current, selectedPublicRealmIdRef.current),
+        groundRequestedRef.current,
+        selectedGroundIdRef.current,
+      ),
+      zoneImageryRequestedRef.current,
     ),
     { override: exteriorStreamingOverrideRef.current, releaseId: exteriorCellReleaseIdRef.current, streaming: exteriorStreamingRequestedRef.current, profile: exteriorProfileRef.current, canarySnapshotId: exteriorCanarySnapshotIdRef.current, scheduler: exteriorSchedulerRequestedRef.current, detailRadiusMeters: exteriorDetailRadiusMetersRef.current, farTier: farTierRequestedRef.current },
   ), []);
@@ -3203,6 +3288,44 @@ export function App() {
     return () => { active = false; controller.abort(); };
   }, [groundOverlay]);
 
+  /**
+   * The zone orthoimagery release, loaded only once the flat base is verified.
+   *
+   * Gated on `groundOverlay` for the same structural reason the curbs are, and
+   * with one addition: the LOADED base is passed in, because the compatibility
+   * pin is a comparison against the base release's own asset list. Imagery that
+   * cannot prove it was built against exactly these polygons never becomes an
+   * overlay at all.
+   *
+   * Every failure grade lands in `zoneImageryError` and nowhere else. The flat
+   * status line, `groundLoadState` and `groundOverlay` are untouched by any of
+   * them, so parks, plazas and water keep drawing as verified flat polygons.
+   */
+  useEffect(() => {
+    if (!groundOverlay || !zoneImageryRequested) {
+      setZoneImageryOverlay(null);
+      setZoneImageryError("");
+      setZoneImagerySummary(null);
+      setZoneImageryDrapedFeatureIds(new Set());
+      return undefined;
+    }
+    let active = true;
+    const controller = new AbortController();
+    setZoneImageryError("");
+    void loadGroundZoneImageryRelease(groundOverlay, `/data/${MANHATTAN_GROUND_ZONE_IMAGERY_RELEASE_ID}/`, controller.signal).then((loaded) => {
+      if (!active) return;
+      setZoneImageryOverlay(loaded);
+      setZoneImageryError("");
+    }).catch((error: unknown) => {
+      if (!active || (error instanceof DOMException && error.name === "AbortError")) return;
+      setZoneImageryOverlay(null);
+      setZoneImagerySummary(null);
+      setZoneImageryDrapedFeatureIds(new Set());
+      setZoneImageryError(groundZoneImageryFailureMessage(error));
+    });
+    return () => { active = false; controller.abort(); };
+  }, [groundOverlay, zoneImageryRequested]);
+
   useEffect(() => {
     if (!citywideAdapter || !civicAdapter || citywideLoadState !== "ready" || civicLoadState !== "ready") {
       setComposedAdapter(null);
@@ -3600,6 +3723,7 @@ export function App() {
       const requestedPublicRealmFeature = requestedPublicRealm ? url.searchParams.get("publicRealmFeature") : null;
       const requestedGround = parseGroundRequested(window.location.href);
       const requestedGroundFeature = requestedGround ? url.searchParams.get("groundFeature") : null;
+      const requestedZoneImagery = parseZoneImageryRequested(window.location.href);
       // Exterior streaming intent is part of history state. Before the Block 835
       // promotion it was read once at mount and never restored, so Back/Forward
       // silently kept whatever the session last had; now every entry restores
@@ -3617,12 +3741,14 @@ export function App() {
       publicRealmRequestedRef.current = requestedPublicRealm;
       selectedPublicRealmIdRef.current = requestedPublicRealmFeature;
       groundRequestedRef.current = requestedGround;
+      zoneImageryRequestedRef.current = requestedZoneImagery;
       selectedGroundIdRef.current = requestedGroundFeature;
       updateSelectedStorefront(state.storefrontId ?? null);
       setExteriorRequested(requestedExterior);
       setPublicRealmRequested(requestedPublicRealm);
       setSelectedPublicRealmId(requestedPublicRealmFeature);
       setGroundRequested(requestedGround);
+      setZoneImageryRequested(requestedZoneImagery);
       setSelectedGroundId(requestedGroundFeature);
       setQuery(state.query);
       setCameraMode(state.cameraMode); setPoseInvalid(state.poseInvalid);
@@ -4026,8 +4152,18 @@ export function App() {
   const groundEmbellishmentNote = groundEmbellishmentError
     ? ` · ${groundEmbellishmentError}`
     : groundEmbellishmentStatusSegment(groundEmbellishmentSummary);
+  /**
+   * The imagery segment, appended to the base's reading like the curb segment.
+   *
+   * It names the VINTAGE — "imagery 2024" — in the status region of every
+   * session with a drape on screen, which is half of the on-screen-accessible
+   * attribution AC3 asks for; the persistent attribution line below is the
+   * other half, and the details panel carries the full statement per feature.
+   */
+  const zoneImageryNote = zoneImageryError ? ` · ${zoneImageryError}` : groundZoneImageryStatusSegment(zoneImagerySummary);
+  const zoneImageryActive = groundActive && zoneImageryOverlay !== null && (zoneImagerySummary?.drapedZones ?? 0) > 0;
   const groundStatusMessage = groundLoadState === "ready"
-    ? `${groundSummary ? groundRenderStatusLine(groundSummary) : "Ground base verified locally; no cell is in view yet."}${groundEmbellishmentNote}${groundVerifyMs === null ? "" : ` · verified in ${groundVerifyMs} ms`}`
+    ? `${groundSummary ? groundRenderStatusLine(groundSummary) : "Ground base verified locally; no cell is in view yet."}${groundEmbellishmentNote}${zoneImageryNote}${groundVerifyMs === null ? "" : ` · verified in ${groundVerifyMs} ms`}`
     : groundError;
   const selectedCommercialBuilding = exteriorActive && selectedRuntimeFeature?.kind === "building" && exteriorOverlay ? exteriorOverlay.commercialForBuilding(selectedRuntimeFeature.id) : null;
   const selectedPlaceTruth = dataMode === "fixtures" && selectedRuntimeFeature ? placeTruthByRuntimeFeatureId.get(selectedRuntimeFeature.id) : undefined;
@@ -4317,6 +4453,18 @@ export function App() {
     if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrlForApp({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current, ...getOverlayUrlFields() }, window.location.href));
   };
 
+  /**
+   * The imagery toggle. Writes the ref BEFORE the canonical URL so the
+   * replaceState below states the intent this click just established rather
+   * than the one it replaced; the load effect does the rest.
+   */
+  const toggleZoneImagery = () => {
+    const next = !zoneImageryRequestedRef.current;
+    zoneImageryRequestedRef.current = next;
+    setZoneImageryRequested(next);
+    if (typeof window !== "undefined") window.history.replaceState({}, "", navigationUrlForApp({ featureId: activeSelectionRef.current, query: queryRef.current, cameraMode: cameraModeRef.current, pose: cameraPoseRef.current, poseInvalid: false, dataMode: dataModeRef.current, releaseId: releaseIdRef.current, visibleLayers: Object.entries(layerVisibilityRef.current).filter(([, visible]) => visible).map(([layer]) => layer), facets: civicModeRef.current ? selectedCivicFacetsRef.current : selectedCategoriesRef.current, ...getOverlayUrlFields() }, window.location.href));
+  };
+
   const disableGround = () => {
     groundRequestedRef.current = false;
     selectedGroundIdRef.current = null;
@@ -4549,6 +4697,9 @@ export function App() {
           onGroundRefusals={setGroundRefusals}
           groundEmbellishmentOverlay={groundActive ? groundEmbellishmentOverlay : null}
           onGroundEmbellishmentRenderSummary={setGroundEmbellishmentSummary}
+          groundZoneImagery={groundActive ? zoneImageryOverlay : null}
+          onGroundZoneImageryRenderSummary={setZoneImagerySummary}
+          onGroundZoneImageryDrapedFeatures={setZoneImageryDrapedFeatureIds}
           exteriorOverlay={exteriorCellOverlays}
           onExteriorUnanchored={setExteriorUnanchoredIds}
           onExteriorCellsRetired={handleExteriorCellsRetired}
@@ -4654,6 +4805,21 @@ export function App() {
             data-ground-verify-ms={groundVerifyMs ?? ""}
           >{groundLoadState === "loading" ? "Citywide ground base · verifying the local release…" : groundStatusMessage || "Citywide ground base unavailable; the synthetic grid remains the ground."}</span>}
           {groundActive && <span className="runtime-note-overlay" role="status">Flat cartographic base from NYC OTI Planimetrics, NYC DOT plazas and NYC Parks properties · source extents, not a survey of current paving, access, or shoreline.</span>}
+          {/* THE IMAGERY ATTRIBUTION AFFORDANCE (T013). Present, unclicked and
+              unscrolled, in every session with a drape on screen, and absent
+              the moment the last drape leaves the view — a CC BY 4.0 credit
+              that only appeared behind a click would put the obligation on the
+              reader to go looking for it. Vintage, capture window, both source
+              agencies and the licence travel in one sentence. */}
+          {zoneImageryActive && zoneImageryOverlay && <span
+            className="runtime-note-overlay"
+            role="status"
+            data-zone-imagery-release={zoneImageryOverlay.releaseId}
+            data-zone-imagery-capture-year={zoneImageryOverlay.captureYear}
+            data-zone-imagery-draped-zones={zoneImagerySummary?.drapedZones ?? 0}
+          >{zoneImageryAttributionLine({ attribution: zoneImageryOverlay.attribution, captureYear: zoneImageryOverlay.captureYear, sourceEpoch: zoneImageryOverlay.provenance.sourceEpoch })}</span>}
+          {/* The imagery opt-out is not a one-way door either. */}
+          {groundActive && <button type="button" aria-pressed={zoneImageryRequested} onClick={toggleZoneImagery}>{zoneImageryRequested ? "Disable orthoimagery" : "Enable orthoimagery"}</button>}
           {/* The opt-out must not be a one-way door: with the ground on by
               default, a session that disables it needs a way back that is not
               "hand-edit the URL". */}
@@ -5111,6 +5277,32 @@ export function App() {
               <div><dt>Release</dt><dd>{selectedGroundRelease.releaseId} · ledger {selectedGroundRelease.ledger.ledgerId} · generated {selectedGroundRelease.document.generatedAt}</dd></div>
               <div><dt>Terms / attribution</dt><dd><a href={selectedGroundRelease.document.provenance.termsUrl} target="_blank" rel="noreferrer">NYC Open Data terms</a> · {selectedGroundRelease.document.provenance.attribution}</dd></div>
             </dl>
+            {/* THE DRAPE'S OWN DISCLOSURE (T013). Shown only when THIS feature
+                is currently drawn with a verified texture, so the panel never
+                describes a photograph a reader is not looking at. The imagery
+                is a second source with its own vintage, licence and registration
+                error, so it gets its own list rather than being folded into the
+                polygon's provenance above. */}
+            {zoneImageryOverlay && zoneImageryDrapedFeatureIds.has(selectedGroundFeature.canonicalFeatureId) && <div
+              className="zone-imagery-detail"
+              data-zone-imagery-feature={selectedGroundFeature.canonicalFeatureId}
+              data-zone-imagery-capture-year={zoneImageryOverlay.captureYear}
+            >
+              <p className="section-label">{ZONE_IMAGERY_DRAPE_STATEMENT}</p>
+              <dl>
+                <div><dt>Imagery capture year</dt><dd>{zoneImageryOverlay.captureYear}</dd></div>
+                <div><dt>Imagery capture window</dt><dd>{zoneImageryOverlay.provenance.sourceEpoch}</dd></div>
+                {/* The release states its terms as a sentence naming the source
+                    metadata document, not as a bare href, so it is rendered as
+                    the text it is rather than linkified into a claim it does
+                    not make. */}
+                <div><dt>Imagery attribution</dt><dd>{zoneImageryOverlay.attribution}</dd></div>
+                <div><dt>Imagery terms</dt><dd>{zoneImageryOverlay.provenance.termsUrl}</dd></div>
+                <div><dt>Imagery resolution</dt><dd>{zoneImageryOverlay.targetGroundSampleDistanceMeters} m per pixel, downsampled from the source</dd></div>
+                <div><dt>Registration</dt><dd>{ZONE_IMAGERY_MISREGISTRATION_STATEMENT}</dd></div>
+                <div><dt>Imagery release</dt><dd>{zoneImageryOverlay.releaseId} · index {zoneImageryOverlay.indexChecksumSha256} · built against {zoneImageryOverlay.baseReleaseId}</dd></div>
+              </dl>
+            </div>}
             {/* Refusal transparency: a share this renderer declined to draw says
                 so here, with its measurement, rather than leaving a hole the
                 panel does not mention. */}

@@ -141,3 +141,32 @@ accepted; the results are in the T008 implementation record.
    tier, which is switched off in fixture mode by `farTierActiveForSession`, the
    ground is not gated on the data mode. A fixture session therefore pays the
    boot cost and draws real Manhattan surfaces under synthetic geometry.
+
+## Addendum — zone orthoimagery rides this default (2026-08-26, T013, Issue #142)
+
+No separate ADR is minted for `ZONE_IMAGERY_DEFAULT_ON = true`. The zone
+orthoimagery drape is not an independent default: its loader is gated on a
+**loaded** ground release, and its release is pinned to that release's own asset
+list, so it cannot be active in any session this ADR did not already put the
+cartographic ground into. What it changes is the *appearance* of three classes
+this ADR already made default — park, plaza and water are drawn with 2024
+photographs instead of a flat fill — and not which releases a session loads at
+boot beyond one 71 KB index.
+
+The fail-closed direction is the same one this ADR established, one level down:
+a ground failure removes the ground and leaves the grid; an imagery failure
+removes the drape and leaves the polygons. The opt-out is a second parameter,
+`?zoneImagery=off`, on the same "state the opt-out, stay silent about the
+default" convention, so a default link still carries neither token.
+
+Rollback is one token and is recorded, with its measurements and its outstanding
+browser validation, in the T013 record in
+`docs/implementation/GROUND_RELEASE_CONTRACTS.md`.
+
+### One risk this addendum adds to the list above
+
+5. **Texture residency is real and is not free.** A mid-zoom camera over Central
+   Park holds 31 verified textures totalling 23.4 MB against the borrowed 48 MiB
+   ceiling — about half of it, for one camera. The ceiling holds and eviction is
+   driven from the same visible set as the polygons, but no frame-time or GPU
+   memory measurement backs the drape yet.
